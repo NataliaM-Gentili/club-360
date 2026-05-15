@@ -66,6 +66,7 @@ class Clase(db.Model):
 class Turno(db.Model):
     __tablename__ = 'turno'
     id = db.Column(db.Integer, primary_key=True)
+    habilitado = db.Column(db.Boolean, nullable=True)
     fecha = db.Column(db.Date, nullable=False)
     id_clase = db.Column(db.Integer, db.ForeignKey('clase.id'), nullable=False)
     __table_args__ = (db.UniqueConstraint('id_clase', 'fecha', name='uq_clase_fecha'),)
