@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from app.models.user_model import UserModel
 
 user_bp = Blueprint('user_bp', __name__) # defines user blueprint for flask
@@ -40,3 +40,36 @@ def signup():
         "message": "¡Usuario creado con éxito!",
         "user_id": user.id
     }), 201
+
+
+@user_bp.route('/login', methods=['POST'])
+def login():
+    datos = request.get_json()
+    email_ingresado = datos.get('email')
+    password_ingresado = datos.get('password')
+
+    #Busqueda de usuario 
+    usuario = UserModel.obtener_email_usuario(email_ingresado)
+
+    #usuario no encontrado
+    if not usuario or not UserModel.verificar_contrasena(usuario, password_ingresado):
+        return jsonify({"mensaje": "No se ha podido iniciar sesión. Por favor, revise sus datos"}), 401
+    
+    #usuario encontrado
+    session['usuario_id'] = usuario.id
+    session['rol_id'] = usuario.rol_id
+    return jsonify({"message": "Inicio de sesión exitoso", "usuario": usuario.email}), 200
+    
+
+# ----- LOGIN AUTHORISATION ROUTE
+# evalúa si el usuario está logueado o no y recupera los datos de la session
+@user_bp.route('/auth/status', methods=['GET'])
+def auth_status():
+    if 'usuario_id' in session:
+        return jsonify({
+            "loggedIn": True,
+            "user_id": session['usuario_id'],
+            "rol_id": session['rol_id']
+        }), 200
+
+    return jsonify({"loggedIn": False}), 200

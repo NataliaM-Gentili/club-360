@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 
-import '../assets/styles/SignUp.css';
+import '../assets/styles/SignUp.css'; // USES SAME STYLES AS SIGNUP
 import mesh from '../assets/images/mesh.png'
 import logo from '../assets/images/logo-club360.png'
 import eyeopen from '../assets/images/eye-open.png'
@@ -17,48 +17,26 @@ export default function SignUpPage(){
 
     const navigate = useNavigate(); // will be used for redirection once the user is registered
 
-    // stores the state for the registered succesfully/unsuccesfully message
-    const [isRegistered, setRegistered] = useState(false);
-
     // initial value for the array that represents the form values.
-    const [formValue, setFormValue] = useState({ email: "", name: "", dni: "", password: ""});
+    const [formValue, setFormValue] = useState({ email: "", password: ""});
 
     // error array for frontend validations --> missing backend errors
-    const [errors, setErrors] = useState({ email: "", name: "", dni: "", password: ""});
+    const [errors, setErrors] = useState({ email: "", password: ""});
 
     // state for toggling password visibility
     const [showPassword, setShowPassword] = useState(false);
 
 
-    // frontend form validations
+    // frontend form validations --> just email for login
 
     const validateEmail = (email) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email) ? "" : "Correo inválido";
     };
 
-    const validateDNI = (dni) => {
-        const regex = /^\d{8}$/;
-        return regex.test(dni) ? "" : "El DNI debe tener 8 dígitos";
-    };
-
-    const validateName = (name) => {
-        const regex = /^([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)(\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*$/;
-        return regex.test(name)
-            ? ""
-            : "Cada palabra debe empezar con mayúscula";
-    };
-
-    const validatePassword = (password) => {
-        return password.length > 6 ? "" : "Mínimo 7 caracteres";
-    };
-
     // central form validator
     const validators = {
-        email: validateEmail,
-        dni: validateDNI,
-        name: validateName,
-        password: validatePassword
+        email: validateEmail
     };
 
     const validateField = (name, value) => {
@@ -83,60 +61,37 @@ export default function SignUpPage(){
 
     
 
-    // backend api communication is be here!!
+    // backend api communication is here!!
     
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const newErrors = {
-            email: validateEmail(formValue.email),
-            name: validateName(formValue.name),
-            dni: validateDNI(formValue.dni),
-            password: validatePassword(formValue.password)
-        };
-
-        setErrors(newErrors);
-
-        const hasErrors = Object.values(newErrors).some(err => err !== "");
-        if (hasErrors) return;
-
         try {
-            const response = await fetch("/api/signup", {
+            const response = await fetch("/api/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
+                credentials: "include", // REQUIRED for Flask session
                 body: JSON.stringify({
                     email: formValue.email,
-                    dni: formValue.dni,
-                    nombres: formValue.name.split(" ")[0],
-                    apellido: formValue.name.split(" ").slice(1).join(" "),
-                    contrasena: formValue.password
+                    password: formValue.password
                 })
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                toast.error(data.error || data.message || "Error en el registro");
+                toast.error(data.mensaje || "Error al iniciar sesión");
                 return;
             }
 
-            toast.success("Usuario creado con éxito", {
-                onClose: () => {
-                    navigate("/login"); // redirige a login
-                }
-            });
+            toast.success(data.message);
 
-            // optional: reset form
-            setFormValue({
-                email: "",
-                name: "",
-                dni: "",
-                password: ""
-            });
+            // redirect after login success
+            navigate("/"); 
 
-        } catch (err) {
+        } catch (error) {
             toast.error("Error de conexión con el servidor");
         }
     };
@@ -148,21 +103,19 @@ export default function SignUpPage(){
     // JSX
      // which page does the web server recieve: 
 
-    if (!isRegistered){ // this is shown in the user is not registered
-
     return (
         <div className="signupContainer">
             <div className="mainDivider signupWelcome">
                 <div className="loginRedirection">
-                    <p>¿Ya tenés una cuenta?</p>
-                    <button onClick={() => navigate('/login')}>Login</button>
+                    <p>¿No tenés una cuenta?</p>
+                    <button onClick={() => navigate('/signup')}>Registrate</button>
                 </div>
                 <img src={logo} alt="Company logo"/>
-                <p>Bienvenido a</p>
+                <p>¡Hola de nuevo!</p>
                 <h1>CLUB 360</h1>
             </div>
             <div className="formContainer mainDivider">
-            <h1 className="formTitle">Creá tu cuenta</h1>
+            <h1 className="formTitle">Iniciá tu sesión</h1>
             <form className='formRegister'  onSubmit={handleSubmit}> 
 
                 {/*E-MAIL*/}
@@ -187,58 +140,6 @@ export default function SignUpPage(){
                         />
 
                         {errors.email && (
-                            <img src={redwarning} className="errorIcon" alt="error" />
-                        )}
-                    </div>
-                </div>
-
-                {/*NAMES AND SURNAME*/}
-                <div className="formInput">
-                    <div className="labelRow">
-                        <label>Nombre(s) y Apellido</label>
-
-                        <span className={`fieldError ${errors.name ? "show" : ""}`}>
-                            {errors.name}
-                        </span>
-                    </div>
-                    <div className="inputWrapper">
-                        <input
-                            className={errors.name ? "inputError" : ""}
-                            value={formValue.name}
-                            name="name"
-                            type="text"
-                            placeholder="Juan Perez"
-                            onChange={handleChange}
-                            required
-                        />
-
-                        {errors.name && (
-                            <img src={redwarning} className="errorIcon" alt="error" />
-                        )}
-                    </div>
-                </div>
-
-                {/*DNI*/}
-                <div className="formInput">
-                    <div className="labelRow">
-                        <label>DNI</label>
-
-                        <span className={`fieldError ${errors.dni ? "show" : ""}`}>
-                            {errors.dni}
-                        </span>
-                    </div>
-                    <div className="inputWrapper">
-                        <input
-                            className={errors.dni ? "inputError" : ""}
-                            value={formValue.dni}
-                            name="dni"
-                            type="text"
-                            placeholder="12345678"
-                            onChange={handleChange}
-                            required
-                        />
-
-                        {errors.dni && (
                             <img src={redwarning} className="errorIcon" alt="error" />
                         )}
                     </div>
@@ -282,6 +183,4 @@ export default function SignUpPage(){
             </div>
         </div>
     )
-
-    }
 }

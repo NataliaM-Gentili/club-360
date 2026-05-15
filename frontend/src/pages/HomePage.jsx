@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../assets/styles/HomePage.css';
 import sports from '../assets/images/sports.png';
@@ -9,6 +10,38 @@ export default function HomePage() {
         { name: 'Vóley', price: '$ 8000' },
         { name: 'Básquet', price: '$ 8500' },
     ];
+
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    // evalúa si el usuario inició sesión o no para ver qué botones mostrar del home
+    useEffect(() => {
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/auth/status', {
+                    credentials: 'include',
+                });
+
+                if (!response.ok) {
+                    setIsLoggedIn(false);
+                    return;
+                }
+
+                const data = await response.json();
+                const loggedIn = !!(
+                    data.loggedIn ||
+                    data.logged_in ||
+                    data.authenticated ||
+                    data.user
+                );
+
+                setIsLoggedIn(loggedIn);
+            } catch {
+                setIsLoggedIn(false);
+            }
+        }
+
+        checkSession();
+    }, []);
 
     return (
         <main className="home-root">
@@ -32,10 +65,12 @@ export default function HomePage() {
                     </ul>
                     
                 </section>
-                <div className="login-prompt">
-                    <p>Iniciá sesión para reservar</p>
-                    <Link to="/login" className="login-btn">Iniciar sesión</Link>
-                </div>
+                {!isLoggedIn && (
+                    <div className="login-prompt">
+                        <p>Iniciá sesión para reservar</p>
+                        <Link to="/login" className="login-btn">Iniciar sesión</Link>
+                    </div>
+                )}
             </section>
 
             <div className="hero-image">

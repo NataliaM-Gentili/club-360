@@ -24,7 +24,7 @@ from app import db
 # recupera la estructura de la bd mapeada a objetos
 from app.models.db_structure import Usuario, Cliente
 
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
 
@@ -60,3 +60,14 @@ class UserModel:
         db.session.commit()
 
         return new_user
+
+    
+    @staticmethod
+    def obtener_email_usuario(email):
+        # Busca en la tabla Usuario por email
+        return Usuario.query.filter_by(email=email).first()
+
+    @staticmethod
+    def verificar_contrasena(usuario_obj, password_plana):
+        # Compara la contraseña del form con el hash de la base de datos
+        return check_password_hash(usuario_obj.contrasena, password_plana)
