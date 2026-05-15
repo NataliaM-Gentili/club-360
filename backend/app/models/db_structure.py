@@ -38,14 +38,18 @@ class Tarjeta(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero = db.Column(db.String(20), nullable=False)
     cvv = db.Column(db.String(4), nullable=False)
-    fecha_vencimiento = db.Column(db.Date, nullable=False)
+    fecha_vencimiento = db.Column(db.String(7), nullable=False)
     titular = db.Column(db.String(150), nullable=False)
 
+class ClienteTarjeta(db.Model):
+    __tablename__ = 'ClienteTarjeta'
+    id_cliente = db.Column(db.Integer, db.ForeignKey('cliente.id_usuario'), primary_key=True)
+    id_tarjeta = db.Column(db.Integer, db.ForeignKey('tarjeta.id'), primary_key=True)
 # Tabla intermedia Cliente_Tarjeta
-cliente_tarjeta = db.Table('cliente_tarjeta',
-    db.Column('id_usuario', db.Integer, db.ForeignKey('cliente.id_usuario'), primary_key=True),
-    db.Column('id_tarjeta', db.Integer, db.ForeignKey('tarjeta.id'), primary_key=True)
-)
+#cliente_tarjeta = db.Table('cliente_tarjeta',
+#    db.Column('id_usuario', db.Integer, db.ForeignKey('cliente.id_usuario'), primary_key=True),
+#    db.Column('id_tarjeta', db.Integer, db.ForeignKey('tarjeta.id'), primary_key=True)
+#)
 
 # --- CLASES Y TURNOS ---
 

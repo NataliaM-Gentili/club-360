@@ -18,3 +18,45 @@ class Item(db.Model):
             "id": self.id,
             "name": self.name
         }
+        
+from app import db
+
+# recupera la estructura de la bd mapeada a objetos
+from app.models.db_structure import Usuario, Cliente
+
+from werkzeug.security import generate_password_hash
+from datetime import datetime
+
+
+class UserModel:
+
+    @staticmethod # recupera el primer usuario cuyo email coincida con el pasado por parámetro
+    def get_user_by_email(email):
+        return Usuario.query.filter_by(email=email).first()
+
+
+    @staticmethod # sube a la bd el nuevo usuario a la tabla usuario y su id a la tabla cliente
+    def create_user(data):
+        hashed_password = generate_password_hash(data["contrasena"])
+
+        new_user = Usuario(
+            email=data["email"],
+            dni=data["dni"],
+            nombres=data["nombres"],
+            apellido=data["apellido"],
+            contrasena=hashed_password,
+            fecha_alta=datetime.utcnow(),
+            rol_id=1  # cliente
+        )
+
+        db.session.add(new_user)
+        db.session.flush()  
+        # flush to get the generated ID without committing yet
+
+        # create entry in cliente table
+        new_cliente = Cliente(id_usuario=new_user.id)
+        db.session.add(new_cliente)
+
+        db.session.commit()
+
+        return new_user
