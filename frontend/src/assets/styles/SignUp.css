@@ -1,0 +1,418 @@
+
+.signupContainer {
+    display: flex;
+    height: 100vh;
+
+}
+
+/* Welcome Sign Styling */
+
+.signupWelcome {
+    flex: 4.5;
+
+    background-color: #598849;
+    color: #fafafa;
+
+    background-image: url('/src/assets/images/mesh.png'); 
+    background-size: cover;       /* fills the container */
+    background-position: center;  /* centers it */
+    background-repeat: no-repeat; /* avoids tiling */
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;  /* bottom */
+    align-items: flex-start;    /* left */
+    padding: 3rem;    
+
+    margin: 15px;
+    border-radius: 40px;
+
+    position: relative;
+}
+
+.signupWelcome > img {
+    width: 40%;      
+    max-width: 150px; 
+    height: auto;     /* keep proportions */
+    margin-bottom: 15px;
+}
+
+.signupWelcome > p,
+.signupWelcome > h1 {
+    margin: 0;
+    line-height: 1;
+}
+
+.signupWelcome > h1 {
+    font-size: 90pt;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -2px;
+}
+
+.signupWelcome > p {
+    font-size: 30pt;
+    font-weight: 200;
+    margin: 0;
+    margin-bottom: 2px;
+}
+
+.loginRedirection {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: #fafafa;
+
+    font-weight: 200;
+}
+
+.loginRedirection p {
+    font-weight: 300;
+}
+
+.loginRedirection button{
+    background: transparent;
+    border: 1px solid #fafafa;
+    color: #fafafa;
+
+    padding: 8px 16px;
+    border-radius: 20px;
+
+    cursor: pointer;
+    font-weight: 400;
+    font-size: 14px; 
+
+    transition: all 0.2s ease;
+}
+
+.loginRedirection button:hover {
+    background: #fafafa;
+    color: #598849;
+    border-color: #fafafa;
+     transform: translateY(-1px);
+}
+
+
+/* Form Styling */
+
+.formContainer {
+    flex: 5.5;
+    background-color: #fafafa;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 4rem;
+}
+
+.formRegister {
+    width: 100%;
+    max-width: 380px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Title */
+
+.formTitle {
+    font-size: 32pt;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: black;
+    letter-spacing: -0.5px;
+
+    width: 100%;
+    max-width: 380px;
+    text-align: left;
+}
+
+/* Inputs */
+
+.formInput {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.formInput label {
+    padding-left: 5px;
+    font-size: 13px;
+    font-weight: 500;
+
+    color: rgba(0, 0, 0, 0.7);
+    letter-spacing: -0.2px;
+}
+
+.formInput input {
+    width: 100%;
+    padding: 14px 16px;
+
+    border: 1px solid rgba(89, 136, 73, 0.25);
+    border-radius: 12px;
+
+    font-size: 14px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+    background-color: #ffffff;
+    color: #333;
+
+    outline: none;
+
+    transition: all 0.2s ease;
+}
+
+.formInput input:focus {
+    border-color: #598849;
+}
+
+.inputWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.inputWrapper input {
+    width: 100%;
+}
+
+.labelRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fieldError {
+    color: red;
+    font-size: 12px;
+    margin-right: -20px;
+    white-space: nowrap;
+
+    opacity: 0;
+    transform: translateY(-6px);
+
+    transition: opacity 0.2s ease, transform 0.2s ease;
+
+    height: 0;
+    overflow: hidden;
+}
+
+.fieldError.show {
+    opacity: 1;
+    transform: translateY(0);
+    height: auto;
+}
+
+.errorIcon {
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+}
+
+.passwordWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.passwordWrapper input {
+    width: 100%;
+}
+
+.passwordWrapper img {
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-40%);
+
+    width: 20px;
+    height: 20px;
+
+    cursor: pointer;
+    opacity: 0.4;
+
+    transition: opacity 0.2s ease;
+    user-select: none;
+}
+
+.passwordWrapper .errorIcon{
+    position: absolute;
+    right: 15px;
+    opacity: 1;
+}
+
+.formRegister input.signUpSubmit {
+
+    padding: 14px 28px;
+    width: 100px;
+
+    border-radius: 20px;
+
+    background-color: #598849;
+    color: #fafafa;
+
+    border: none;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.formRegister input.signUpSubmit:hover {
+    background-color: #4e7740;
+    transform: translateY(-1px);
+}
+
+
+/* UI FOR MOBILE PHONES */
+
+@media (max-width: 600px) {
+
+    .signupContainer {
+        flex-direction: column;
+        height: auto;
+    }
+
+    /* left welcome panel */
+    .signupWelcome {
+        height: 220px;
+        margin: 8px;
+        border-radius: 25px;
+        padding: 1.5rem;
+        align-items: center;
+    }
+
+    .signupWelcome > h1 {
+        font-size: 20pt;
+    }
+
+    .signupWelcome > p {
+        font-size: 10pt;
+    }
+
+    .signupWelcome > img {
+        max-width: 90px;
+    }
+
+    .loginRedirection{
+        color: black;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 90vh;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        opacity: 0.5;
+    }
+
+    .loginRedirection button{
+        color: black;
+        border-color: black;
+        opacity: 0.5;
+    }
+
+    .loginRedirection button:hover{
+        background-color: black;
+        color: #fafafa;
+        border-color: black;
+    }
+
+    /* From */
+    .mainDivider {
+        align-items: center;
+    }
+
+    .formContainer {
+        align-items: center;
+        padding: 0px;
+        vertical-align: middle;
+        justify-content: flex-start;
+        padding-top: 2rem;
+    }
+
+    .formRegister{
+        display: flex;
+        align-content: center;
+        width: 100%;
+        max-width: 320px; 
+        margin: 0 auto;
+        padding: 0px;
+    }
+
+    .formTitle {
+        font-size: 22pt;
+        text-align: center;
+    }
+
+    .formInput{
+        display: flex;
+        align-items: center;
+    }
+
+    .labelRow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    .labelRow label{
+        font-size: 8pt;
+    }
+
+    /* inputs */
+    .formInput input {
+        width: 300px;;
+        font-size: 13px;
+        
+    }
+
+    /* error text */
+    .fieldError {
+        font-size: 8px;
+        margin-right: 0;
+    }
+
+    /* icons */
+    .errorIcon {
+        right: 8px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .passwordWrapper img {
+        width: 18px;
+        height: 18px;
+        right: 8px;
+    }
+
+    .passwordWrapper .errorIcon{
+        position: absolute;
+        right: 30px;
+        opacity: 1;
+    }
+
+    /* submit button */
+
+    .formRegister input.signUpSubmit {
+        width: 100%;
+        max-width: 200px;
+        align-self: center;
+    }
+}
