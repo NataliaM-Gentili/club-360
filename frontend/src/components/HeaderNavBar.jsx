@@ -9,6 +9,8 @@ export default function HeaderNavBar(){
 
     const navigate = useNavigate();
 
+    const isAuthenticated = false; // TEMPORAL UNTIL ADDING ROLE AUTHORISATION
+
     return(
         <header className="main-header">
 
@@ -18,8 +20,17 @@ export default function HeaderNavBar(){
 
             <nav className="headerNav">
                 <ul>
-                    <li><Link to="/profile">Perfil</Link></li>
-                    <li><Link to="/book">Reservar</Link></li>
+                    {isAuthenticated ? (
+                        <>
+                            <li><Link to="/profile">Perfil</Link></li>
+                            <li><Link to="/book">Reservar</Link></li>
+                        </>
+                    ) : (
+                        <>
+                            <li><Link to="/signup">Registrarse</Link></li>
+                            <li><Link to="/login">Login</Link></li>
+                        </>
+                    )}
                 </ul>
             </nav>
 

@@ -1,0 +1,131 @@
+.home-root {
+    display: flex;
+    gap: 24px;
+    min-height: calc(100vh - 100px); /* leave space for fixed navbar */
+    padding-top: 0; /* center vertically; navbar space already reserved by min-height */
+    max-width: 800px;
+    color: #222;
+    align-items: center; /* vertically center children */
+    align-self: center;
+    padding-left: 150px;
+}
+
+.hero {
+    flex: 0.65;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow: visible;
+}
+
+.hero-content {
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.hero-image {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-shrink: 0;
+}
+
+.hero-image img {
+    width: 100%;
+    max-width: 350px;
+    height: auto;
+    border-radius: 14px;
+    max-height: calc(100vh - 160px); /* keep image from forcing vertical scroll */
+    object-fit: cover;
+}
+
+.hero h1 {
+    font-size: 36px;
+    margin: 0 0 8px 0;
+    color: #598849;
+}
+
+.subtitle {
+    font-size: 16px;
+    color: rgba(0,0,0,0.7);
+    margin-bottom: 12px;
+}
+
+.description {
+    margin-bottom: 8px;
+    color: rgba(0,0,0,0.6);
+    font-size: 14px;
+}
+
+.address {
+    margin-top: 8px;
+    font-weight: 600;
+    color: rgba(0,0,0,0.55);
+    font-size: 14px;
+}
+
+.activities {
+    background: #fafafa;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.activities h2 {
+    text-align: right;
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 16px;
+}
+
+.activities ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 12px 0;
+}
+
+.activity-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: white;
+    align-items: center;
+    font-size: 14px;
+}
+
+.activity-name { font-weight: 600; }
+.activity-price { color: rgba(0,0,0,0.6); }
+
+.cta-row { display: flex; gap: 10px; margin-top: 8px; }
+.cta { padding: 8px 14px; border-radius: 8px; background: #598849; color: #fff; text-decoration: none; font-weight: 700; font-size: 13px; }
+.cta.outline { background: transparent; border: 1px solid #598849; color: #598849; }
+
+.login-prompt {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+.login-prompt p {
+    margin: 0;
+    font-weight: 600;
+    color: rgba(0,0,0,0.7);
+}
+.login-btn {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #598849;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+@media (max-width: 1024px) {
+    .home-root { flex-direction: column; height: auto; }
+    .hero { flex-direction: row; }
+    .hero-image { flex: none; }
+    .hero-image img { max-width: 200px; }
+    .hero h1 { font-size: 28px; }
+}
