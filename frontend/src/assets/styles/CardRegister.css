@@ -1,0 +1,150 @@
+
+.cardRegisterFormContainer {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    box-sizing: border-box;
+
+    background-image: url('/src/assets/images/mesh.png'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+}
+
+.cardRegisterFormTitle {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f1f1f;
+
+    margin: 0 0 10px 0;
+    text-align: center;
+    letter-spacing: -0.5px;
+}
+
+/* FORM BOX */
+.cardRegisterForm {
+    width: 100%;
+    max-width: 420px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    background: #ffffff;
+    padding: 40px;
+
+    border-radius: 18px;
+    box-sizing: border-box;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* INPUT GROUP (reuse signup style logic) */
+.formInput {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.formInput label {
+    font-size: 13px;
+    font-weight: 500;
+
+    color: rgba(0, 0, 0, 0.7);
+}
+
+/* INPUT */
+.inputWrapper {
+    width: 100%;
+    display: flex;
+}
+
+.cardRegisterInput {
+    flex: 1; /* replaces width: 100% */
+
+    padding: 14px 16px;
+
+    border: 1px solid rgba(89, 136, 73, 0.25);
+    border-radius: 12px;
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition: all 0.2s ease;
+}
+
+.cardRegisterInput:focus {
+    border-color: #598849;
+}
+
+/* SUBMIT BUTTON */
+.cardRegisterSUbmit {
+    margin-top: 10px;
+
+    padding: 14px;
+    width: 100%;
+
+    border-radius: 12px;
+
+    background-color: #598849;
+    color: #fafafa;
+
+    border: none;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.cardRegisterSUbmit:hover {
+    background-color: #4e7740;
+    transform: translateY(-1px);
+}
+
+
+/*INPUT ERRORS*/
+
+/* label row like signup */
+.labelRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* error text animation */
+.fieldError {
+    color: #d93025;
+    font-size: 12px;
+
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all 0.2s ease;
+
+    white-space: nowrap;
+}
+
+.fieldError.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* optional red border like signup */
+.inputError {
+    border: 1px solid #d93025 !important;
+}
+
+
+
+@media (max-width: 600px) {
+    .cardRegisterForm {
+        padding: 1.5rem;
+        border-radius: 14px;
+    }
+}

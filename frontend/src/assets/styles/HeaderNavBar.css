@@ -1,0 +1,58 @@
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: transparent;
+
+    height: 100px;
+    flex-shrink: 0;
+    
+    /* fija la navbar al tope*/
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 100px;
+    z-index: 1000;
+}
+
+.headerLogo {
+    background: transparent;
+    padding: 8px;
+    cursor: pointer;
+    border: 0px;
+}
+
+.headerLogo img {
+    width: 80px; /* better than % for navbar */
+    height: auto;
+    display: block;
+}
+
+.headerNav ul {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 20px 30px;
+    background: white;
+    border-radius: 12px;
+}
+
+.headerNav a {
+    text-decoration: none;
+    color: black;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.headerNav a:hover {
+    background: #f59235;
+    color: white;
+}
+
+

@@ -1,0 +1,14 @@
+/*styling that applies to the whole app*/
+
+body {
+    margin: 0;
+    font-family: "Inter", Helvetica, Arial, sans-serif;
+    background-color: #fafafa;
+
+}
+
+#root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
