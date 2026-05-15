@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 # --- USUARIO Y ROLES ---
 
@@ -16,7 +16,7 @@ class Usuario(db.Model):
     nombres = db.Column(db.String(100), nullable=False)
     apellido = db.Column(db.String(100), nullable=False)
     contrasena = db.Column(db.String(255), nullable=False)
-    fecha_alta = db.Column(db.Date, default=datetime.utcnow)
+    fecha_alta = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     rol_id = db.Column(db.Integer, db.ForeignKey('rol.id'))
 
 class Administrador(db.Model):
