@@ -169,10 +169,14 @@ export default function SignUpPage(){
         <>
             <div className="signupContainer">
                 <div className="mainDivider signupWelcome">
+
+                    {/* 
                     <div className="loginRedirection">
                         <p>¿Ya tenés una cuenta?</p>
                         <button onClick={() => navigate('/login')}>Login</button>
                     </div>
+                    */}
+
                     <img src={logo} alt="Company logo"/>
                     <p>Bienvenido a</p>
                     <h1>CLUB 360</h1>
