@@ -17,7 +17,7 @@ export default function HeaderNavBar(){
 
     // corre cada vez que se renderiza la página
     useEffect(() => {
-        fetch("http://localhost:5000/auth/status", {
+        fetch("http://localhost:5000/api/auth/status", {
             credentials: "include"
         })
         .then(res => res.json())
@@ -48,7 +48,7 @@ export default function HeaderNavBar(){
     };
 
     // lógica de qué botones se renderizan según el rol:
-        const renderLinks = () => {
+    const renderLinks = () => {
         if (!auth.loggedIn) {
             return (
                 <>
@@ -65,6 +65,7 @@ export default function HeaderNavBar(){
                     <>
                         <li><Link to="/profile">Ver Perfil</Link></li>
                         <li><Link to="/book">Reservar</Link></li>
+                        <li><Link to="/mis-actividades">Mis Actividades</Link></li>
                         <li><button className="logoutBtn" onClick={logout}>Cerrar Sesión</button></li>
                     </>
                 );

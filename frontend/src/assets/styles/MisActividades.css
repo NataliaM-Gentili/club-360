@@ -1,0 +1,158 @@
+/* ESTRUCTURA */
+.calendarioCard, .calendarioCard * {
+    box-sizing: border-box;
+}
+
+.calendarioCard {
+    background: white;
+    padding: 10px 20px; 
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    width: 92%;          
+    max-width: 1000px; 
+    margin: 5px auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: auto !important;
+    overflow: hidden;
+}
+
+/* TÍTULO "MIS ACTIVIDADES" */
+.cardRegisterFormTitle {
+    background-color: #85ad88; 
+    color: #305031;           
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+    margin: 0 0 5px 0;
+    font-size: 1.4rem;
+    width: 100%;
+    display: block;
+}
+
+/* WRAPPER DEL CALENDARIO */
+.calendarWrapper {
+    margin-top: 5px; 
+    width: 100%;
+}
+
+.fc {
+    width: 100% !important;
+    height: auto !important;
+    font-size: 0.8rem; 
+}
+
+/* AJUSTE DE FILAS */
+.fc .fc-view-harness {
+    height: auto !important;
+    min-height: auto !important;
+}
+
+.fc .fc-daygrid-day {
+    height: 52px !important; 
+}
+
+/* TOOLBAR */
+.fc .fc-toolbar {
+    margin-bottom: 8px !important;
+    display: flex;
+    align-items: center;
+    position: relative;
+    min-height: 35px;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 1rem !important;
+    font-weight: 600;
+    color: #444;
+    text-transform: capitalize;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* BOTONES */
+.fc .fc-button-primary {
+    background-color: #85ad88 !important;
+    border-color: #749c77 !important;
+    color: white !important;
+    padding: 3px 6px !important;
+    font-size: 0.75rem !important;
+}
+
+.fc .fc-button-primary:hover {
+    background-color: #749c77 !important;
+}
+
+/* CÍRCULOS EN EL NÚMERO DEL DÍA */
+.numero-circulo {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50% !important;
+    color: white !important;
+    margin: 2px auto !important;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.fc .fc-daygrid-day-number {
+    color: #444;
+    padding: 2px;
+    text-decoration: none !important;
+}
+
+/* EVENTOS - sacar fondo y borde default de FullCalendar */
+.fc-event {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.fc-event:hover {
+    background-color: transparent !important;
+}
+
+/* CONTENEDOR DEL EVENTO CON RAYITA */
+.evento-texto-container {
+    padding: 2px 4px;
+    line-height: 1.3;
+    width: 100%;
+}
+
+.evento-titulo {
+    font-weight: 600;
+    display: block;
+    font-size: 0.75rem;
+    color: #1a1a1a;
+}
+
+.evento-hora {
+    display: block;
+    font-size: 0.65rem;
+    color: #555;
+}
+
+/* BADGE "CANCELADA" */
+.evento-cancelada {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: #972934;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin-top: 2px;
+}
+.fc .fc-day-today {
+    background-color: transparent !important;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number {
+    color: #444 !important;
+    opacity: 1 !important;
+}

@@ -18,7 +18,8 @@ class Usuario(db.Model):
     contrasena = db.Column(db.String(255), nullable=False)
     fecha_alta = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     rol_id = db.Column(db.Integer, db.ForeignKey('rol.id'))
-
+    token = db.Column(db.String(256))
+    
 class Administrador(db.Model):
     __tablename__ = 'administrador'
     id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id', ondelete='CASCADE'), primary_key=True)

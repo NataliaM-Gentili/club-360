@@ -15,7 +15,8 @@ def all_routes(app):
     from app.routes.reserva_routes import reserva_bp
     from app.routes.tarjeta_routes import tarjeta_bp
     
-    app.register_blueprint(user_bp, url_prefix="/api")
-    app.register_blueprint(reserva_bp, url_prefix="/api")
-    app.register_blueprint(tarjeta_bp, url_prefix="/api")
-    
+    from app.routes.turno_routes import turno_bp 
+    app.register_blueprint(turno_bp, url_prefix="/api")
+
+    from app.routes.actividad_routes import actividad_bp
+    app.register_blueprint(actividad_bp, url_prefix="/api")
