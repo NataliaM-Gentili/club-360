@@ -8,6 +8,7 @@ import logo from '../assets/images/logo-club360.png'
 import eyeopen from '../assets/images/eye-open.png'
 import eyeclosed from '../assets/images/eye-closed.png'
 import redwarning from '../assets/images/warning-red.png'
+import ModalDialog from '../components/ModalDialog';
 
 import { useNavigate } from "react-router-dom";
 
@@ -29,6 +30,8 @@ export default function SignUpPage(){
     // state for toggling password visibility
     const [showPassword, setShowPassword] = useState(false);
 
+    // modal para opción de registro de tarjeta
+    const [showModal, setShowModal] = useState(false);
 
     // frontend form validations
 
@@ -101,6 +104,7 @@ export default function SignUpPage(){
         if (hasErrors) return;
 
         try {
+            // 1. REGISTER
             const response = await fetch("/api/signup", {
                 method: "POST",
                 headers: {
@@ -122,11 +126,22 @@ export default function SignUpPage(){
                 return;
             }
 
-            toast.success("Usuario creado con éxito", {
-                onClose: () => {
-                    navigate("/login"); // redirige a login
-                }
+            // 2. LOGIN immediately after
+            const loginRes = await fetch("http://localhost:5000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    email: formValue.email,
+                    password: formValue.password
+                })
             });
+
+            toast.success("Usuario creado con éxito");
+
+            setTimeout(() => {
+                setShowModal(true);
+            }, 500);
 
             // optional: reset form
             setFormValue({
@@ -151,136 +166,157 @@ export default function SignUpPage(){
     if (!isRegistered){ // this is shown in the user is not registered
 
     return (
-        <div className="signupContainer">
-            <div className="mainDivider signupWelcome">
-                <div className="loginRedirection">
-                    <p>¿Ya tenés una cuenta?</p>
-                    <button onClick={() => navigate('/login')}>Login</button>
+        <>
+            <div className="signupContainer">
+                <div className="mainDivider signupWelcome">
+
+                    {/* 
+                    <div className="loginRedirection">
+                        <p>¿Ya tenés una cuenta?</p>
+                        <button onClick={() => navigate('/login')}>Login</button>
+                    </div>
+                    */}
+
+                    <img src={logo} alt="Company logo"/>
+                    <p>Bienvenido a</p>
+                    <h1>CLUB 360</h1>
                 </div>
-                <img src={logo} alt="Company logo"/>
-                <p>Bienvenido a</p>
-                <h1>CLUB 360</h1>
-            </div>
-            <div className="formContainer mainDivider">
-            <h1 className="formTitle">Creá tu cuenta</h1>
-            <form className='formRegister'  onSubmit={handleSubmit}> 
+                <div className="formContainer mainDivider">
+                <h1 className="formTitle">Creá tu cuenta</h1>
+                <form className='formRegister'  onSubmit={handleSubmit}> 
 
-                {/*E-MAIL*/}
-                <div className="formInput">
-                    <div className="labelRow">
-                        <label>Correo electrónico</label>
+                    {/*E-MAIL*/}
+                    <div className="formInput">
+                        <div className="labelRow">
+                            <label>Correo electrónico</label>
 
-                        <span className={`fieldError ${errors.email ? "show" : ""}`}>
-                            {errors.email}
-                        </span>
+                            <span className={`fieldError ${errors.email ? "show" : ""}`}>
+                                {errors.email}
+                            </span>
+                        </div>
+
+                        <div className="inputWrapper">
+                            <input
+                                className={errors.email ? "inputError" : ""}
+                                value={formValue.email}
+                                name="email"
+                                type="text"
+                                placeholder="tu-email@gmail.com"
+                                onChange={handleChange}
+                                required
+                            />
+
+                            {errors.email && (
+                                <img src={redwarning} className="errorIcon" alt="error" />
+                            )}
+                        </div>
                     </div>
 
-                    <div className="inputWrapper">
+                    {/*NAMES AND SURNAME*/}
+                    <div className="formInput">
+                        <div className="labelRow">
+                            <label>Nombre(s) y Apellido</label>
+
+                            <span className={`fieldError ${errors.name ? "show" : ""}`}>
+                                {errors.name}
+                            </span>
+                        </div>
+                        <div className="inputWrapper">
+                            <input
+                                className={errors.name ? "inputError" : ""}
+                                value={formValue.name}
+                                name="name"
+                                type="text"
+                                placeholder="Juan Perez"
+                                onChange={handleChange}
+                                required
+                            />
+
+                            {errors.name && (
+                                <img src={redwarning} className="errorIcon" alt="error" />
+                            )}
+                        </div>
+                    </div>
+
+                    {/*DNI*/}
+                    <div className="formInput">
+                        <div className="labelRow">
+                            <label>DNI</label>
+
+                            <span className={`fieldError ${errors.dni ? "show" : ""}`}>
+                                {errors.dni}
+                            </span>
+                        </div>
+                        <div className="inputWrapper">
+                            <input
+                                className={errors.dni ? "inputError" : ""}
+                                value={formValue.dni}
+                                name="dni"
+                                type="text"
+                                placeholder="12345678"
+                                onChange={handleChange}
+                                required
+                            />
+
+                            {errors.dni && (
+                                <img src={redwarning} className="errorIcon" alt="error" />
+                            )}
+                        </div>
+                    </div>
+
+                    {/*PASSWORD*/}
+                    <div className="formInput">
+                    <div className="labelRow">
+                            <label>Contraseña</label>
+
+                            <span className={`fieldError ${errors.password ? "show" : ""}`}>
+                                {errors.password}
+                            </span>
+                        </div>
+
+                    <div className="passwordWrapper inputWrapper">
                         <input
-                            className={errors.email ? "inputError" : ""}
-                            value={formValue.email}
-                            name="email"
-                            type="text"
-                            placeholder="tu-email@gmail.com"
+                            value={formValue.password}
+                            name="password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Elige tu contraseña!"
                             onChange={handleChange}
                             required
                         />
 
-                        {errors.email && (
-                            <img src={redwarning} className="errorIcon" alt="error" />
+                        {errors.password && (
+                                <img src={redwarning} className="errorIcon" alt="error" />
                         )}
-                    </div>
-                </div>
 
-                {/*NAMES AND SURNAME*/}
-                <div className="formInput">
-                    <div className="labelRow">
-                        <label>Nombre(s) y Apellido</label>
-
-                        <span className={`fieldError ${errors.name ? "show" : ""}`}>
-                            {errors.name}
-                        </span>
-                    </div>
-                    <div className="inputWrapper">
-                        <input
-                            className={errors.name ? "inputError" : ""}
-                            value={formValue.name}
-                            name="name"
-                            type="text"
-                            placeholder="Juan Perez"
-                            onChange={handleChange}
-                            required
+                        <img
+                            src={showPassword ? eyeopen : eyeclosed}
+                            alt="toggle password visibility"
+                            onClick={() => setShowPassword(prev => !prev)}
                         />
-
-                        {errors.name && (
-                            <img src={redwarning} className="errorIcon" alt="error" />
-                        )}
                     </div>
                 </div>
 
-                {/*DNI*/}
-                <div className="formInput">
-                    <div className="labelRow">
-                        <label>DNI</label>
+                <input type="submit" className="signUpSubmit" value="Enviar"/>
 
-                        <span className={`fieldError ${errors.dni ? "show" : ""}`}>
-                            {errors.dni}
-                        </span>
-                    </div>
-                    <div className="inputWrapper">
-                        <input
-                            className={errors.dni ? "inputError" : ""}
-                            value={formValue.dni}
-                            name="dni"
-                            type="text"
-                            placeholder="12345678"
-                            onChange={handleChange}
-                            required
-                        />
-
-                        {errors.dni && (
-                            <img src={redwarning} className="errorIcon" alt="error" />
-                        )}
-                    </div>
-                </div>
-
-                {/*PASSWORD*/}
-                <div className="formInput">
-                <div className="labelRow">
-                        <label>Contraseña</label>
-
-                        <span className={`fieldError ${errors.password ? "show" : ""}`}>
-                            {errors.password}
-                        </span>
-                    </div>
-
-                <div className="passwordWrapper inputWrapper">
-                    <input
-                        value={formValue.password}
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Elige tu contraseña!"
-                        onChange={handleChange}
-                        required
-                    />
-
-                    {errors.password && (
-                            <img src={redwarning} className="errorIcon" alt="error" />
-                    )}
-
-                    <img
-                        src={showPassword ? eyeopen : eyeclosed}
-                        alt="toggle password visibility"
-                        onClick={() => setShowPassword(prev => !prev)}
-                    />
+                </form>
                 </div>
             </div>
 
-            <input type="submit" className="signUpSubmit" value="Enviar"/>
+            <ModalDialog
+                open={showModal}
+                onClose={() => setShowModal(false)}
 
-            </form>
-            </div>
-        </div>
+                title="¿Querés registrar una tarjeta?"
+                message="Son necesarias para señar las reservas"
+
+                primaryText="Registrar ahora"
+                secondaryText="Más tarde"
+
+                onPrimary={() => navigate("/card-register")}
+                onSecondary={() => navigate("/")}
+            />
+
+        </>
     )
 
     }

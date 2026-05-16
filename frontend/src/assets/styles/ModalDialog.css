@@ -1,0 +1,66 @@
+/* remove default ugly styles */
+.cardDialog {
+    border: none;
+    border-radius: 16px;
+    padding: 2rem;
+
+    width: 90%;
+    max-width: 400px;
+
+    text-align: center;
+
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+
+    animation: fadeIn 0.2s ease;
+}
+
+/* backdrop (the dark overlay) */
+.cardDialog::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* text */
+.cardDialog h2 {
+    margin-bottom: 10px;
+}
+
+.cardDialog p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* buttons */
+.dialogActions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.primaryBtn {
+    background: #598849;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.secondaryBtn {
+    background: transparent;
+    border: 1px solid #ccc;
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
