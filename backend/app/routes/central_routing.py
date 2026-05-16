@@ -13,5 +13,8 @@ def get_items():
 def all_routes(app):
     from app.routes.user_routes import user_bp
     app.register_blueprint(user_bp, url_prefix="/api")
+
+    from app.routes.tarjeta_routes import tarjeta_bp
+    app.register_blueprint(tarjeta_bp, url_prefix="/api")
     
     

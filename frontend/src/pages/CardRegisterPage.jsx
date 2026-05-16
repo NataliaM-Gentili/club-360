@@ -57,9 +57,8 @@ export default function CardRegisterPage(){
     };
 
 	
-
-	// BACKEND INTERACTION should go here
-	const handleSubmit = (e) => {
+	// BACKEND INTEGRATION
+	const handleSubmit = async (e) => {
 		e.preventDefault();
 
 		const newErrors = {
@@ -71,12 +70,39 @@ export default function CardRegisterPage(){
 		setErrors(newErrors);
 
 		const hasErrors = Object.values(newErrors).some(err => err !== "");
+		if (hasErrors) return;
 
-		if (hasErrors) return; // prevents submitting if frontend validations fail
+		try {
+			const response = await fetch("/api/registrar-tarjeta", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				credentials: "include", // IMPORTANT if you use Flask session
+				body: JSON.stringify({
+				numero: formValue.number,
+				fecha_vencimiento: formValue.expirationDate,
+				cvv: formValue.cvv,
+				titular: formValue.owner
+			})
+			});
 
-		toast.success("Tarjeta registrada correctamente"); // remplace with backend interaction
+			const data = await response.json();
+
+			if (!response.ok) {
+				toast.error(data.error || data.mensaje || "Error al registrar tarjeta");
+				return;
+			}
+
+			toast.success(data.mensaje || "Tarjeta registrada correctamente");
+
+			// optional: redirect or reset form
+			// navigate("/profile");
+
+		} catch (err) {
+			toast.error("Error de conexión con el servidor");
+		}
 	};
-
 
 	return(
 			<div className="cardRegisterFormContainer">

@@ -59,6 +59,7 @@ def login():
     #usuario encontrado
     session['usuario_id'] = usuario.id
     session['rol_id'] = usuario.rol_id
+
     return jsonify({"message": "Inicio de sesión exitoso", "usuario": usuario.email}), 200
 
 # LOGOUT
