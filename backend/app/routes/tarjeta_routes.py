@@ -26,3 +26,35 @@ def registrar_tarjeta():
         from app import db
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+@tarjeta_bp.route('/tarjetas/<int:id_cliente>', methods=['GET'])
+def obtener_tarjetas(id_cliente):
+    tarjetas = TarjetaModel.obtener_tarjetas_usuario(id_cliente)
+    return jsonify([{
+        "id": t.id,
+        "numero": t.numero[-4:],
+        "titular": t.titular,
+        "fecha_vencimiento": t.fecha_vencimiento
+    } for t in tarjetas]), 200
+    
+@tarjeta_bp.route('/pago_tarjeta', methods=['POST'])
+def pago_tarjeta():
+    data = request.get_json()
+    
+    id_reserva = data.get("id_reserva")
+    id_tarjeta = data.get("id_tarjeta")
+    
+    abono = TarjetaModel.obtener_abono(id_reserva)
+    
+    user_id = TarjetaModel.obtener_usuario_con_reserva(id_reserva)
+    #user_id = data.get("id_cliente")
+    
+    if user_id == 2:
+        return jsonify({"mensaje": "Saldo insuficiente!"}), 200
+    
+    TarjetaModel.registrar_abono_tarjeta(id_reserva, id_tarjeta)
+    
+    return jsonify({"mensaje": f"Pago realizado con exito! Se han descontado {abono.monto} de la tarjeta {id_tarjeta}"}), 200
+    
+    
+    

@@ -1,7 +1,23 @@
 from app import db
-from app.models.db_structure import ClienteTarjeta, Cliente, Tarjeta
+from app.models.db_structure import ClienteTarjeta, Cliente, Tarjeta, Reserva, Abono, AbonoTarjeta, Usuario
 from datetime import datetime
 class TarjetaModel:
+    @staticmethod
+    def obtener_tarjetas_usuario(id_cliente):
+        return db.session.query(Tarjeta)\
+        .join(ClienteTarjeta, ClienteTarjeta.id_tarjeta == Tarjeta.id)\
+        .filter(ClienteTarjeta.id_cliente == id_cliente)\
+        .all()
+
+
+    @staticmethod
+    def obtener_usuario_con_reserva(id_reserva):
+        reserva = Reserva.query.filter_by(id=id_reserva).first()
+        return reserva.id_cliente if reserva else None 
+    
+    @staticmethod
+    def obtener_abono(id_reserva):
+        return Abono.query.filter_by(id_reserva=id_reserva).first()
 
     @staticmethod
     def registrar_tarjeta_a_cliente(id_cliente, data):
@@ -35,3 +51,14 @@ class TarjetaModel:
         db.session.commit()
         
         return {"status": "success", "mensaje": "Tarjeta registrada y vinculada con éxito"}
+    
+    @staticmethod
+    def registrar_abono_tarjeta(id_reserva, id_tarjeta):
+        nuevo_abono_tarjeta = AbonoTarjeta(
+            id_abono=id_reserva,
+            id_tarjeta=id_tarjeta
+        )
+        db.session.add(nuevo_abono_tarjeta)
+        db.session.commit()
+        
+        return {"status": "success", "mensaje": "Abono registrado con exito"}

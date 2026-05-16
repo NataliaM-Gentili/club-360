@@ -1,3 +1,5 @@
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import event
 from app import db
 from datetime import datetime, timezone
 
@@ -137,3 +139,26 @@ class ListaEspera(db.Model):
             name='check_exclusividad'
         ),
     )
+
+def insertar_roles_y_listas(*args, **kwargs):
+    # Verificamos si ya existen para no duplicar en futuras ejecuciones
+    if Rol.query.count() == 0:
+        roles = [
+            Rol(id=1, nombre="cliente"),
+            Rol(id=2, nombre="Administrador"),
+            Rol(id=3, nombre="Empleado")
+        ]
+        db.session.bulk_save_objects(roles)
+        
+    if TipoLista.query.count() == 0:
+        listas = [
+            TipoLista(id=1, nombre="General"),
+            TipoLista(id=2, nombre="Abonados"),
+            TipoLista(id=3, nombre="No abonados")
+        ]
+        db.session.bulk_save_objects(listas)
+        
+    db.session.commit()
+    
+# Esto se ejecuta automáticamente DESPUÉS de que db.create_all() hace su trabajo
+event.listen(db.metadata, 'after_create', insertar_roles_y_listas)
