@@ -5,6 +5,7 @@ import SignUpPage from "../pages/SignUpPage.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
 import HomePage from "../pages/HomePage";
 import MisActividaes from "../pages/MisActividades.jsx"
+import CrearClasePage from "../pages/CrearClasePage";
 
 export default function AppRoutes() {
   return (
@@ -20,6 +21,7 @@ export default function AppRoutes() {
           <Route path="/" element={<HomePage/>} />
           <Route path="/card-register" element={<CardRegisterPage/>}/>
           <Route path="/Mis-Actividades" element={<MisActividaes/>}/>
+          <Route path="/clases/crear" element={<CrearClasePage />} />
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
         </Route>
 
