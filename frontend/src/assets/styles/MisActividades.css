@@ -1,0 +1,125 @@
+/* ESTRUCTURA */
+.calendarioCard, .calendarioCard * {
+    box-sizing: border-box;
+}
+
+.calendarioCard {
+    background: white;
+    padding: 10px 20px; 
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    width: 92%;          
+    max-width: 1000px; 
+    margin: 5px auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: auto !important;
+    overflow: hidden;
+}
+
+/*  TÍTULO "MIS ACTIVIDADES"  */
+.cardRegisterFormTitle {
+    background-color: #85ad88; 
+    color: #305031;           
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+    margin: 0 0 5px 0;
+    font-size: 1.4rem;
+    width: 100%;
+    display: block;
+}
+
+/* 3. WRAPPER DEL CALENDARIO */
+.calendarWrapper {
+    margin-top: 5px; 
+    width: 100%;
+}
+
+.fc {
+    width: 100% !important;
+    height: auto !important;
+    font-size: 0.8rem; 
+}
+
+/* AJUSTE DE FILAS (Para que entre en pantalla) */
+.fc .fc-view-harness {
+    height: auto !important;
+    min-height: auto !important;
+}
+
+.fc .fc-daygrid-day {
+    height: 52px !important; 
+}
+
+/* 5. TOOLBAR (MES CENTRADO Y BOTONES) */
+.fc .fc-toolbar {
+    margin-bottom: 8px !important;
+    display: flex;
+    align-items: center;
+    position: relative;
+    min-height: 35px;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 1rem !important;
+    font-weight: 600;
+    color: #444;
+    text-transform: capitalize;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* 6. BOTONES */
+.fc .fc-button-primary {
+    background-color: #85ad88 !important;
+    border-color: #749c77 !important;
+    color: white !important;
+    padding: 3px 6px !important;
+    font-size: 0.75rem !important;
+}
+
+.fc .fc-button-primary:hover {
+    background-color: #749c77 !important;
+}
+
+/* 7. DÍAS Y CÍRCULOS (Gris por defecto) */
+.numero-circulo {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50% !important;
+    color: white !important;
+    margin: 2px auto !important;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.fc .fc-daygrid-day-number {
+    color: #444;
+    padding: 2px;
+    text-decoration: none !important;
+}
+
+/* 8. TEXTO DE EVENTOS */
+.evento-texto-container {
+    padding: 1px 2px;
+    line-height: 1;
+}
+
+.evento-titulo {
+    font-weight: bold;
+    display: block;
+    font-size: 0.75rem;
+    color: #1a1a1a;
+}
+
+.evento-hora {
+    font-size: 0.65rem;
+    color: #555;
+}
