@@ -19,14 +19,12 @@ def create_app():
         db.create_all()
         
     from app.routes.central_routing import all_routes
-    from app.routes.user_routes import user_bp
-    from app.routes.tarjeta_routes import tarjeta_bp
-
-    app.register_blueprint(user_bp)
-    app.register_blueprint(tarjeta_bp)
+   
+    all_routes(app)
     #from app.routes.user_routes import main as main_blueprint
     #app.register_blueprint(main_blueprint)
     #from app.routes import main
     #app.register_blueprint(main)
+
 
     return app
