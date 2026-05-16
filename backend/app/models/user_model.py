@@ -1,4 +1,6 @@
 from app import db
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
 
 class Item(db.Model):
     __tablename__ = "items"
@@ -33,7 +35,9 @@ class UserModel:
     @staticmethod # recupera el primer usuario cuyo email coincida con el pasado por parámetro
     def get_user_by_email(email):
         return Usuario.query.filter_by(email=email).first()
-
+    @staticmethod # recupera el primer usuario con dni coincidente
+    def get_user_by_dni(dni):
+        return Usuario.query.filter_by(dni=dni).first()
 
     @staticmethod # sube a la bd el nuevo usuario a la tabla usuario y su id a la tabla cliente
     def create_user(data):
@@ -71,3 +75,16 @@ class UserModel:
     def verificar_contrasena(usuario_obj, password_plana):
         # Compara la contraseña del form con el hash de la base de datos
         return check_password_hash(usuario_obj.contrasena, password_plana)
+    
+    @staticmethod
+    def generate_reset_token(email):
+        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        stoken = s.dumps(email, salt="password-reset")
+
+        user = Usuario.query.filter_by(email=email).first()
+        if not user:
+            return None
+        user.token = stoken
+        db.session.commit()
+
+        return stoken

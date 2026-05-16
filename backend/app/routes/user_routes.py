@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from app.models.user_model import UserModel
+from app.services.email_services import send_password_reset_email
 
 user_bp = Blueprint('user_bp', __name__) # defines user blueprint for flask
 
@@ -24,6 +25,10 @@ def signup():
     # unique email
     if UserModel.get_user_by_email(email):
         return jsonify({"error": "El email se encuentra en uso, elija otro"}), 409
+
+    # unique DNI
+    if UserModel.get_user_by_dni(dni):
+        return jsonify({"error": "El DNI ya se encuentra registrado"}), 409
 
     # DNI: exactly 8 digits
     if not (dni.isdigit() and len(dni) == 8):
@@ -79,3 +84,22 @@ def auth_status():
         }), 200
 
     return jsonify({"loggedIn": False}), 200
+
+# REGISTRO CLIENTE DESDE EMPLEADO
+@user_bp.route('/registrar_cliente', methods=['POST'])
+def registrar_cliente():
+    new_user = request.get_json()
+    
+    response = signup()
+    status_code = response[1] if isinstance(response, tuple) else getattr(response, 'status_code', 200)
+   
+    email = new_user.get('email')
+    if status_code in [200, 201]:
+        try:
+            token = UserModel.generate_reset_token(email)
+            if token:
+                send_password_reset_email(email, token)
+        except Exception as e:
+            print(f"Error al enviar el correo de bienvenida: {e}")
+    return response
+
