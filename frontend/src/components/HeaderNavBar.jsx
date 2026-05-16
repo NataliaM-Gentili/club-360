@@ -34,7 +34,17 @@ export default function HeaderNavBar(){
 
 
     const logout = async () => {
-        // ACA SE DEBE LLAMAR AL /LOGOUT DEL BACKEND!!!
+        try {
+            await fetch("http://localhost:5000/logout", {
+                method: "POST",
+                credentials: "include", // 🔥 IMPORTANT (sends session cookie)
+            });
+
+            navigate("/"); // go home or login page
+            window.location.reload(); // optional but often useful
+        } catch (err) {
+            console.error("Logout error:", err);
+        }
     };
 
     // lógica de qué botones se renderizan según el rol:

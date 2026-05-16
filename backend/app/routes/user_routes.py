@@ -41,7 +41,7 @@ def signup():
         "user_id": user.id
     }), 201
 
-
+# LOGIN
 @user_bp.route('/login', methods=['POST'])
 def login():
     datos = request.get_json()
@@ -59,6 +59,12 @@ def login():
     session['usuario_id'] = usuario.id
     session['rol_id'] = usuario.rol_id
     return jsonify({"message": "Inicio de sesión exitoso", "usuario": usuario.email}), 200
+
+# LOGOUT
+@user_bp.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return jsonify({"mensaje": "Sesión cerrada. ¡Hasta luego!"}), 200
     
 
 # ----- LOGIN AUTHORISATION ROUTE
