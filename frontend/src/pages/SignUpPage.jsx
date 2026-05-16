@@ -101,6 +101,7 @@ export default function SignUpPage(){
         if (hasErrors) return;
 
         try {
+            // 1. REGISTER
             const response = await fetch("/api/signup", {
                 method: "POST",
                 headers: {
@@ -122,9 +123,20 @@ export default function SignUpPage(){
                 return;
             }
 
+            // 2. LOGIN immediately after
+            const loginRes = await fetch("http://localhost:5000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    email: formValue.email,
+                    password: formValue.password
+                })
+            });
+
             toast.success("Usuario creado con éxito", {
                 onClose: () => {
-                    navigate("/login"); // redirige a login
+                    navigate("/"); // redirige a página principal
                 }
             });
 

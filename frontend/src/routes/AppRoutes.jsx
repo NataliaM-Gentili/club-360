@@ -17,9 +17,8 @@ export default function AppRoutes() {
         <Route element={<ProtectedLayout />}>
           
           <Route path="/" element={<HomePage/>} />
-
+          <Route path="/card-register" element={<CardRegisterPage/>}/>
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
-          {/* cambiar por CardRegisterPage para visualizar esa y idem con lo demas --> NO!! osea SE CONCATENAN! (osea abajo de la del home cada una con su ruta)*/}
         </Route>
 
       </Routes>
