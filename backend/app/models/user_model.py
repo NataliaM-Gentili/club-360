@@ -34,6 +34,11 @@ class UserModel:
     def get_user_by_email(email):
         return Usuario.query.filter_by(email=email).first()
 
+    # recupera el usuario por id
+    @staticmethod
+    def get_by_id(user_id):
+        return Usuario.query.get(user_id)
+
 
     @staticmethod # sube a la bd el nuevo usuario a la tabla usuario y su id a la tabla cliente
     def create_user(data):

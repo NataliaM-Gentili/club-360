@@ -37,7 +37,7 @@ export default function HeaderNavBar(){
         try {
             await fetch("http://localhost:5000/logout", {
                 method: "POST",
-                credentials: "include", // 🔥 IMPORTANT (sends session cookie)
+                credentials: "include", //(sends session cookie)
             });
 
             navigate("/"); // go home or login page

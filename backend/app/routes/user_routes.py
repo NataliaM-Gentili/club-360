@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from app.models.user_model import UserModel
+from app.models.tarjeta_model import TarjetaModel
 
 user_bp = Blueprint('user_bp', __name__) # defines user blueprint for flask
 
@@ -79,3 +80,20 @@ def auth_status():
         }), 200
 
     return jsonify({"loggedIn": False}), 200
+
+# PROFILE INFO
+@user_bp.route('/profile', methods=['GET'])
+def get_profile():
+
+    user_id = session.get("usuario_id")
+
+    if not user_id:
+        return jsonify({"error": "No autenticado"}), 401
+
+    user = UserModel.get_by_id(user_id)
+    cards = TarjetaModel.get_by_user(user_id)
+
+    return jsonify({
+        "user": user.to_dict(),
+        "cards": [c.to_dict() for c in cards]
+    }), 200

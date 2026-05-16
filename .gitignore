@@ -7,6 +7,9 @@ __pycache__/
 
 # SQLite database --> COMPLETAR CUANDO HAGAMOS LA DB
 # backend/instance/database.db
+backend/instance/database.db
+backend/instance/db_scripts/*
+
 
 # Environment variables
 .env

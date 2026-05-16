@@ -1,0 +1,17 @@
+.cardItem {
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 1rem;
+    background:#343c48;
+    color: white;
+}
+
+.editBtn {
+    margin-top: 10px;
+    background: #f59235;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+}
