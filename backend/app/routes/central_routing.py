@@ -14,4 +14,8 @@ def all_routes(app):
     from app.routes.user_routes import user_bp
     app.register_blueprint(user_bp, url_prefix="/api")
     
-    
+    from app.routes.turno_routes import turno_bp 
+    app.register_blueprint(turno_bp, url_prefix="/api")
+
+    from app.routes.actividad_routes import actividad_bp
+    app.register_blueprint(actividad_bp, url_prefix="/api")
