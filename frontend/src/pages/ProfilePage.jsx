@@ -13,7 +13,7 @@ export default function ProfilePage() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const res = await fetch("http://localhost:5000/profile", {
+                const res = await fetch("api/profile", {
                     credentials: "include"
                 });
 
