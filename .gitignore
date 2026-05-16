@@ -2,6 +2,7 @@ start.sh
 
 # Python backend
 backend/venv/
+venv/
 __pycache__/
 *.pyc
 
