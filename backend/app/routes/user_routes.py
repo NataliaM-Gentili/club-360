@@ -102,4 +102,3 @@ def registrar_cliente():
         except Exception as e:
             print(f"Error al enviar el correo de bienvenida: {e}")
     return response
-
