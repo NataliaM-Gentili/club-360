@@ -12,8 +12,7 @@ export default function MisActividades() {
     useEffect(() => {
         const fetchActividades = async () => {
             try {
-                // conexion con back
-                const response = await axios.get('http://127.0.0.1:5000/api/cliente/mis_actividades', {
+                const response = await axios.get('http://localhost:5000/api/cliente/mis_actividades', {
                     withCredentials: true
                 });
                 setEventos(response.data);
@@ -43,43 +42,65 @@ export default function MisActividades() {
                             right: ''
                         }}
                         
-                        eventContent={(info) => (
-                            <div className="evento-texto-container">
-                                <span className="evento-titulo">{info.event.title}</span>
-                                <span className="evento-hora">{info.event.extendedProps.hora} hs</span>
-                            </div>
-                        )}
+                        eventContent={(info) => {
+                            const estado = info.event.extendedProps.estado?.toLowerCase();
+                            const esCancelada = estado === 'cancelada por club' || estado === 'cancelada por cliente';
+
+                            let colorBorde = '#6c757d';   // gris → asistida
+                            if (estado === 'confirmada') colorBorde = '#387246';          // verde
+                            if (estado === 'cancelada por club') colorBorde = '#972934';  // rojo
+                            if (estado === 'cancelada por cliente') colorBorde = '#972934';
+
+                            return (
+                                <div style={{
+                                    borderLeft: `3px solid ${colorBorde}`,
+                                    paddingLeft: '6px',
+                                    backgroundColor: 'transparent',
+                                    width: '100%',
+                                }}>
+                                    <span className="evento-titulo">{info.event.title}</span>
+                                    <span className="evento-hora">{info.event.extendedProps.hora} hs</span>
+                                    {esCancelada && (
+                                        <span className="evento-cancelada">Cancelada</span>
+                                    )}
+                                </div>
+                            );
+                        }}
 
                         dayCellDidMount={(info) => {
                             const today = new Date();
-                            
-                            // resaltar dia de hoy
                             if (info.date.toDateString() === today.toDateString()) {
-                                info.el.style.backgroundColor = '#85ad88'; 
-                            }
-                            
-                            const fechaCelda = info.date.toISOString().split('T')[0];
-                            
-                            // canceladas por cliente (no tener en cuenta)
-                            const ev = eventos.find(e => 
-                                e.start === fechaCelda && 
-                                e.extendedProps.estado.toLowerCase() !== 'cancelada por cliente'
-                            );
-                            
-                            if (ev) {
                                 const numeroDia = info.el.querySelector('.fc-daygrid-day-number');
                                 if (numeroDia) {
-                                    const estado = ev.extendedProps.estado.toLowerCase();
-                                    let colorCirculo = '#6c757d'; // pasada
-
-                                    if (estado === 'confirmada') colorCirculo = '#387246'; // futura
-                                    if (estado === 'cancelada por club') colorCirculo = '#972934'; // cancelada
-
                                     numeroDia.classList.add('numero-circulo');
-                                    numeroDia.style.backgroundColor = colorCirculo;
+                                    numeroDia.style.backgroundColor = '#adb5bd'; // gris claro neutro
                                 }
                             }
                         }}
+
+                        eventDidMount={(info) => {
+                            const estado = info.event.extendedProps.estado?.toLowerCase();
+                            if (!estado || estado === 'cancelada por cliente') return;
+
+                            const celda = info.el.closest('.fc-daygrid-day');
+                            if (!celda) return;
+
+                            const numeroDia = celda.querySelector('.fc-daygrid-day-number');
+                            if (!numeroDia) return;
+
+                            let colorCirculo = '#6c757d';
+                            if (estado === 'confirmada') colorCirculo = '#387246';
+                            if (estado === 'cancelada por club') colorCirculo = '#972934';
+
+                            numeroDia.classList.add('numero-circulo');
+                            numeroDia.style.backgroundColor = colorCirculo;
+
+                            // sacar fondo default de FullCalendar al evento
+                            info.el.style.backgroundColor = 'transparent';
+                            info.el.style.border = 'none';
+                            info.el.style.boxShadow = 'none';
+                        }}
+
                         height="auto"         
                         contentHeight="auto" 
                         aspectRatio={1.35}
