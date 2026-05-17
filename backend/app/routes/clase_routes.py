@@ -1,0 +1,99 @@
+from flask import Blueprint, request, jsonify, session
+from app.models.clase_model import ClaseModel
+from app.models.db_structure import Clase, Turno
+from datetime import datetime, date, timedelta
+from app import db
+
+clase_bp = Blueprint("clase_bp", __name__)
+
+ROL_ADMINISTRADOR = 2
+
+FERIADOS_2026 = {
+    date(2026, 1, 1),  # Año Nuevo
+    date(2026, 2, 16),  # Carnaval
+    date(2026, 2, 17),  # Carnaval
+    date(2026, 3, 24),  # Día de la Memoria
+    date(2026, 4, 2),  # Malvinas
+    date(2026, 4, 3),  # Viernes Santo
+    date(2026, 5, 1),  # Día del Trabajador
+    date(2026, 5, 25),  # Revolución de Mayo
+    date(2026, 6, 15),  # Güemes
+    date(2026, 6, 20),  # Belgrano
+    date(2026, 7, 9),  # Independencia
+    date(2026, 8, 17),  # San Martín
+    date(2026, 10, 12),  # Día de la Raza
+    date(2026, 11, 20),  # Soberanía Nacional
+    date(2026, 12, 8),  # Inmaculada Concepción
+    date(2026, 12, 25),  # Navidad
+}
+
+DIAS_SEMANA = {
+    "Lunes": 0,
+    "Martes": 1,
+    "Miércoles": 2,
+    "Jueves": 3,
+    "Viernes": 4,
+    "Sábado": 5,
+}
+
+
+# /CREAR_CLASE --> ruta para crear una clase
+@clase_bp.route("/crear_clase", methods=["POST"])
+def crear_clase():
+
+    # --- verificación de rol ---
+    if session.get("rol_id") != ROL_ADMINISTRADOR:
+        return jsonify({"error": "No autorizado"}), 403
+
+    data = request.get_json()
+
+    required_fields = ["dia", "hora", "disciplina", "cupo"]
+
+    # --- check missing fields ---
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Campo faltante: {field}"}), 400
+
+    # --- verificar conflicto de horario ---
+    hora_nueva = datetime.strptime(data["hora"], "%H:%M")
+    clases_misma_disciplina = Clase.query.filter_by(
+        disciplina=data["disciplina"].lower(), dia=data["dia"]
+    ).all()
+
+    for clase in clases_misma_disciplina:
+        hora_existente = datetime.strptime(clase.hora, "%H:%M")
+        diferencia = abs((hora_nueva - hora_existente).total_seconds()) / 60
+
+        if diferencia < 60:
+            return (
+                jsonify(
+                    {
+                        "error": "Ya existe una clase de esa disciplina en ese horario. Debe haber al menos 1 hora de diferencia"
+                    }
+                ),
+                409,
+            )
+
+    # Llama al modelo para que ejecute el INSERT en la bd
+    clase = ClaseModel.crear_clase(data)
+
+    # --- crear turnos para los proximos 4 meses ---
+    dia_semana = DIAS_SEMANA[data["dia"]]
+    hoy = date.today()
+    fin = hoy + timedelta(days=120)  # 4 meses aprox
+
+    # buscar el primer día que coincida con el día de la clase
+    dia_actual = hoy
+    while dia_actual.weekday() != dia_semana:
+        dia_actual += timedelta(days=1)
+
+    # crear un turno por semana hasta 4 meses
+    while dia_actual <= fin:
+        if dia_actual not in FERIADOS_2026:
+            turno = Turno(habilitado=True, fecha=dia_actual, id_clase=clase.id)
+            db.session.add(turno)
+        dia_actual += timedelta(weeks=1)
+
+    db.session.commit()
+
+    return jsonify({"message": "¡Clase creada con éxito!", "clase_id": clase.id}), 201
