@@ -8,6 +8,7 @@ import MisActividaes from "../pages/MisActividades.jsx"
 import CrearClasePage from "../pages/CrearClasePage";
 import ListarTurnosPage from "../pages/ListarTurnosPage";
 import ProfilePage from "../pages/ProfilePage.jsx";
+import ResetPasswordPage from "../pages/ResetPasswordPage";
 
 export default function AppRoutes() {
   return (
@@ -16,6 +17,8 @@ export default function AppRoutes() {
         {/* 1. RUTAS PÚBLICAS (Se ven sin estar logueado) */}
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/turnos" element={<ListarTurnosPage/>} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* 2. RUTAS PROTEGIDAS (Usan el Layout con Navbar) */}
         <Route element={<ProtectedLayout />}>

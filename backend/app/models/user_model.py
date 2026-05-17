@@ -2,9 +2,10 @@ from app import db
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
 
+
 class Item(db.Model):
     __tablename__ = "items"
-    
+
     # mapea la estructura de la base de datos a variables de pyhton (no sólo tienen el nombre, sino las características de cada columna)
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -14,13 +15,11 @@ class Item(db.Model):
     @classmethod
     def get_all(cls):
         return cls.query.all()
-        
+
     def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name
-        }
-        
+        return {"id": self.id, "name": self.name}
+
+
 from app import db
 
 # recupera la estructura de la bd mapeada a objetos
@@ -32,11 +31,11 @@ from datetime import datetime
 
 class UserModel:
 
-    @staticmethod # recupera el primer usuario cuyo email coincida con el pasado por parámetro
+    @staticmethod  # recupera el primer usuario cuyo email coincida con el pasado por parámetro
     def get_user_by_email(email):
         return Usuario.query.filter_by(email=email).first()
-        
-    @staticmethod # recupera el primer usuario con dni coincidente
+
+    @staticmethod  # recupera el primer usuario con dni coincidente
     def get_user_by_dni(dni):
         return Usuario.query.filter_by(dni=dni).first()
 
@@ -45,8 +44,7 @@ class UserModel:
     def get_by_id(user_id):
         return Usuario.query.get(user_id)
 
-
-    @staticmethod # sube a la bd el nuevo usuario a la tabla usuario y su id a la tabla cliente
+    @staticmethod  # sube a la bd el nuevo usuario a la tabla usuario y su id a la tabla cliente
     def create_user(data):
         hashed_password = generate_password_hash(data["contrasena"])
 
@@ -57,11 +55,11 @@ class UserModel:
             apellido=data["apellido"],
             contrasena=hashed_password,
             fecha_alta=datetime.utcnow(),
-            rol_id=1  # cliente
+            rol_id=1,  # cliente
         )
 
         db.session.add(new_user)
-        db.session.flush()  
+        db.session.flush()
         # flush to get the generated ID without committing yet
 
         # create entry in cliente table
@@ -72,7 +70,6 @@ class UserModel:
 
         return new_user
 
-    
     @staticmethod
     def obtener_email_usuario(email):
         # Busca en la tabla Usuario por email
@@ -82,7 +79,7 @@ class UserModel:
     def verificar_contrasena(usuario_obj, password_plana):
         # Compara la contraseña del form con el hash de la base de datos
         return check_password_hash(usuario_obj.contrasena, password_plana)
-    
+
     @staticmethod
     def generate_reset_token(email):
         s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
@@ -95,3 +92,26 @@ class UserModel:
         db.session.commit()
 
         return stoken
+
+    @staticmethod
+    def reset_password(token, nueva_contrasena):
+        from itsdangerous import SignatureExpired, BadSignature
+
+        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+
+        try:
+            email = s.loads(token, salt="password-reset", max_age=86400)  # 24hs
+        except SignatureExpired:
+            return None, "El link expiró"
+        except BadSignature:
+            return None, "Token inválido"
+
+        user = Usuario.query.filter_by(email=email, token=token).first()
+        if not user:
+            return None, "Token inválido o ya utilizado"
+
+        user.contrasena = generate_password_hash(nueva_contrasena)
+        user.token = None  # invalida el token una vez usado
+        db.session.commit()
+
+        return user, None
