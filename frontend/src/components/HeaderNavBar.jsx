@@ -17,7 +17,7 @@ export default function HeaderNavBar(){
 
     // corre cada vez que se renderiza la página
     useEffect(() => {
-        fetch("http://localhost:5000/api/auth/status", {
+        fetch("/api/auth/status", {
             credentials: "include"
         })
         .then(res => res.json())
@@ -35,9 +35,9 @@ export default function HeaderNavBar(){
 
     const logout = async () => {
         try {
-            await fetch("http://localhost:5000/logout", {
+            await fetch("api/logout", {
                 method: "POST",
-                credentials: "include", // 🔥 IMPORTANT (sends session cookie)
+                credentials: "include",
             });
 
             navigate("/"); // go home or login page

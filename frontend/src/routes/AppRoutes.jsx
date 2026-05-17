@@ -16,6 +16,7 @@ export default function AppRoutes() {
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/turnos" element={<ListarTurnosPage/>} />
+        <Route path="/" element={<HomePage/>} />
 
         {/* 2. RUTAS PROTEGIDAS (Usan el Layout con Navbar) */}
         <Route element={<ProtectedLayout />}>
