@@ -28,11 +28,13 @@ def create_app():
     from app.routes.user_routes import user_bp
     from app.routes.tarjeta_routes import tarjeta_bp
     from app.routes.clase_routes import clase_bp
+    from app.routes.reserva_routes import reserva_bp
 
     # app.register_blueprint(user_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(tarjeta_bp)
     app.register_blueprint(clase_bp)
+    app.register_blueprint(reserva_bp)
     # from app.routes.user_routes import main as main_blueprint
     # app.register_blueprint(main_blueprint)
     # from app.routes import main

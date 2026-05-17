@@ -16,6 +16,7 @@ def get_items():
 def all_routes(app):
     from app.routes.user_routes import user_bp
     from app.routes.clase_routes import clase_bp
+    from app.routes.reserva_routes import reserva_bp
 
     app.register_blueprint(user_bp, url_prefix="/api")
 
@@ -27,3 +28,5 @@ def all_routes(app):
 
     app.register_blueprint(actividad_bp, url_prefix="/api")
     app.register_blueprint(clase_bp, url_prefix="/api")
+    app.register_blueprint(reserva_bp, url_prefix="/api")
+    
