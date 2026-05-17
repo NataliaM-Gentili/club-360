@@ -16,3 +16,17 @@ class ClaseModel:
         db.session.add(nueva_clase)
         db.session.commit()
         return nueva_clase
+    
+    
+    @staticmethod
+    def buscar_clase_por_id(id_clase):
+        return Clase.query.filter_by(id=id_clase).first()
+    
+    
+    @staticmethod
+    def habilitar_clase(clase):
+        clase.habilitada = True
+        db.session.commit()
+        
+        
+    

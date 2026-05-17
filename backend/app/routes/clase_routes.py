@@ -97,3 +97,29 @@ def crear_clase():
     db.session.commit()
 
     return jsonify({"message": "¡Clase creada con éxito!", "clase_id": clase.id}), 201
+
+
+
+@clase_bp.route("/habilitarClase", methods=["POST"])
+def habilitar_clase():
+    
+    # Verificación de rol
+    if session.get('rol_id') != 2:
+        return jsonify({"Error": "Acceso denegado. Se requiere rol de administrador."}), 403
+    
+    data = request.get_json()
+    
+    id_clase = data['id_clase']
+    
+    clase = ClaseModel.buscar_clase_por_id(id_clase)
+    
+    if not clase:
+        return jsonify({"message": "Clase no encontrada."}), 404
+    
+    if clase.habilitada:
+        return jsonify({"message": "La clase ya está habilitada."}), 400
+    
+    ClaseModel.habilitar_clase(clase)
+    
+    return jsonify({"message": "Clase habilitada con éxito."}), 200
+
