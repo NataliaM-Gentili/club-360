@@ -6,18 +6,19 @@ import AppRoutes from './routes/AppRoutes'
 // imports the toast container
 import { ToastContainer, Slide } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { AuthProvider } from "./hooks/AuthContext";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-  <>
-    <AppRoutes />
-    <ToastContainer 
-    	position="top-center" 
-    	autoClose={3000} 
-    	hideProgressBar={true}  
-    	pauseOnHover
-    	theme="colored"
-      transition={Slide}/>
-  </>
+    <AuthProvider>
+      <AppRoutes />
+      <ToastContainer 
+        position="top-center" 
+        autoClose={3000} 
+        hideProgressBar={true}  
+        pauseOnHover
+        theme="colored"
+        transition={Slide}/>
+    </AuthProvider>
   </StrictMode>,
 )

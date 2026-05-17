@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useAuth } from "../hooks/AuthContext";
 
 import '../assets/styles/CrearClase.css';
 import logo from '../assets/images/logo-club360.png';
@@ -19,12 +21,9 @@ const ROL_ADMINISTRADOR = 2;
 export default function CrearClasePage() {
 
     const navigate = useNavigate();
-    const { rol_id } = useOutletContext();
+    
+    const { rol_id, loading } = useAuth();
 
-    if (rol_id !== ROL_ADMINISTRADOR) {
-        navigate("/");
-        return null;
-    }
 
     const [formValue, setFormValue] = useState({
         disciplina: '',
@@ -33,6 +32,14 @@ export default function CrearClasePage() {
         horaMM: '',
         cupo: '',
     });
+
+    useEffect(() => {
+    if (loading) return;
+
+    if (rol_id !== ROL_ADMINISTRADOR) {
+        navigate("/", { replace: true });
+    }
+}, [rol_id, loading, navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;

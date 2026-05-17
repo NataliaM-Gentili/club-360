@@ -64,7 +64,7 @@ export default function HeaderNavBar(){
                 return (
                     <>
                         <li><Link to="/profile">Ver Perfil</Link></li>
-                        <li><Link to="/book">Reservar</Link></li>
+                        <li><Link to="/turnos">Reservar</Link></li>
                         <li><Link to="/mis-actividades">Mis Actividades</Link></li>
                         <li><button className="logoutBtn" onClick={logout}>Cerrar Sesión</button></li>
                     </>
@@ -73,7 +73,7 @@ export default function HeaderNavBar(){
             case 2: // ADMIN
                 return (
                     <>
-                        <li><Link to="/classes">Ver Clases/Turnos</Link></li>
+                        <li><Link to="/turnos">Ver Clases/Turnos</Link></li>
                         <li><button className="logoutBtn" onClick={logout}>Cerrar Sesión</button></li>
                     </>
                 );
@@ -93,6 +93,8 @@ export default function HeaderNavBar(){
                 return null;
         }
     };
+
+    if (!auth.loggedIn) return null;
 
     return (
         <header className="main-header">

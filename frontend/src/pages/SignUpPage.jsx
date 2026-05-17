@@ -127,7 +127,7 @@ export default function SignUpPage(){
             }
 
             // 2. LOGIN immediately after
-            const loginRes = await fetch("http://localhost:5000/api/login", {
+            const loginRes = await fetch("/api/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

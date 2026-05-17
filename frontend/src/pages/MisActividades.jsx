@@ -12,7 +12,7 @@ export default function MisActividades() {
     useEffect(() => {
         const fetchActividades = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/cliente/mis_actividades', {
+                const response = await axios.get('/api/cliente/mis_actividades', {
                     withCredentials: true
                 });
                 setEventos(response.data);
