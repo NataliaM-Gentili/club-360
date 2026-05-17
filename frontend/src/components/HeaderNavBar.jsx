@@ -17,7 +17,7 @@ export default function HeaderNavBar(){
 
     // corre cada vez que se renderiza la página
     useEffect(() => {
-        fetch("http://localhost:5000/auth/status", {
+        fetch("api/auth/status", {
             credentials: "include"
         })
         .then(res => res.json())
@@ -35,7 +35,7 @@ export default function HeaderNavBar(){
 
     const logout = async () => {
         try {
-            await fetch("http://localhost:5000/logout", {
+            await fetch("api/logout", {
                 method: "POST",
                 credentials: "include", //(sends session cookie)
             });
@@ -52,8 +52,8 @@ export default function HeaderNavBar(){
         if (!auth.loggedIn) {
             return (
                 <>
-                    <li><Link to="/signup">Registrarse</Link></li>
-                    <li><Link to="/login">Iniciar Sesión</Link></li>
+                  {/*  <li><Link to="/signup">Registrarse</Link></li>
+                    <li><Link to="/login">Iniciar Sesión</Link></li> */}
                 </>
             );
         }
@@ -92,6 +92,8 @@ export default function HeaderNavBar(){
                 return null;
         }
     };
+
+    if (!auth.loggedIn) return null;
 
     return (
         <header className="main-header">

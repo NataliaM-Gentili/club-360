@@ -68,8 +68,8 @@ export default function HomePage() {
 
                 {!isLoggedIn && (
                     <div className="login-prompt">
-                        <p>¡Iniciá sesión para reservar!</p>
-                        <p>Crea una cuenta si no estás registrado</p>
+                        <Link to="/login"><button className='login-btn'>Iniciar Sesion</button></Link>
+                        <Link to="/signup"><button className='login-btn'>Registrarse</button></Link>
                     </div> ) }
             </section>
 
