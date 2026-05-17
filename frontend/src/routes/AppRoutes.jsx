@@ -6,6 +6,7 @@ import LoginPage from "../pages/LoginPage.jsx";
 import HomePage from "../pages/HomePage";
 import MisActividaes from "../pages/MisActividades.jsx"
 import CrearClasePage from "../pages/CrearClasePage";
+import ListarTurnosPage from "../pages/ListarTurnosPage";
 
 export default function AppRoutes() {
   return (
@@ -14,6 +15,7 @@ export default function AppRoutes() {
         {/* 1. RUTAS PÚBLICAS (Se ven sin estar logueado) */}
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/turnos" element={<ListarTurnosPage/>} />
 
         {/* 2. RUTAS PROTEGIDAS (Usan el Layout con Navbar) */}
         <Route element={<ProtectedLayout />}>

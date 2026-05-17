@@ -1,0 +1,227 @@
+.crearClaseContainer {
+    display: flex;
+    height: 100vh;
+}
+
+/* Welcome Panel */
+
+.crearClaseWelcome {
+    flex: 4.5;
+
+    background-color: #598849;
+    color: #fafafa;
+
+    background-image: url('/src/assets/images/mesh.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 3rem;
+
+    margin: 15px;
+    border-radius: 40px;
+
+    position: relative;
+}
+
+.crearClaseWelcome > img {
+    width: 40%;
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 15px;
+}
+
+.crearClaseWelcome > p,
+.crearClaseWelcome > h1 {
+    margin: 0;
+    line-height: 1;
+}
+
+.crearClaseWelcome > h1 {
+    font-size: 90pt;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -2px;
+}
+
+.crearClaseWelcome > p {
+    font-size: 30pt;
+    font-weight: 200;
+    margin: 0;
+    margin-bottom: 2px;
+}
+
+/* Form */
+
+.crearClaseFormContainer {
+    flex: 5.5;
+    background-color: #fafafa;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 4rem;
+}
+
+.crearClaseForm {
+    width: 100%;
+    max-width: 380px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.crearClaseTitle {
+    font-size: 32pt;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: black;
+    letter-spacing: -0.5px;
+
+    width: 100%;
+    max-width: 380px;
+    text-align: left;
+}
+
+/* Inputs y Selects */
+
+.crearClaseInput {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.crearClaseInput label {
+    padding-left: 5px;
+    font-size: 13px;
+    font-weight: 500;
+
+    color: rgba(0, 0, 0, 0.7);
+    letter-spacing: -0.2px;
+}
+
+.crearClaseInput input,
+.crearClaseInput select {
+    width: 100%;
+    padding: 14px 16px;
+
+    border: 1px solid rgba(89, 136, 73, 0.25);
+    border-radius: 12px;
+
+    font-size: 14px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+    background-color: #ffffff;
+    color: #333;
+
+    outline: none;
+
+    transition: all 0.2s ease;
+
+    appearance: none; /* quita la flecha nativa del select */
+    -webkit-appearance: none;
+}
+
+.crearClaseInput input:focus,
+.crearClaseInput select:focus {
+    border-color: #598849;
+}
+
+/* Submit */
+
+.crearClaseForm input.crearClaseSubmit {
+    padding: 14px 28px;
+    width: 100px;
+
+    border-radius: 20px;
+
+    background-color: #598849;
+    color: #fafafa;
+
+    border: none;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.crearClaseForm input.crearClaseSubmit:hover {
+    background-color: #4e7740;
+    transform: translateY(-1px);
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+    .crearClaseContainer {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .crearClaseWelcome {
+        height: 220px;
+        margin: 8px;
+        border-radius: 25px;
+        padding: 1.5rem;
+        align-items: center;
+    }
+
+    .crearClaseWelcome > h1 {
+        font-size: 20pt;
+    }
+
+    .crearClaseWelcome > p {
+        font-size: 10pt;
+    }
+
+    .crearClaseWelcome > img {
+        max-width: 90px;
+    }
+
+    .crearClaseFormContainer {
+        align-items: center;
+        padding: 0px;
+        justify-content: flex-start;
+        padding-top: 2rem;
+    }
+
+    .crearClaseForm {
+        width: 100%;
+        max-width: 320px;
+        margin: 0 auto;
+        padding: 0px;
+    }
+
+    .crearClaseTitle {
+        font-size: 22pt;
+        text-align: center;
+    }
+
+    .crearClaseInput {
+        display: flex;
+        align-items: center;
+    }
+
+    .crearClaseInput input,
+    .crearClaseInput select {
+        width: 300px;
+        font-size: 13px;
+    }
+
+    .crearClaseForm input.crearClaseSubmit {
+        width: 100%;
+        max-width: 200px;
+        align-self: center;
+    }
+}
