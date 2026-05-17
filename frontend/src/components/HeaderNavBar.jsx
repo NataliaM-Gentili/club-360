@@ -74,6 +74,7 @@ export default function HeaderNavBar(){
                 return (
                     <>
                         <li><Link to="/turnos">Ver Clases/Turnos</Link></li>
+                        <li><Link to="/clases/crear">Crear Clases</Link></li>
                         <li><button className="logoutBtn" onClick={logout}>Cerrar Sesión</button></li>
                     </>
                 );
