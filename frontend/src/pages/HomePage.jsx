@@ -65,12 +65,12 @@ export default function HomePage() {
                     </ul>
                     
                 </section>
+
                 {!isLoggedIn && (
                     <div className="login-prompt">
-                        <p>Iniciá sesión para reservar</p>
-                        <Link to="/login" className="login-btn">Iniciar sesión</Link>
-                    </div>
-                )}
+                        <Link to="/login"><button className='login-btn'>Iniciar Sesion</button></Link>
+                        <Link to="/signup"><button className='login-btn'>Registrarse</button></Link>
+                    </div> ) }
             </section>
 
             <div className="hero-image">

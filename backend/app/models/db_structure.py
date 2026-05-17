@@ -25,6 +25,17 @@ class Usuario(db.Model):
     token = db.Column(db.String(256))
 
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "email": self.email,
+            "dni": self.dni,
+            "nombres": self.nombres,
+            "apellido": self.apellido,
+            "fecha_alta": self.fecha_alta.isoformat() if self.fecha_alta else None,
+            "rol_id": self.rol_id
+        }
+
 class Administrador(db.Model):
     __tablename__ = "administrador"
     id_usuario = db.Column(
@@ -57,15 +68,30 @@ class Tarjeta(db.Model):
     fecha_vencimiento = db.Column(db.String(7), nullable=False)
     titular = db.Column(db.String(150), nullable=False)
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "numero": self.numero,
+            "fecha_vencimiento": self.fecha_vencimiento,
+            "titular": self.titular
+        }
 
 class ClienteTarjeta(db.Model):
-    __tablename__ = "ClienteTarjeta"
+    __tablename__ = 'cliente_tarjeta'
+
     id_cliente = db.Column(
-        db.Integer, db.ForeignKey("cliente.id_usuario"), primary_key=True
+        "id_usuario",
+        db.Integer,
+        db.ForeignKey('cliente.id_usuario'),
+        primary_key=True
     )
-    id_tarjeta = db.Column(db.Integer, db.ForeignKey("tarjeta.id"), primary_key=True)
 
-
+    id_tarjeta = db.Column(
+        db.Integer,
+        db.ForeignKey('tarjeta.id'),
+        primary_key=True
+    )
+    
 # Tabla intermedia Cliente_Tarjeta
 # cliente_tarjeta = db.Table('cliente_tarjeta',
 #    db.Column('id_usuario', db.Integer, db.ForeignKey('cliente.id_usuario'), primary_key=True),

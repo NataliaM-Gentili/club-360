@@ -103,23 +103,28 @@
 
 .login-prompt {
     display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: flex-end;
     margin-top: 12px;
+    text-align: right;
+    align-items: flex-end;
+    align-content: flex-end;
 }
 .login-prompt p {
     margin: 0;
     font-weight: 600;
-    color: rgba(0,0,0,0.7);
+    color: gray;
+    font-size: small;
+    padding: 5px;
 }
 .login-btn {
-    padding: 8px 12px;
+    padding: 5px;
+    border-color: transparent;
     border-radius: 8px;
     background: #598849;
     color: #fff;
     text-decoration: none;
     font-weight: 700;
+    margin: 5px;
+    align-self: flex-end;
 }
 
 @media (max-width: 1024px) {

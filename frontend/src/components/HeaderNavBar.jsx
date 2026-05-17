@@ -37,7 +37,7 @@ export default function HeaderNavBar(){
         try {
             await fetch("api/logout", {
                 method: "POST",
-                credentials: "include",
+                credentials: "include", //(sends session cookie)
             });
 
             navigate("/"); // go home or login page
@@ -52,8 +52,8 @@ export default function HeaderNavBar(){
         if (!auth.loggedIn) {
             return (
                 <>
-                    <li><Link to="/signup">Registrarse</Link></li>
-                    <li><Link to="/login">Iniciar Sesión</Link></li>
+                  {/*  <li><Link to="/signup">Registrarse</Link></li>
+                    <li><Link to="/login">Iniciar Sesión</Link></li> */}
                 </>
             );
         }

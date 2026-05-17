@@ -35,9 +35,16 @@ class UserModel:
     @staticmethod # recupera el primer usuario cuyo email coincida con el pasado por parámetro
     def get_user_by_email(email):
         return Usuario.query.filter_by(email=email).first()
+        
     @staticmethod # recupera el primer usuario con dni coincidente
     def get_user_by_dni(dni):
         return Usuario.query.filter_by(dni=dni).first()
+
+    # recupera el usuario por id
+    @staticmethod
+    def get_by_id(user_id):
+        return Usuario.query.get(user_id)
+
 
     @staticmethod # sube a la bd el nuevo usuario a la tabla usuario y su id a la tabla cliente
     def create_user(data):

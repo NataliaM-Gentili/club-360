@@ -62,3 +62,22 @@ class TarjetaModel:
         db.session.commit()
         
         return {"status": "success", "mensaje": "Abono registrado con exito"}
+
+
+    # recupera todas las tarjetas del usuario segun su id
+    @staticmethod
+    def get_by_user(user_id):
+
+        cliente = Cliente.query.filter_by(id_usuario=user_id).first()
+
+        if not cliente:
+            return []
+
+        return (
+            db.session.query(Tarjeta)
+            .join(ClienteTarjeta, ClienteTarjeta.id_tarjeta == Tarjeta.id)
+            .filter(ClienteTarjeta.id_cliente == cliente.id_usuario)
+            .all()
+        )
+
+    

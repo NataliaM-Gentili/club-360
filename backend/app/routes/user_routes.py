@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, session
 from app.models.user_model import UserModel
 from app.services.email_services import send_password_reset_email
+from app.models.tarjeta_model import TarjetaModel
 
 user_bp = Blueprint('user_bp', __name__) # defines user blueprint for flask
 
@@ -63,6 +64,7 @@ def login():
     #usuario encontrado
     session['usuario_id'] = usuario.id
     session['rol_id'] = usuario.rol_id
+
     return jsonify({"message": "Inicio de sesión exitoso", "usuario": usuario.email}), 200
 
 # LOGOUT
@@ -102,3 +104,19 @@ def registrar_cliente():
         except Exception as e:
             print(f"Error al enviar el correo de bienvenida: {e}")
     return response
+# PROFILE INFO
+@user_bp.route('/profile', methods=['GET'])
+def get_profile():
+
+    user_id = session.get("usuario_id")
+
+    if not user_id:
+        return jsonify({"error": "No autenticado"}), 401
+
+    user = UserModel.get_by_id(user_id)
+    cards = TarjetaModel.get_by_user(user_id)
+
+    return jsonify({
+        "user": user.to_dict(),
+        "cards": [c.to_dict() for c in cards]
+    }), 200
