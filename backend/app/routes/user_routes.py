@@ -3,12 +3,15 @@ from app.models.user_model import UserModel
 from app.services.email_services import send_password_reset_email
 from app.models.tarjeta_model import TarjetaModel
 
-user_bp = Blueprint('user_bp', __name__) # defines user blueprint for flask
+user_bp = Blueprint("user_bp", __name__)  # defines user blueprint for flask
+
 
 # /SIGNUP --> ruta de registro de usuario
-@user_bp.route('/signup', methods=['POST'])
+@user_bp.route("/signup", methods=["POST"])
 def signup():
-    data = request.get_json() # recupera en la variable data lo enviado en el post del front
+    data = (
+        request.get_json()
+    )  # recupera en la variable data lo enviado en el post del front
 
     required_fields = ["email", "dni", "nombres", "apellido", "contrasena"]
 
@@ -22,7 +25,7 @@ def signup():
     password = data["contrasena"]
 
     # --- validaciones de los datos enviados ---
-    
+
     # unique email
     if UserModel.get_user_by_email(email):
         return jsonify({"error": "El email se encuentra en uso, elija otro"}), 409
@@ -42,60 +45,79 @@ def signup():
     # Llama al modelo para que ejecute el UPDATE de la bd
     user = UserModel.create_user(data)
 
-    return jsonify({
-        "message": "¡Usuario creado con éxito!",
-        "user_id": user.id
-    }), 201
+    return jsonify({"message": "¡Usuario creado con éxito!", "user_id": user.id}), 201
+
 
 # LOGIN
-@user_bp.route('/login', methods=['POST'])
+@user_bp.route("/login", methods=["POST"])
 def login():
     datos = request.get_json()
-    email_ingresado = datos.get('email')
-    password_ingresado = datos.get('password')
+    email_ingresado = datos.get("email")
+    password_ingresado = datos.get("password")
 
-    #Busqueda de usuario 
+    # Busqueda de usuario
     usuario = UserModel.obtener_email_usuario(email_ingresado)
 
-    #usuario no encontrado
+    # usuario no encontrado
     if not usuario or not UserModel.verificar_contrasena(usuario, password_ingresado):
-        return jsonify({"mensaje": "No se ha podido iniciar sesión. Por favor, revise sus datos"}), 401
-    
-    #usuario encontrado
-    session['usuario_id'] = usuario.id
-    session['rol_id'] = usuario.rol_id
+        return (
+            jsonify(
+                {
+                    "mensaje": "No se ha podido iniciar sesión. Por favor, revise sus datos"
+                }
+            ),
+            401,
+        )
 
-    return jsonify({"message": "Inicio de sesión exitoso", "usuario": usuario.email}), 200
+    # usuario encontrado
+    session["usuario_id"] = usuario.id
+    session["rol_id"] = usuario.rol_id
+
+    return (
+        jsonify({"message": "Inicio de sesión exitoso", "usuario": usuario.email}),
+        200,
+    )
+
 
 # LOGOUT
-@user_bp.route('/logout', methods=['POST'])
+@user_bp.route("/logout", methods=["POST"])
 def logout():
     session.clear()
     return jsonify({"mensaje": "Sesión cerrada. ¡Hasta luego!"}), 200
-    
+
 
 # ----- LOGIN AUTHORISATION ROUTE
 # evalúa si el usuario está logueado o no y recupera los datos de la session
-@user_bp.route('/auth/status', methods=['GET'])
+@user_bp.route("/auth/status", methods=["GET"])
 def auth_status():
-    if 'usuario_id' in session:
-        return jsonify({
-            "loggedIn": True,
-            "user_id": session['usuario_id'],
-            "rol_id": session['rol_id']
-        }), 200
+    if "usuario_id" in session:
+        return (
+            jsonify(
+                {
+                    "loggedIn": True,
+                    "user_id": session["usuario_id"],
+                    "rol_id": session["rol_id"],
+                }
+            ),
+            200,
+        )
 
     return jsonify({"loggedIn": False}), 200
 
+
 # REGISTRO CLIENTE DESDE EMPLEADO
-@user_bp.route('/registrar_cliente', methods=['POST'])
+@user_bp.route("/registrar_cliente", methods=["POST"])
 def registrar_cliente():
     new_user = request.get_json()
-    
+
     response = signup()
-    status_code = response[1] if isinstance(response, tuple) else getattr(response, 'status_code', 200)
-   
-    email = new_user.get('email')
+    status_code = (
+        response[1]
+        if isinstance(response, tuple)
+        else getattr(response, "status_code", 200)
+    )
+
+    email = new_user.get("email")
     if status_code in [200, 201]:
         try:
             token = UserModel.generate_reset_token(email)
@@ -104,8 +126,10 @@ def registrar_cliente():
         except Exception as e:
             print(f"Error al enviar el correo de bienvenida: {e}")
     return response
+
+
 # PROFILE INFO
-@user_bp.route('/profile', methods=['GET'])
+@user_bp.route("/profile", methods=["GET"])
 def get_profile():
 
     user_id = session.get("usuario_id")
@@ -116,7 +140,26 @@ def get_profile():
     user = UserModel.get_by_id(user_id)
     cards = TarjetaModel.get_by_user(user_id)
 
-    return jsonify({
-        "user": user.to_dict(),
-        "cards": [c.to_dict() for c in cards]
-    }), 200
+    return jsonify({"user": user.to_dict(), "cards": [c.to_dict() for c in cards]}), 200
+
+
+# RESET PASSWORD
+@user_bp.route("/reset-password", methods=["POST"])
+def reset_password():
+    data = request.get_json()
+
+    token = data.get("token")
+    nueva_contrasena = data.get("contrasena")
+
+    if not token or not nueva_contrasena:
+        return jsonify({"error": "Datos incompletos"}), 400
+
+    if len(nueva_contrasena) < 7:
+        return jsonify({"error": "La contraseña debe tener mínimo 7 caracteres"}), 400
+
+    user, error = UserModel.reset_password(token, nueva_contrasena)
+
+    if error:
+        return jsonify({"error": error}), 400
+
+    return jsonify({"message": "Contraseña actualizada con éxito"}), 200
