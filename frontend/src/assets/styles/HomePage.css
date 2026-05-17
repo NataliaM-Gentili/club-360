@@ -102,16 +102,13 @@
 .cta.outline { background: transparent; border: 1px solid #598849; color: #598849; }
 
 .login-prompt {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: flex-end;
     margin-top: 12px;
+    text-align: right;
 }
 .login-prompt p {
     margin: 0;
     font-weight: 600;
-    color: rgba(0,0,0,0.7);
+    color: red;
 }
 .login-btn {
     padding: 8px 12px;
