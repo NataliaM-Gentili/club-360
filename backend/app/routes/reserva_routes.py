@@ -9,6 +9,9 @@ from app.models.db_structure import Reserva, ReservaTurno
 from app.models.db_structure import Turno, Clase
 from app.models.db_structure import Abono
 
+from sqlalchemy import exists
+from app.models.db_structure import ReservaClase
+
 reserva_bp = Blueprint('reserva_bp', __name__)
 
 
@@ -82,14 +85,10 @@ def registrar_pago_efectivo():
 def revisar_reserva():
 
     datos = request.get_json()
-
     email = datos.get('email')
-    disciplina = datos.get('disciplina')
-    fecha = datos.get('fecha')  # YYYY-MM-DD
-    hora = datos.get('hora')
 
-    if not all([email, disciplina, fecha, hora]):
-        return jsonify({"mensaje": "Faltan datos"}), 400
+    if not email:
+        return jsonify({"mensaje": "Email requerido"}), 400
 
     usuario = Usuario.query.filter_by(email=email).first()
     if not usuario:
@@ -99,7 +98,12 @@ def revisar_reserva():
     if not cliente:
         return jsonify({"mensaje": "El usuario no es cliente"}), 404
 
-    reservas = (
+    result = []
+
+    # -------------------------
+    # 🔹 TURNOS
+    # -------------------------
+    reservas_turno = (
         db.session.query(Reserva, Abono, Turno, Clase)
         .join(ReservaTurno, ReservaTurno.id_reserva == Reserva.id)
         .join(Turno, Turno.id == ReservaTurno.id_turno)
@@ -107,29 +111,51 @@ def revisar_reserva():
         .outerjoin(Abono, Abono.id_reserva == Reserva.id)
         .filter(
             Reserva.id_cliente == cliente.id_usuario,
-            Reserva.estado == "Pendiente", 
-            Clase.disciplina == disciplina,
-            Turno.fecha == fecha,
-            Clase.hora == hora
+            Reserva.estado == "Pendiente",
+
+            # EXCLUDE monthly reservations
+            ~exists().where(ReservaClase.id_reserva == Reserva.id)
         )
         .all()
     )
 
-    if not reservas:
-        return jsonify({"mensaje": "No hay deudas de turno coincidentes"}), 404
-
-    result = []
-
-    for reserva, abono, turno, clase in reservas:
+    for reserva, abono, turno, clase in reservas_turno:
         result.append({
             "id_reserva": reserva.id,
-            "id_turno": turno.id,
-            "estado": reserva.estado,
+            "tipo": "turno",
             "disciplina": clase.disciplina,
-            "fecha_turno": str(turno.fecha),
+            "fecha": str(turno.fecha),
             "hora": clase.hora,
             "monto_deuda": float(abono.monto),
-            "efectivo": abono.efectivo
         })
+
+    # -------------------------
+    # 🔹 CLASES (mensuales)
+    # -------------------------
+
+    reservas_clase = (
+        db.session.query(Reserva, Abono, Clase)
+        .join(ReservaClase, ReservaClase.id_reserva == Reserva.id)
+        .join(Clase, Clase.id == ReservaClase.id_clase)
+        .outerjoin(Abono, Abono.id_reserva == Reserva.id)
+        .filter(
+            Reserva.id_cliente == cliente.id_usuario,
+            Reserva.estado == "Pendiente"
+        )
+        .all()
+    )
+
+    for reserva, abono, clase in reservas_clase:
+        result.append({
+            "id_reserva": reserva.id,
+            "tipo": "clase",
+            "disciplina": clase.disciplina,
+            "fecha": "Mensual",
+            "hora": "-",
+            "monto_deuda": float(abono.monto),
+        })
+
+    if not result:
+        return jsonify({"mensaje": "No hay deudas pendientes"}), 404
 
     return jsonify(result), 200

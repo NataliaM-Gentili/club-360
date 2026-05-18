@@ -1,7 +1,3 @@
-# CREA LA CLASE VOLEY LOS LUNES 16:00 EN MAYO
-
-# CREA LA RESERVA PARA UN TURNO 25 DE MAYO PARA EL USUARIO ID 2 CON ABONO PENDIENTE Y PRECIO 2000
-
 import sqlite3
 from datetime import datetime, date, timedelta
 
@@ -12,113 +8,136 @@ conn.execute("PRAGMA foreign_keys = ON")
 cur = conn.cursor()
 
 ID_CLIENTE = 1
-MONTO = 2000.00
 
 # ---------------------------------------------------
-# 1. Crear clases de voley todos los lunes de mayo 2026
+# FUNCIONES DE CALENDARIO
 # ---------------------------------------------------
 
 def get_mondays_may_2026():
-    year = 2026
-    month = 5
-
-    first_day = date(year, month, 1)
     days = []
-
     for i in range(31):
-        d = first_day + timedelta(days=i)
-        if d.month != month:
+        d = date(2026, 5, 1) + timedelta(days=i)
+        if d.month != 5:
             break
-        if d.weekday() == 0:  # Monday
+        if d.weekday() == 0:
             days.append(d)
-
     return days
 
 
-clase_ids = []
+def get_wednesdays_may_2026():
+    days = []
+    for i in range(31):
+        d = date(2026, 5, 1) + timedelta(days=i)
+        if d.month != 5:
+            break
+        if d.weekday() == 2:
+            days.append(d)
+    return days
+
+
+# ===================================================
+# 1. CLASES (UNA POR DISCIPLINA)
+# ===================================================
+
+cur.execute("""
+INSERT INTO clase (dia, hora, disciplina, cupo, habilitada)
+VALUES (?, ?, ?, ?, ?)
+""", ("2026-05-01", "16:00", "Voley", 10, 1))
+
+id_clase_voley = cur.lastrowid
+
+
+cur.execute("""
+INSERT INTO clase (dia, hora, disciplina, cupo, habilitada)
+VALUES (?, ?, ?, ?, ?)
+""", ("2026-05-01", "18:00", "Padel", 10, 1))
+
+id_clase_padel = cur.lastrowid
+
+
+# ===================================================
+# 2. TURNOS VOLEY (LUNES)
+# ===================================================
+
+voley_turnos = []
 
 for d in get_mondays_may_2026():
     cur.execute("""
-        INSERT INTO clase (dia, hora, disciplina, cupo, habilitada)
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        d.strftime("%Y-%m-%d"),
-        "16:00",
-        "Voley",
-        10,
-        1
-    ))
+        INSERT INTO turno (fecha, id_clase)
+        VALUES (?, ?)
+    """, (d.strftime("%Y-%m-%d"), id_clase_voley))
 
-    clase_ids.append(cur.lastrowid)
+    voley_turnos.append(cur.lastrowid)
 
 
-# ---------------------------------------------------
-# 2. Crear turno específico: 25 mayo 2026
-# ---------------------------------------------------
+# ===================================================
+# 3. TURNOS PADEL (MIÉRCOLES)
+# ===================================================
+
+padel_turnos = []
+
+for d in get_wednesdays_may_2026():
+    cur.execute("""
+        INSERT INTO turno (fecha, id_clase)
+        VALUES (?, ?)
+    """, (d.strftime("%Y-%m-%d"), id_clase_padel))
+
+    padel_turnos.append(cur.lastrowid)
+
+
+# ===================================================
+# 4. RESERVA VOLEY (TURNO ESPECÍFICO 25/05)
+# ===================================================
 
 target_date = "2026-05-25"
 
-# buscar clase de ese día
 cur.execute("""
-    SELECT id FROM clase WHERE dia = ?
-""", (target_date,))
+SELECT id FROM turno WHERE fecha = ? AND id_clase = ?
+""", (target_date, id_clase_voley))
 
-clase_row = cur.fetchone()
-
-if not clase_row:
-    raise Exception("No se encontró clase para 25/05/2026")
-
-id_clase = clase_row[0]
+id_turno_voley = cur.fetchone()[0]
 
 cur.execute("""
-    INSERT INTO turno (fecha, id_clase)
-    VALUES (?, ?)
-""", (target_date, id_clase))
+INSERT INTO reserva (fecha, id_cliente, estado)
+VALUES (?, ?, ?)
+""", (datetime.now(), ID_CLIENTE, "Pendiente"))
 
-id_turno = cur.lastrowid
-
-
-# ---------------------------------------------------
-# 3. Crear reserva (usuario 1)
-# ---------------------------------------------------
+reserva_voley_turno = cur.lastrowid
 
 cur.execute("""
-    INSERT INTO reserva (fecha, id_cliente, estado)
-    VALUES (?, ?, ?)
-""", (
-    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    ID_CLIENTE,
-    "Pendiente"
-))
-
-id_reserva = cur.lastrowid
-
-
-# ---------------------------------------------------
-# 4. Vincular reserva con turno 
-# ---------------------------------------------------
+INSERT INTO reserva_turno (id_reserva, id_turno)
+VALUES (?, ?)
+""", (reserva_voley_turno, id_turno_voley))
 
 cur.execute("""
-    INSERT INTO reserva_turno (id_reserva, id_turno)
-    VALUES (?, ?)
-""", (id_reserva, id_turno))
+INSERT INTO abono (id_reserva, monto, efectivo)
+VALUES (?, ?, ?)
+""", (reserva_voley_turno, 2000, 0))
 
-# ---------------------------------------------------
-# 5. Crear abono (NO EFECTIVO)
-# ---------------------------------------------------
+# ===================================================
+# 6. RESERVA PADEL MENSUAL
+# ===================================================
+
+precio_hora = 100
+monto_padel = precio_hora * len(padel_turnos)
 
 cur.execute("""
-    INSERT INTO abono (id_reserva, monto, efectivo)
-    VALUES (?, ?, ?)
-""", (
-    id_reserva,
-    MONTO,
-    0
-))
+INSERT INTO reserva (fecha, id_cliente, estado)
+VALUES (?, ?, ?)
+""", (datetime.now(), ID_CLIENTE, "Pendiente"))
+
+reserva_padel = cur.lastrowid
+
+cur.execute("""
+INSERT INTO reserva_clase (id_reserva, id_clase)
+VALUES (?, ?)
+""", (reserva_padel, id_clase_padel))
+
+cur.execute("""
+INSERT INTO abono (id_reserva, monto, efectivo)
+VALUES (?, ?, ?)
+""", (reserva_padel, monto_padel, 0))
 
 
 conn.commit()
 conn.close()
-
-print("OK: Clase + Turno + Reserva + Abono creados correctamente")
-print(f"Reserva ID: {id_reserva}, Turno ID: {id_turno}, Clase ID: {id_clase}")
