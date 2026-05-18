@@ -4,6 +4,10 @@ from app import db
 from app.models.reserva_model import ReservaModel
 from app.models.db_structure import EmpleadoRegistraAbono
 
+from app.models.db_structure import Usuario, Cliente
+from app.models.db_structure import Reserva, ReservaTurno
+from app.models.db_structure import Turno, Clase
+from app.models.db_structure import Abono
 
 reserva_bp = Blueprint('reserva_bp', __name__)
 
@@ -70,3 +74,62 @@ def registrar_pago_efectivo():
     return jsonify({
         "mensaje": "El pago ha sido registrado correctamente"
     }), 200
+
+
+# dado email de cliente, deporte, fecha y hora revisa si existe un turno reservado
+# se usa para la página de registrar pago en efectivo
+@reserva_bp.route('/revisar-reserva', methods=['POST'])
+def revisar_reserva():
+
+    datos = request.get_json()
+
+    email = datos.get('email')
+    disciplina = datos.get('disciplina')
+    fecha = datos.get('fecha')  # YYYY-MM-DD
+    hora = datos.get('hora')
+
+    if not all([email, disciplina, fecha, hora]):
+        return jsonify({"mensaje": "Faltan datos"}), 400
+
+    usuario = Usuario.query.filter_by(email=email).first()
+    if not usuario:
+        return jsonify({"mensaje": "Usuario no encontrado"}), 404
+
+    cliente = Cliente.query.filter_by(id_usuario=usuario.id).first()
+    if not cliente:
+        return jsonify({"mensaje": "El usuario no es cliente"}), 404
+
+    reservas = (
+        db.session.query(Reserva, Abono, Turno, Clase)
+        .join(ReservaTurno, ReservaTurno.id_reserva == Reserva.id)
+        .join(Turno, Turno.id == ReservaTurno.id_turno)
+        .join(Clase, Clase.id == Turno.id_clase)
+        .outerjoin(Abono, Abono.id_reserva == Reserva.id)
+        .filter(
+            Reserva.id_cliente == cliente.id_usuario,
+            Reserva.estado == "Pendiente", 
+            Clase.disciplina == disciplina,
+            Turno.fecha == fecha,
+            Clase.hora == hora
+        )
+        .all()
+    )
+
+    if not reservas:
+        return jsonify({"mensaje": "No hay deudas de turno coincidentes"}), 404
+
+    result = []
+
+    for reserva, abono, turno, clase in reservas:
+        result.append({
+            "id_reserva": reserva.id,
+            "id_turno": turno.id,
+            "estado": reserva.estado,
+            "disciplina": clase.disciplina,
+            "fecha_turno": str(turno.fecha),
+            "hora": clase.hora,
+            "monto_deuda": float(abono.monto),
+            "efectivo": abono.efectivo
+        })
+
+    return jsonify(result), 200
