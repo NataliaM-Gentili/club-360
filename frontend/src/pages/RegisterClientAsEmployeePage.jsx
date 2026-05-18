@@ -114,7 +114,7 @@ export default function RegisterClientAsEmployee() {
 
       if (response.ok) {
         toast.success(
-          "Cliente registrado y email enviado correctamente ✉️"
+          `Cliente registrado y email enviado correctamente a ${formValue.email} ✉️`
         );
 
         setFormValue({
