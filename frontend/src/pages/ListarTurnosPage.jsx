@@ -47,7 +47,6 @@ export default function ListarTurnosPage() {
 
     const handleBuscar = async (e) => {
         e.preventDefault();
-
         setCargando(true);
         setBuscado(false);
 
@@ -67,6 +66,35 @@ export default function ListarTurnosPage() {
     };
 
     const handleAccionNoLogueado = () => navigate('/login');
+
+    const handleToggleClase = async (idClase, estaHabilitada) => {
+        try {
+            const endpoint = estaHabilitada ? '/api/deshabilitarClase' : '/api/habilitarClase';
+
+            const response = await fetch(endpoint, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ id_clase: idClase }) 
+            });
+            
+            if (response.ok) {
+                
+                setTurnos(prev => prev.map(t =>
+                    t.id_clase === idClase
+                        ? { ...t, habilitada: !estaHabilitada } 
+                        : t
+                ));
+            } else {
+                const errData = await response.json();
+                console.error("Error del backend:", errData);
+            }
+        } catch (error) {
+            console.error('Error al cambiar estado de clase:', error);
+        }
+    };
 
     const renderBotonAccion = (turno) => {
         const turnoLleno = turno.ocupados >= turno.cupo;
@@ -164,6 +192,7 @@ export default function ListarTurnosPage() {
                                     <th>Día</th>
                                     <th>Hora</th>
                                     {esPersonalInterno && <th>Cupo</th>}
+                                    {esAdmin && <th>Clase</th>}
                                     {!esPersonalInterno && <th></th>}
                                 </tr>
                             </thead>
@@ -175,6 +204,16 @@ export default function ListarTurnosPage() {
                                         <td>{turno.dia}</td>
                                         <td>{turno.hora}</td>
                                         {esPersonalInterno && <td>{turno.ocupados}/{turno.cupo}</td>}
+                                        {esAdmin && (
+                                            <td>
+                                                <button
+                                                    className={turno.habilitada ? 'deshabilitarBtn' : 'habilitarBtn'}
+                                                    onClick={() => handleToggleClase(turno.id_clase, turno.habilitada)} 
+                                                >
+                                                    {turno.habilitada ? 'Deshabilitar clase' : 'Habilitar clase'}
+                                                </button>
+                                            </td>
+                                        )}
                                         {!esPersonalInterno && (
                                             <td>{renderBotonAccion(turno)}</td>
                                         )}

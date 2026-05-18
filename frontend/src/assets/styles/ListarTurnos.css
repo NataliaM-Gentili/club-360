@@ -178,6 +178,42 @@
     transform: translateY(-1px);
 }
 
+/* HABILITAR / DESHABILITAR CLASE */
+
+.habilitarBtn {
+    padding: 8px 18px;
+    border-radius: 20px;
+    background-color: #598849;
+    color: #fafafa;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.habilitarBtn:hover {
+    background-color: #4e7740;
+    transform: translateY(-1px);
+}
+
+.deshabilitarBtn {
+    padding: 8px 18px;
+    border-radius: 20px;
+    background-color: transparent;
+    color: #972934;
+    border: 1px solid #972934;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.deshabilitarBtn:hover {
+    background-color: #972934;
+    color: #fafafa;
+}
+
 /* AVISO LOGIN */
 
 .loginAviso {
