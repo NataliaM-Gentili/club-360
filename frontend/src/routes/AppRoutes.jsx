@@ -10,6 +10,7 @@ import ListarTurnosPage from "../pages/ListarTurnosPage";
 import ProfilePage from "../pages/ProfilePage.jsx";
 import ResetPasswordPage from "../pages/ResetPasswordPage";
 import OlvideContrasenaPage from "../pages/OlvideContraseñaPage";
+import RegisterClientAsEmployee from "../pages/RegisterClientAsEmployeePage.jsx";
 
 export default function AppRoutes() {
   return (
@@ -31,6 +32,7 @@ export default function AppRoutes() {
           <Route path="/clases/crear" element={<CrearClasePage />} />
           <Route path="/turnos" element={<ListarTurnosPage/>} />
           <Route path="/profile" element={<ProfilePage/>}/>
+          <Route path="register-client" element={<RegisterClientAsEmployee/>}/>
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
         </Route>
 
