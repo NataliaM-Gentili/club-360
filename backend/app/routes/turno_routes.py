@@ -62,20 +62,23 @@ def buscar_turnos():
     else:
         ultimo_dia_mes = date(hoy.year, hoy.month + 1, 1)
 
-    turnos = (
-        Turno.query.filter(
-            Turno.id_clase == clase.id,
-            Turno.habilitado == True,
-            Turno.fecha >= primer_dia_mes,
-            Turno.fecha < ultimo_dia_mes,
-        )
-        .order_by(Turno.fecha)
-        .all()
+    rol_usuario = session.get("rol_id")
+    es_admin_o_empleado = rol_usuario in [2, 3]
+
+    query = Turno.query.filter(
+        Turno.id_clase == clase.id,
+        Turno.fecha >= primer_dia_mes,
+        Turno.fecha < ultimo_dia_mes,
     )
+
+    # si es cleinte,filtro para ocultar los deshabilitados
+    if not es_admin_o_empleado:
+        query = query.filter(Turno.habilitado == True)
+
+    turnos = query.order_by(Turno.fecha).all()
 
     resultado = []
     for t in turnos:
-        # contar reservas asociadas a este turno
         ocupados = ReservaTurno.query.filter_by(id_turno=t.id).count()
         resultado.append(
             {
@@ -86,6 +89,8 @@ def buscar_turnos():
                 "hora": clase.hora,
                 "cupo": clase.cupo,
                 "ocupados": ocupados,
+                "id_clase": clase.id,
+                "habilitada": clase.habilitada,
             }
         )
 

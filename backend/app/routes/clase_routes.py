@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from app.models.clase_model import ClaseModel
-from app.models.db_structure import Clase, Turno
+from app.models.db_structure import Clase, Turno, Reserva, ReservaTurno
 from datetime import datetime, date, timedelta
 from app import db
 
@@ -121,5 +121,72 @@ def habilitar_clase():
     
     ClaseModel.habilitar_clase(clase)
     
+    hoy = date.today()
+    turnos_deshabilitados = Turno.query.filter(
+        Turno.id_clase == id_clase,
+        Turno.fecha >= hoy,
+        Turno.habilitado == False
+    ).all()
+
+    for turno in turnos_deshabilitados:
+        turno.habilitado = True
+        
+    db.session.commit()
+    
     return jsonify({"message": "Clase habilitada con éxito."}), 200
 
+@clase_bp.route("/deshabilitarClase", methods=["POST"])
+def deshabilitar_clase():
+    
+    # 1. Verificación de rol
+    if session.get('rol_id') != ROL_ADMINISTRADOR:
+        return jsonify({"Error": "Acceso denegado. Se requiere rol de administrador."}), 403
+    
+    data = request.get_json()
+    id_clase = data.get('id_clase')
+    
+    clase = Clase.query.get(id_clase)
+    
+    if not clase:
+        return jsonify({"message": "Clase no encontrada."}), 404
+    
+    if not clase.habilitada:
+        return jsonify({"message": "La clase ya está deshabilitada."}), 400
+    
+    # 2. Apagamos la clase general
+    clase.habilitada = False
+    
+    # 3. Buscamos todos los turnos de esta clase a partir de hoy
+    hoy = date.today()
+    turnos_futuros = Turno.query.filter(
+        Turno.id_clase == id_clase, 
+        Turno.fecha >= hoy,
+        Turno.habilitado == True
+    ).all()
+    
+    turnos_cancelados = 0
+    turnos_mantenidos = 0
+
+    for turno in turnos_futuros:
+        # Chequeamos si ESTE turno en particular tiene reservas activas
+        tiene_inscriptos = db.session.query(ReservaTurno).join(Reserva).filter(
+            ReservaTurno.id_turno == turno.id,
+            Reserva.estado != 'Cancelada'
+        ).first() is not None
+
+        if not tiene_inscriptos:
+            # Si el turno está vacío, lo damos de baja
+            turno.habilitado = False
+            turnos_cancelados += 1
+        else:
+            # Si tiene alumnos, lo dejamos intacto
+            turnos_mantenidos += 1
+
+    # Guardamos los cambios en la base de datos
+    db.session.commit()
+    
+    # Devolvemos un resumen de lo que pasó para que el Front lo sepa
+    return jsonify({
+        "message": f"Clase deshabilitada. Se bajaron {turnos_cancelados} turnos vacíos y quedaron {turnos_mantenidos} vivos con alumnos.",
+        "habilitada": False
+    }), 200
