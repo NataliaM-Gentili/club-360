@@ -19,7 +19,6 @@ export default function AppRoutes() {
         {/* 1. RUTAS PÚBLICAS (Se ven sin estar logueado) */}
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/turnos" element={<ListarTurnosPage/>} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/olvide-contrasena" element={<OlvideContrasenaPage />} />
 

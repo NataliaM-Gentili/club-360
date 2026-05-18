@@ -134,3 +134,82 @@
     .hero-image img { max-width: 200px; }
     .hero h1 { font-size: 28px; }
 }
+
+
+@media (max-width: 600px) {
+    .home-root {
+        flex-direction: column;
+        padding: 16px;
+        padding-left: 16px; /* override the 150px */
+        gap: 16px;
+        align-items: center;
+        max-width: 100%;
+    }
+
+    .hero {
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .hero-content {
+        text-align: center; /* important for mobile readability */
+    }
+
+    .hero h1 {
+        font-size: 24px;
+    }
+
+    .subtitle {
+        font-size: 14px;
+    }
+
+    .description {
+        font-size: 13px;
+    }
+
+    .address {
+        font-size: 13px;
+    }
+
+    .activities {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .activities h2 {
+        text-align: center;
+        font-size: 15px;
+    }
+
+    .activity-row {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+
+    .hero-image {
+        order: -1; /* moves image to top (optional, but nice UX) */
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hero-image img {
+        max-width: 90%;
+        max-height: 200px;
+        border-radius: 12px;
+    }
+
+    .login-prompt {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .login-btn {
+        width: 100%;
+        max-width: 200px;
+        padding: 8px;
+        font-size: 14px;
+    }
+}

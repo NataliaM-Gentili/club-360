@@ -69,3 +69,69 @@
     transition: all 0.2s ease;
 }
 
+@media (max-width: 600px) {
+    .main-header {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+
+        height: 60px;
+        padding: 0;
+
+        justify-content: center;
+        background: #343c48; /* give it solid mobile bar look */
+        border-top-left-radius: 14px;
+        border-top-right-radius: 14px;
+
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+    }
+
+    /* Hide logo or make it smaller (optional) */
+    .headerLogo {
+        display: none;
+    }
+
+    /* Turn nav into full-width bottom bar */
+    .headerNav {
+        width: 100%;
+    }
+
+    .headerNav ul {
+        justify-content: space-around;
+        gap: 0;
+
+        padding: 0;
+        margin: 0;
+
+        background: transparent;
+        border-radius: 0;
+
+        height: 60px;
+        align-items: center;
+    }
+
+    .headerNav li {
+        flex: 1;
+        text-align: center;
+    }
+
+    .headerNav a {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        font-size: 12px;
+        padding: 6px 8px;
+        color: #f59235;
+    }
+
+    .headerNav a:hover {
+        background: transparent; /* avoid hover effects on mobile */
+        color: #fff;
+    }
+
+    .logoutBtn {
+        font-size: 11px;
+    }
+}
