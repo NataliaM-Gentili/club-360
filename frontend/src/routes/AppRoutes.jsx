@@ -9,6 +9,7 @@ import CrearClasePage from "../pages/CrearClasePage";
 import ListarTurnosPage from "../pages/ListarTurnosPage";
 import ProfilePage from "../pages/ProfilePage.jsx";
 import ResetPasswordPage from "../pages/ResetPasswordPage";
+import OlvideContrasenaPage from "../pages/OlvideContraseñaPage";
 
 export default function AppRoutes() {
   return (
@@ -19,6 +20,7 @@ export default function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/turnos" element={<ListarTurnosPage/>} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/olvide-contrasena" element={<OlvideContrasenaPage />} />
 
         {/* 2. RUTAS PROTEGIDAS (Usan el Layout con Navbar) */}
         <Route element={<ProtectedLayout />}>

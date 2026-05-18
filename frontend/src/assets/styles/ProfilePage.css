@@ -131,6 +131,24 @@
     align-self: flex-end;
 }
 
+/* CAMBIAR CONTRASEÑA */
+.cambiarContrasenaBtn {
+    padding: 10px 20px;
+    border-radius: 12px;
+    background: transparent;
+    color: #598849;
+    border: 1px solid #598849;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cambiarContrasenaBtn:hover {
+    background: #598849;
+    color: white;
+}
+
 /* RESPONSIVE */
 @media (max-width: 600px) {
 

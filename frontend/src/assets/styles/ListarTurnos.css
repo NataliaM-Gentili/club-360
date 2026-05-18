@@ -1,6 +1,4 @@
 .listarTurnosContainer {
-    margin-top: 100px;
-    padding-top: 100px;
     padding: 2rem 4rem;
     background-color: #fafafa;
     min-height: 100vh;
@@ -66,7 +64,7 @@
 .buscarBtn img {
     width: 20px;
     height: 20px;
-    filter: brightness(0) invert(1); /* la hace blanca */
+    filter: brightness(0) invert(1);
 }
 
 .buscarBtn:hover {
@@ -158,6 +156,25 @@
 .reservarBtn:hover {
     background-color: #598849;
     color: #fafafa;
+}
+
+/* LISTA DE ESPERA */
+
+.listaEsperaBtn {
+    padding: 8px 18px;
+    border-radius: 20px;
+    background-color: #F59235;
+    color: #fafafa;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.listaEsperaBtn:hover {
+    background-color: #e07e28;
+    transform: translateY(-1px);
 }
 
 /* AVISO LOGIN */

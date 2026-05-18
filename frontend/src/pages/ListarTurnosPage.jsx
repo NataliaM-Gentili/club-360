@@ -13,6 +13,7 @@ const getMinutos = (hora) => {
 };
 
 const ROL_ADMINISTRADOR = 2;
+const ROL_EMPLEADO = 3;
 
 export default function ListarTurnosPage() {
     const navigate = useNavigate();
@@ -31,6 +32,8 @@ export default function ListarTurnosPage() {
     }, []);
 
     const esAdmin = session?.rol_id === ROL_ADMINISTRADOR;
+    const esEmpleado = session?.rol_id === ROL_EMPLEADO;
+    const esPersonalInterno = esAdmin || esEmpleado;
     const logueado = session?.loggedIn;
 
     const handleChange = (e) => {
@@ -64,6 +67,32 @@ export default function ListarTurnosPage() {
     };
 
     const handleAccionNoLogueado = () => navigate('/login');
+
+    const renderBotonAccion = (turno) => {
+        const turnoLleno = turno.ocupados >= turno.cupo;
+
+        if (turnoLleno) {
+            return (
+                <button
+                    className="listaEsperaBtn"
+                    onClick={!logueado ? handleAccionNoLogueado : undefined}
+                >
+                    Lista de espera
+                </button>
+            );
+        }
+
+        return (
+            <button
+                className="reservarBtn"
+                onClick={!logueado ? handleAccionNoLogueado : undefined}
+            >
+                Reservar
+            </button>
+        );
+    };
+
+    const hayAlgunTurnoLleno = turnos.some(t => t.ocupados >= t.cupo);
 
     return (
         <div className="listarTurnosContainer">
@@ -111,14 +140,14 @@ export default function ListarTurnosPage() {
             {buscado && (
                 <div className="resultadosContainer">
 
-                    {/* BOTON ABONAR - solo si no es admin */}
-                    {!esAdmin && (
+                    {/* BOTON ABONAR - solo si no es personal interno */}
+                    {!esPersonalInterno && (
                         <div className="abonarContainer">
                             <button
-                                className="abonarBtn"
+                                className={`abonarBtn ${hayAlgunTurnoLleno ? 'listaEsperaBtn' : ''}`}
                                 onClick={!logueado ? handleAccionNoLogueado : undefined}
                             >
-                                Abonar (mensual)
+                                {hayAlgunTurnoLleno ? 'Lista de espera (mensual)' : 'Abonar (mensual)'}
                             </button>
                         </div>
                     )}
@@ -134,8 +163,8 @@ export default function ListarTurnosPage() {
                                     <th>Disciplina</th>
                                     <th>Día</th>
                                     <th>Hora</th>
-                                    {esAdmin && <th>Cupo</th>}
-                                    {!esAdmin && <th></th>}
+                                    {esPersonalInterno && <th>Cupo</th>}
+                                    {!esPersonalInterno && <th></th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -145,16 +174,9 @@ export default function ListarTurnosPage() {
                                         <td>{turno.disciplina.charAt(0).toUpperCase() + turno.disciplina.slice(1)}</td>
                                         <td>{turno.dia}</td>
                                         <td>{turno.hora}</td>
-                                        {esAdmin && <td>{turno.ocupados}/{turno.cupo}</td>}
-                                        {!esAdmin && (
-                                            <td>
-                                                <button
-                                                    className="reservarBtn"
-                                                    onClick={!logueado ? handleAccionNoLogueado : undefined}
-                                                >
-                                                    Reservar
-                                                </button>
-                                            </td>
+                                        {esPersonalInterno && <td>{turno.ocupados}/{turno.cupo}</td>}
+                                        {!esPersonalInterno && (
+                                            <td>{renderBotonAccion(turno)}</td>
                                         )}
                                     </tr>
                                 ))}

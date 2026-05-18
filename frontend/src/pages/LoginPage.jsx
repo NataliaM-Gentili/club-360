@@ -183,6 +183,14 @@ export default function SignUpPage(){
 
             <input type="submit" className="signUpSubmit" value="Enviar"/>
 
+              {/* OLVIDE CONTRASEÑA */}
+            <p className="olvidéLink">
+                ¿Olvidaste tu contraseña?{" "}
+                <span onClick={() => navigate('/olvide-contrasena')}>
+                    Hacé click acá
+                </span>
+            </p>
+
             </form>
             </div>
         </div>

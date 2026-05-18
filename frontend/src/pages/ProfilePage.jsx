@@ -29,6 +29,27 @@ export default function ProfilePage() {
         fetchProfile();
     }, []);
 
+    const handleCambiarContrasena = async () => {
+        try {
+            const res = await fetch("/api/generar-token-cambio", {
+                method: "POST",
+                credentials: "include"
+            });
+
+            const json = await res.json();
+
+            if (!res.ok) {
+                console.error("Error al generar token:", json.error);
+                return;
+            }
+
+            navigate(`/reset-password?token=${json.token}`);
+
+        } catch (err) {
+            console.error("Error al cambiar contraseña:", err);
+        }
+    };
+
     if (loading) return <div className="profileContainer">Cargando...</div>;
     if (!data) return <div className="profileContainer">Error al cargar perfil</div>;
 
@@ -54,15 +75,16 @@ export default function ProfilePage() {
                     <div className="profileMainInfo">
                         <h2>{user.email}</h2>
                         <p>{user.nombres + " " + user.apellido}</p>
-
-                        {/* LOGICA TEMPORAL --> NO FUNCIONA EN REALIDAD 
-                        <span className={`status ${user.suspended ? "suspended" : "active"}`}>
-                            {user.suspended ? "Suspendido" : "Activo"}
-                        </span>
-                        */}
-
                     </div>
                 </div>
+
+                {/* BOTON CAMBIAR CONTRASEÑA */}
+                <button
+                    className="cambiarContrasenaBtn"
+                    onClick={handleCambiarContrasena}
+                >
+                    Cambiar contraseña
+                </button>
 
             </div>
 

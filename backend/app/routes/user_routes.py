@@ -163,3 +163,35 @@ def reset_password():
         return jsonify({"error": error}), 400
 
     return jsonify({"message": "Contraseña actualizada con éxito"}), 200
+
+
+# GENERAR TOKEN PARA CAMBIO DE CONTRASEÑA (usuario logueado)
+@user_bp.route("/generar-token-cambio", methods=["POST"])
+def generar_token_cambio():
+    user_id = session.get("usuario_id")
+    if not user_id:
+        return jsonify({"error": "No autenticado"}), 401
+
+    usuario = UserModel.get_by_id(user_id)
+    if not usuario:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    token = UserModel.generate_reset_token(usuario.email)
+    return jsonify({"token": token}), 200
+
+
+# GENERAR TOKEN POR EMAIL (usuario no logueado)
+@user_bp.route("/generar-token-email", methods=["POST"])
+def generar_token_email():
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "Email requerido"}), 400
+
+    usuario = UserModel.get_user_by_email(email)
+    if not usuario:
+        return jsonify({"error": "No existe una cuenta con ese email"}), 404
+
+    token = UserModel.generate_reset_token(email)
+    return jsonify({"token": token}), 200

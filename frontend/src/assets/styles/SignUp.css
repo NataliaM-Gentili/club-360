@@ -416,3 +416,16 @@
         align-self: center;
     }
 }
+
+.olvidéLink {
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.olvidéLink span {
+    color: #598849;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
