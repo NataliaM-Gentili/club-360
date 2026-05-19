@@ -91,16 +91,14 @@ def logout():
 @user_bp.route("/auth/status", methods=["GET"])
 def auth_status():
     if "usuario_id" in session:
-        return (
-            jsonify(
-                {
-                    "loggedIn": True,
-                    "user_id": session["usuario_id"],
-                    "rol_id": session["rol_id"],
-                }
-            ),
-            200,
-        )
+        usuario = UserModel.get_by_id(session["usuario_id"])
+        return jsonify({
+            "loggedIn": True,
+            "user_id": session["usuario_id"],
+            "rol_id": session["rol_id"],
+            "email": usuario.email if usuario else None,
+            "nombres": usuario.nombres if usuario else None,
+        }), 200
 
     return jsonify({"loggedIn": False}), 200
 

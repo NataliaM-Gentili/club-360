@@ -105,7 +105,7 @@ def revisar_reserva():
     result = []
 
     # -------------------------
-    # 🔹 TURNOS
+    # TURNOS SUELTOS
     # -------------------------
     reservas_turno = (
         db.session.query(Reserva, Abono, Turno, Clase)
@@ -116,7 +116,6 @@ def revisar_reserva():
         .filter(
             Reserva.id_cliente == cliente.id_usuario,
             Reserva.estado == "Pendiente",
-
             # EXCLUDE monthly reservations
             ~exists().where(ReservaClase.id_reserva == Reserva.id)
         )
@@ -126,6 +125,7 @@ def revisar_reserva():
     for reserva, abono, turno, clase in reservas_turno:
         result.append({
             "id_reserva": reserva.id,
+            "id_cliente": cliente.id_usuario,
             "tipo": "turno",
             "disciplina": clase.disciplina,
             "fecha": str(turno.fecha),
@@ -134,9 +134,8 @@ def revisar_reserva():
         })
 
     # -------------------------
-    # 🔹 CLASES (mensuales)
+    # CLASES (mensuales)
     # -------------------------
-
     reservas_clase = (
         db.session.query(Reserva, Abono, Clase)
         .join(ReservaClase, ReservaClase.id_reserva == Reserva.id)
@@ -152,10 +151,11 @@ def revisar_reserva():
     for reserva, abono, clase in reservas_clase:
         result.append({
             "id_reserva": reserva.id,
+            "id_cliente": cliente.id_usuario,
             "tipo": "clase",
             "disciplina": clase.disciplina,
             "fecha": "Mensual",
-            "hora": "-",
+            "hora": clase.hora,
             "monto_deuda": float(abono.monto),
         })
 
