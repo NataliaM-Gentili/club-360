@@ -12,6 +12,7 @@ import ResetPasswordPage from "../pages/ResetPasswordPage";
 import OlvideContrasenaPage from "../pages/OlvideContraseñaPage";
 import RegisterClientAsEmployee from "../pages/RegisterClientAsEmployeePage.jsx";
 import RegisterCashPaymentPage from "../pages/RegisterCashPaymentPage.jsx";
+import PayWithCardPage from "../pages/PayWithCardPage.jsx";
 
 export default function AppRoutes() {
   return (
@@ -34,6 +35,7 @@ export default function AppRoutes() {
           <Route path="/profile" element={<ProfilePage/>}/>
           <Route path="register-client" element={<RegisterClientAsEmployee/>}/>
           <Route path="register-cash" element={<RegisterCashPaymentPage/>}/>
+          <Route path="/pay" element={<PayWithCardPage/>}/>
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
         </Route>
 

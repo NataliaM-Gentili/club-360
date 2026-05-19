@@ -83,7 +83,7 @@ def registrar_pago_efectivo():
     }), 200
 
 
-# dado email de cliente, deporte, fecha y hora revisa si existe un turno reservado
+# dado el email de un usuario. retorna sus RESERVAS PENDIENTES
 # se usa para la página de registrar pago en efectivo
 @reserva_bp.route('/revisar-reserva', methods=['POST'])
 def revisar_reserva():
@@ -349,11 +349,82 @@ def _procesar_pago_tarjeta(id_reserva, id_tarjeta):
 
 
 
+# RECUPERA LOS DATOS DE LA RESERVA DADO SU ID
+@reserva_bp.route('/reservas/<int:id_reserva>', methods=['GET'])
+def obtener_detalle_reserva(id_reserva):
 
+    reserva = Reserva.query.get(id_reserva)
 
+    if not reserva:
+        return jsonify({
+            "mensaje": "Reserva no encontrada"
+        }), 404
 
+    # -----------------------------------
+    # RESERVA DE TURNO
+    # Debe existir en reserva_turno
+    # y NO existir en reserva_clase
+    # -----------------------------------
 
+    reserva_turno = ReservaTurno.query.filter_by(
+        id_reserva=id_reserva
+    ).first()
 
+    reserva_clase = ReservaClase.query.filter_by(
+        id_reserva=id_reserva
+    ).first()
+
+    if reserva_turno and not reserva_clase:
+
+        turno = Turno.query.get(reserva_turno.id_turno)
+
+        if not turno:
+            return jsonify({
+                "mensaje": "Turno no encontrado"
+            }), 404
+
+        clase = Clase.query.get(turno.id_clase)
+
+        if not clase:
+            return jsonify({
+                "mensaje": "Clase no encontrada"
+            }), 404
+
+        return jsonify({
+            "tipo": "turno",
+            "disciplina": clase.disciplina,
+            "hora": clase.hora,
+            "fecha": turno.fecha.strftime("%Y-%m-%d"),
+            "estado": reserva.estado
+        }), 200
+
+    # -----------------------------------
+    # RESERVA DE CLASE
+    # -----------------------------------
+
+    if reserva_clase:
+
+        clase = Clase.query.get(reserva_clase.id_clase)
+
+        if not clase:
+            return jsonify({
+                "mensaje": "Clase no encontrada"
+            }), 404
+
+        return jsonify({
+            "tipo": "clase",
+            "disciplina": clase.disciplina,
+            "hora": clase.hora,
+            "dia": clase.dia,
+            "estado": reserva.estado
+        }), 200
+
+    # -----------------------------------
+    # SI NO TIENE 
+    # -----------------------------------
+    return jsonify({
+        "mensaje": "La reserva no tiene información asociada"
+    }), 404
 
 
 
