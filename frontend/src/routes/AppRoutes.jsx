@@ -12,7 +12,6 @@ import ResetPasswordPage from "../pages/ResetPasswordPage";
 import OlvideContrasenaPage from "../pages/OlvideContraseñaPage";
 import RegisterClientAsEmployee from "../pages/RegisterClientAsEmployeePage.jsx";
 import RegisterCashPaymentPage from "../pages/RegisterCashPaymentPage.jsx";
-import PayWithCardPage from "../pages/PayWithCardPage.jsx";
 import MisPagos from "../pages/MisPagosPage.jsx";
 
 export default function AppRoutes() {
@@ -36,7 +35,6 @@ export default function AppRoutes() {
           <Route path="/profile" element={<ProfilePage/>}/>
           <Route path="register-client" element={<RegisterClientAsEmployee/>}/>
           <Route path="register-cash" element={<RegisterCashPaymentPage/>}/>
-          <Route path="/pay" element={<PayWithCardPage/>}/>
           <Route path="/mis-pagos" element={<MisPagos />} />
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
         </Route>

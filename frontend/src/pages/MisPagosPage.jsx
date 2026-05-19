@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/MisPagos.css';
 
+import { toast } from 'react-toastify';
+
 const ICONOS_DISCIPLINA = {
     futbol: '⚽',
     padel: '🎾',
@@ -15,6 +17,16 @@ export default function MisPagos() {
     const [pagos, setPagos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
+
+    // para la parte de pagar con tarjeta:
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedPago, setSelectedPago] = useState(null);
+
+    const [reservaInfo, setReservaInfo] = useState(null);
+
+    const [cards, setCards] = useState([]);
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const [selectedCard, setSelectedCard] = useState(null);
 
     useEffect(() => {
         const fetchPagos = async () => {
@@ -51,11 +63,84 @@ export default function MisPagos() {
         fetchPagos();
     }, []);
 
-    const handlePagar = (pago) => {
-        localStorage.setItem("reserva_id", pago.id_reserva);
-        localStorage.setItem("user_id", pago.id_cliente);
-        navigate(`/pagar/${pago.id_reserva}`);
+    const handlePagar = async (pago) => {
+        try {
+            localStorage.setItem("reserva_id", pago.id_reserva);
+            localStorage.setItem("user_id", pago.id_cliente);
+
+            setSelectedPago(pago);
+            setModalOpen(true);
+
+            // fetch cards
+            const resCards = await fetch(`/api/tarjetas/${pago.id_cliente}`, { 
+                    method: 'GET',
+                    credentials: 'include' });
+
+            const cardsData = await resCards.json();
+
+            if (cardsData.length === 0) {
+                toast.error("No tenés tarjetas registradas");
+            }
+
+            setCards(cardsData);
+            setSelectedIndex(0);
+            setSelectedCard(cardsData[0]);
+
+        } catch (err) {
+            toast.error("Error cargando datos de pago");
+        }
     };
+
+    // --- controles del carrousell
+    const nextCard = () => {
+        if (!cards.length) return;
+
+        const newIndex = (selectedIndex + 1) % cards.length;
+        setSelectedIndex(newIndex);
+        setSelectedCard(cards[newIndex]);
+    };
+
+    const prevCard = () => {
+        if (!cards.length) return;
+
+        const newIndex =
+            (selectedIndex - 1 + cards.length) % cards.length;
+
+        setSelectedIndex(newIndex);
+        setSelectedCard(cards[newIndex]);
+    };
+
+    // ----
+
+    // PAGAR
+    const confirmPay = async () => {
+    try {
+        const res = await fetch("/api/pago_tarjeta", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id_reserva: selectedPago.id_reserva,
+                id_tarjeta: selectedCard.id,
+            }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.mensaje.includes("insuficiente")) {
+            toast.error(data.mensaje);
+            return;
+        }
+
+        toast.success(data.mensaje);
+
+        // close modal + refresh list
+        setModalOpen(false);
+        setPagos(prev => prev.filter(p => p.id_reserva !== selectedPago.id_reserva));
+
+    } catch (err) {
+        toast.error("Error procesando pago");
+    }
+};
 
     const getIcono = (disciplina) => {
         return ICONOS_DISCIPLINA[disciplina?.toLowerCase()] || '🏃';
@@ -115,6 +200,63 @@ export default function MisPagos() {
 
                         </div>
                     ))}
+                </div>
+            )}
+
+                        {modalOpen && selectedPago && (
+                <div className="modalOverlay" onClick={() => setModalOpen(false)}>
+
+                    <div className="modalContent" onClick={(e) => e.stopPropagation()}>
+
+                        <h2>Confirmar pago</h2>
+
+                        {/* RESERVA INFO */}
+                        {reservaInfo && (
+                            <div className="modalReserva">
+                                <h3>{reservaInfo.disciplina}</h3>
+                                <p>🕐 {reservaInfo.hora}</p>
+
+                                {reservaInfo.tipo === "turno" ? (
+                                    <p>📅 {reservaInfo.fecha}</p>
+                                ) : (
+                                    <p>🔁 {reservaInfo.dia}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* CAROUSEL */}
+                        {cards.length > 0 && (
+                            <div className="carousel">
+
+                                <button onClick={prevCard}>◀</button>
+
+                                <div className="card">
+                                    <p>**** **** **** {selectedCard?.numero}</p>
+                                    <p>{selectedCard?.titular}</p>
+                                    <p>{selectedCard?.fecha_vencimiento}</p>
+                                </div>
+
+                                <button onClick={nextCard}>▶</button>
+
+                            </div>
+                        )}
+
+                        {/* ACTIONS */}
+                        <div className="modalActions">
+
+                            <button onClick={() => setModalOpen(false)}>
+                                Cancelar
+                            </button>
+
+                            {selectedCard && (
+                                <button onClick={confirmPay}>
+                                    Confirmar pago
+                                </button>
+                            )}
+
+                        </div>
+
+                    </div>
                 </div>
             )}
         </div>
