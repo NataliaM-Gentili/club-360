@@ -66,6 +66,7 @@ export default function HeaderNavBar(){
                         <li><Link to="/profile">Ver Perfil</Link></li>
                         <li><Link to="/turnos">Reservar</Link></li>
                         <li><Link to="/mis-actividades">Mis Actividades</Link></li>
+                        <li><Link to="/mis-pagos">Mis Pagos</Link></li>
                         <li><button className="logoutBtn" onClick={logout}>Cerrar Sesión</button></li>
                     </>
                 );

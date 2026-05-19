@@ -1,0 +1,166 @@
+.misPagosContainer {
+    padding: 2rem 4rem;
+    background-color: #fafafa;
+    min-height: 100vh;
+    margin-top: 80px;
+}
+
+.misPagosTitle {
+    font-size: 28pt;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 2rem;
+    color: black;
+}
+
+.misPagosEstado {
+    text-align: center;
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 15px;
+    margin-top: 3rem;
+}
+
+.misPagosError {
+    color: #972934;
+}
+
+/* GRID DE CARDS */
+.pagosGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+/* CARD */
+.pagoCard {
+    background: white;
+    border-radius: 16px;
+    padding: 1.2rem 1.4rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    position: relative;
+}
+
+/* BADGE TIPO */
+.tipoBadge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+    width: fit-content;
+}
+
+.tipoBadgeTurno {
+    background-color: rgba(89, 136, 73, 0.12);
+    color: #598849;
+}
+
+.tipoBadgeClase {
+    background-color: rgba(245, 146, 53, 0.12);
+    color: #c97a1a;
+}
+
+/* HEADER CON ICONO */
+.pagoHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.pagoIcono {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #f0f4ef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.pagoDisciplina {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+/* DETALLES */
+.pagoDetalles {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.pagoDetalles p {
+    font-size: 0.8rem;
+    color: #666;
+    margin: 0;
+}
+
+/* FOOTER */
+.pagoFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pagoMonto {
+    display: flex;
+    flex-direction: column;
+}
+
+.pagoMontoLabel {
+    font-size: 0.65rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.pagoMontoValor {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.pagarBtn {
+    padding: 9px 20px;
+    border-radius: 20px;
+    background-color: #598849;
+    color: white;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagarBtn:hover {
+    background-color: #4e7740;
+    transform: translateY(-1px);
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+    .misPagosContainer {
+        padding: 1.5rem 1rem;
+        margin-top: 70px;
+    }
+
+    .misPagosTitle {
+        font-size: 20pt;
+    }
+
+    .pagosGrid {
+        grid-template-columns: 1fr;
+    }
+}
