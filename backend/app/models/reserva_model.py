@@ -22,6 +22,9 @@ PRECIOS_DISCIPLINA = {
     "basquet": 8500,
 }
 
+def _normalizar(texto: str) -> str:
+    return unicodedata.normalize("NFD", texto).encode("ascii", "ignore").decode("utf-8").lower().strip()
+
 
 class ReservaModel:
 
@@ -39,12 +42,9 @@ class ReservaModel:
         ).first()
         
 
-    def _normalizar(texto: str) -> str:
-        return unicodedata.normalize("NFD", texto).encode("ascii", "ignore").decode("utf-8").lower().strip()
-
+   
     @staticmethod
     def obtener_precio_disciplina(disciplina: str):
-        from app.models.reserva_model import _normalizar
         return PRECIOS_DISCIPLINA.get(_normalizar(disciplina))
         
     @staticmethod

@@ -2,6 +2,7 @@ from app.models.reserva_model import ReservaModel
 from flask import Blueprint, request, jsonify, session
 from app import db
 from app.models.tarjeta_model import TarjetaModel
+from app.models.db_structure import ReservaTurno, Turno, Clase
 
 tarjeta_bp = Blueprint('tarjeta', __name__)
 
@@ -78,8 +79,6 @@ def pago_tarjeta():
             "mensaje": "Abono no encontrado"
         }), 404
 
-
-    
     # retorna el ID del usuario
     user_id = TarjetaModel.obtener_usuario_con_reserva(id_reserva)
     if user_id == 2 or user_id == 3:

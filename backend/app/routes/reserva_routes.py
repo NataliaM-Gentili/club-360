@@ -170,25 +170,22 @@ def revisar_reserva():
 # NO Abonado
 @reserva_bp.route("/reservar_turno", methods=["POST"])
 def reservar_turno():
-    """""
+    """
+    Body JSON: { "id_turno": 5 }
+    Requiere sesión de cliente (rol_id == 1).
+
     Flujo:
     1. Valida turno, cupo y que no esté ya inscripto.
-    2. Verifica que la tarjeta pertenezca al cliente.
-    3. Crea Reserva (en estado pendiente) + ReservaTurno + Abono (monto 50% del total).
-    4. Procesa el pago de la seña con tarjeta.
-       - Si el pago falla: revierte la reserva.
-       - Si el pago es exitoso: registra AbonoTarjeta y envía QR por email.
+    2. Verifica que el cliente tenga al menos una tarjeta asociada.
+    3. Crea Reserva (Pendiente) + ReservaTurno + Abono (50% del precio).
+    4. Devuelve id_reserva — el pago y el QR los maneja /pago_tarjeta.
     """
-    if session.get("rol_id") != 1:
-        return jsonify({"mensaje": "Acceso denegado. Debés iniciar sesión como cliente"}), 403
-
     id_cliente = session.get("usuario_id")
     datos = request.get_json()
     id_turno = datos.get("id_turno")
-    id_tarjeta = datos.get("id_tarjeta")
 
-    if not id_turno or not id_tarjeta:
-        return jsonify({"mensaje": "Faltan datos requeridos (id_turno, id_tarjeta)"}), 400
+    if not id_turno:
+        return jsonify({"mensaje": "Falta el id_turno"}), 400
 
     # Verificar que el turno existe y está habilitado
     turno = Turno.query.get(id_turno)
@@ -203,11 +200,10 @@ def reservar_turno():
     if ReservaModel.cliente_ya_inscripto_turno(id_cliente, id_turno):
         return jsonify({"mensaje": "Usted ya se encuentra inscripto al turno seleccionado"}), 400
 
-    # Verificar que la tarjeta pertenezca al cliente
-    tarjetas = ReservaModel.obtener_tarjetas_cliente(id_cliente)
+    # Verificar que el cliente tenga al menos una tarjeta asociada
+    tarjetas = TarjetaModel.obtener_tarjetas_usuario(id_cliente)
     if not tarjetas:
-        return jsonify({"mensaje": "No tenés tarjetas asociadas a tu cuenta"}), 400
-
+        return jsonify({"mensaje": "Usted no posee tarjetas asociadas para abonar la seña correspondiente"}), 400
 
     # Obtener precio según disciplina
     clase = Clase.query.get(turno.id_clase)
@@ -215,26 +211,14 @@ def reservar_turno():
     if precio is None:
         return jsonify({"mensaje": "No se pudo determinar el precio de la disciplina"}), 400
 
-    # Crear reserva con abono al 50% — queda Pendiente hasta confirmar pago
+    # Crear reserva con abono al 50% — queda Pendiente hasta que /pago_tarjeta confirme
     reserva = ReservaModel.reservar_turno_no_abonado(
         id_cliente=id_cliente,
         id_turno=id_turno,
         monto_total=precio,
     )
 
-    # Procesar pago de la seña con tarjeta
-    pago_exitoso, mensaje_pago = _procesar_pago_tarjeta(reserva.id, id_tarjeta)
-
-    if not pago_exitoso:
-        # Revierte la reserva si el pago falló
-        db.session.delete(ReservaModel.obtener_abono(reserva.id))
-        db.session.delete(reserva)
-        db.session.commit()
-        return jsonify({
-            "mensaje": "No se ha realizado el pago correctamente, no se ha podido reservar el turno"
-        }), 402
-
-    # Envia QR por email 
+    # Enviar QR por email
     enviar_comprobante_qr_turno(
         id_cliente=id_cliente,
         id_reserva=reserva.id,
@@ -244,8 +228,10 @@ def reservar_turno():
         hora=clase.hora,
     )
 
-    return jsonify({"mensaje": "Turno reservado con éxito"}), 201
-
+    return jsonify({
+        "mensaje": "Turno reservado con éxito",
+        "id_reserva": reserva.id,
+    }), 201
 
 
 
@@ -259,9 +245,7 @@ def abonar_mensual():
     3. Crea Reserva (Pendiente) + ReservaClase + Abono.
     4. Envía un QR por cada turno restante del mes por email.
     """
-    if session.get("rol_id") != 1:
-        return jsonify({"mensaje": "Acceso denegado. Debés iniciar sesión como cliente"}), 403
-
+    
     id_cliente = session.get("usuario_id")
     datos = request.get_json()
     id_clase = datos.get("id_clase")
@@ -320,30 +304,5 @@ def abonar_mensual():
 
 
 
-def _procesar_pago_tarjeta(id_reserva, id_tarjeta):
-    """
-    Llama a la lógica de TarjetaModel para procesar el pago.
-    Registra AbonoTarjeta si el pago es exitoso.
-    Retorna (exitoso: bool, mensaje: str).
 
-    El comportamiento de aprobación/rechazo está simulado en TarjetaModel
-    (user_id == 2 → fallo, cualquier otro → éxito).
-    """
-    try:
-        abono = ReservaModel.obtener_abono(id_reserva)
-        if not abono:
-            return False, "Abono no encontrado"
-
-        # Simular resultado del pago (misma lógica que pago_tarjeta de tarjeta_routes)
-        user_id = TarjetaModel.obtener_usuario_con_reserva(id_reserva)
-        if user_id == 2:
-            return False, "Saldo insuficiente"
-
-        # Registrar el pago exitoso
-        TarjetaModel.registrar_abono_tarjeta(id_reserva, id_tarjeta)
-
-        return True, "Pago realizado con éxito"
-
-    except Exception as e:
-        return False, str(e)
 
