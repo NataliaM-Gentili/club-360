@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify, session
 from app import db
 from app.models.tarjeta_model import TarjetaModel
 from app.models.db_structure import ReservaTurno, Turno, Clase
+from app.models.db_structure import AbonoTarjeta
 
 tarjeta_bp = Blueprint('tarjeta', __name__)
 
@@ -59,31 +60,29 @@ def obtener_tarjetas(id_cliente):
         "fecha_vencimiento": t.fecha_vencimiento
     } for t in tarjetas]), 200
     
+    
 @tarjeta_bp.route('/pago_tarjeta', methods=['POST'])
 def pago_tarjeta():
-    """ Recibo id_reserva y id_tarjeta (la seleccionada en obtener_tarjetas())"""
+    """ 
+    Maneja dos flujos:
+    1. Standalone booking (50% deposit): Primer pago mantiene Pendiente, segundo pago completa a Pago
+    2. Monthly booking (full amount): Un solo pago, completa a Pago
+    """
     data = request.get_json()
     
     id_reserva = data.get('id_reserva')
     reserva = ReservaModel.obtener_reserva(id_reserva)
 
     if not reserva:
-        return jsonify({
-            "mensaje": "Reserva no encontrada"
-        }), 404
+        return jsonify({"mensaje": "Reserva no encontrada"}), 404
 
     # reserva ya abonada
     if reserva.estado != "Pendiente":
-        return jsonify({
-            "mensaje": "La reserva ya fue abonada"
-        }), 400
+        return jsonify({"mensaje": "La reserva ya fue abonada"}), 400
 
-   
     abono = TarjetaModel.obtener_abono(id_reserva)
     if not abono:
-        return jsonify({
-            "mensaje": "Abono no encontrado"
-        }), 404
+        return jsonify({"mensaje": "Abono no encontrado"}), 404
 
     # retorna el ID del usuario
     user_id = TarjetaModel.obtener_usuario_con_reserva(id_reserva)
@@ -92,8 +91,26 @@ def pago_tarjeta():
     
     id_tarjeta = data.get('id_tarjeta')
     abono.efectivo = False
-    reserva.estado = "Pago"
-    TarjetaModel.registrar_abono_tarjeta(id_reserva, id_tarjeta)
+    
+    # Determinar si es standalone (ReservaTurno) o monthly (ReservaClase)
+    from app.models.db_structure import ReservaClase
+    is_standalone = ReservaTurno.query.filter_by(id_reserva=id_reserva).first() is not None
+    is_monthly = ReservaClase.query.filter_by(id_reserva=id_reserva).first() is not None
+    
+    # Verificar si ya existe un pago previo (AbonoTarjeta)
+    existing_payment = AbonoTarjeta.query.filter_by(id_abono=id_reserva).first()
+    
+    if is_standalone and existing_payment:
+        # STANDALONE - Segundo pago (50% restante): Actualizar a 100% y completar
+        abono.monto = abono.monto * 2  # 50% * 2 = 100%
+        reserva.estado = "Pago"
+    elif is_standalone and not existing_payment:
+        # STANDALONE - Primer pago (50% seña): Crear registro de pago, mantener Pendiente
+        TarjetaModel.registrar_abono_tarjeta(id_reserva, id_tarjeta)
+    else:
+        # MONTHLY - Primer y único pago (monto completo): Completar a Pago
+        reserva.estado = "Pago"
+        TarjetaModel.registrar_abono_tarjeta(id_reserva, id_tarjeta)
     
     db.session.commit()
     return jsonify({"mensaje": f"Pago realizado con exito! Se han descontado {abono.monto}"}), 200
