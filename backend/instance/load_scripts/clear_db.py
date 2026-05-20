@@ -29,7 +29,6 @@ tables_to_clear = [
     "turno",
     "clase",
     "tarjeta",
-    "items"
 ]
 
 for t in tables_to_clear:

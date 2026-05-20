@@ -5,6 +5,8 @@ import lupa from '../assets/images/lupa.png';
 import ModalDialog from '../components/ModalDialog';
 import { toast } from 'react-toastify';
 
+import PaymentModal from "../components/PaymentModal";
+
 const DISCIPLINAS = ['paddle', 'futbol', 'basquet', 'voley'];
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const HORAS = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21'];
@@ -25,6 +27,13 @@ export default function ListarTurnosPage() {
     const [turnos, setTurnos] = useState([]);
     const [buscado, setBuscado] = useState(false);
     const [cargando, setCargando] = useState(false);
+
+    // para el modal de pagos
+    const [modalOpen, setModalOpen] = useState(false);
+    const [cards, setCards] = useState([]);
+    const [selectedCard, setSelectedCard] = useState(null);
+    const [selectedReserva, setSelectedReserva] = useState(null);
+    
 
     useEffect(() => {
         fetch('/api/auth/status', { credentials: 'include' })
@@ -70,12 +79,18 @@ export default function ListarTurnosPage() {
     const handleAccionNoLogueado = () => navigate('/login');
 
     const handleReservar = async (turno) => {
+
         try {
+
             const response = await fetch('/api/reservar_turno', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 credentials: 'include',
-                body: JSON.stringify({ id_turno: turno.id }),
+                body: JSON.stringify({
+                    id_turno: turno.id
+                }),
             });
 
             const data = await response.json();
@@ -85,13 +100,66 @@ export default function ListarTurnosPage() {
                 return;
             }
 
-            localStorage.setItem('reserva_id', data.id_reserva);
-            navigate('/pay-with-card');
+            const resCards = await fetch(
+                `/api/tarjetas/${session.user_id}`,
+                {
+                    credentials: 'include'
+                }
+            );
+
+            const cardsData = await resCards.json();
+
+            setCards(cardsData);
+            setSelectedCard(cardsData[0]);
+
+            setSelectedReserva({
+                id_reserva: data.id_reserva,
+                disciplina: turno.disciplina,
+                fecha: turno.fecha,
+                hora: turno.hora,
+                monto: turno.precio
+            });
+
+            setModalOpen(true);
 
         } catch (error) {
-            toast.error('No se pudo conectar con el servidor. Intentá de nuevo.');
+
+            toast.error(
+                'No se pudo conectar con el servidor.'
+            );
         }
     };
+
+        // PAGAR (boton del modal)
+        const confirmPay = async () => {
+            try {
+                const res = await fetch("/api/pago_tarjeta", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        id_reserva: selectedReserva.id_reserva,
+                        id_tarjeta: selectedCard.id,
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || data.mensaje?.includes("insuficiente")) {
+                    toast.error(data.mensaje);
+                    return;
+                }
+
+                toast.success(data.mensaje);
+
+                setModalOpen(false);
+
+                // optional: refresh turnos instead of filtering pagos
+                // setTurnos(...)
+            } catch (err) {
+                toast.error("Error procesando pago");
+            }
+        };
 
     const handleAbonarMensual = async () => {
         const idClase = turnos[0]?.id_clase;
@@ -278,6 +346,17 @@ export default function ListarTurnosPage() {
                             Para reservar o abonar turnos tenés que <span onClick={() => navigate('/login')}>iniciar sesión</span>.
                         </p>
                     )}
+
+                    <PaymentModal
+                        isOpen={modalOpen}
+                        onClose={() => setModalOpen(false)}
+                        cards={cards}
+                        selectedCard={selectedCard}
+                        setSelectedCard={setSelectedCard}
+                        onConfirm={confirmPay}
+                        reservaInfo={selectedReserva}
+                        amount={selectedReserva?.monto}
+                    />
                 </div>
             )}
         </div>

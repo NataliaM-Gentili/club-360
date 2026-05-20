@@ -4,6 +4,8 @@ import '../assets/styles/MisPagos.css';
 
 import { toast } from 'react-toastify';
 
+import PaymentModal from "../components/PaymentModal";
+
 const ICONOS_DISCIPLINA = {
     futbol: '⚽',
     padel: '🎾',
@@ -204,60 +206,16 @@ export default function MisPagos() {
             )}
 
                         {modalOpen && selectedPago && (
-                <div className="modalOverlay" onClick={() => setModalOpen(false)}>
-
-                    <div className="modalContent" onClick={(e) => e.stopPropagation()}>
-
-                        <h2>Confirmar pago</h2>
-
-                        {/* RESERVA INFO */}
-                        {reservaInfo && (
-                            <div className="modalReserva">
-                                <h3>{reservaInfo.disciplina}</h3>
-                                <p>🕐 {reservaInfo.hora}</p>
-
-                                {reservaInfo.tipo === "turno" ? (
-                                    <p>📅 {reservaInfo.fecha}</p>
-                                ) : (
-                                    <p>🔁 {reservaInfo.dia}</p>
-                                )}
-                            </div>
-                        )}
-
-                        {/* CAROUSEL */}
-                        {cards.length > 0 && (
-                            <div className="carousel">
-
-                                <button onClick={prevCard}>◀</button>
-
-                                <div className="card">
-                                    <p>**** **** **** {selectedCard?.numero}</p>
-                                    <p>{selectedCard?.titular}</p>
-                                    <p>{selectedCard?.fecha_vencimiento}</p>
-                                </div>
-
-                                <button onClick={nextCard}>▶</button>
-
-                            </div>
-                        )}
-
-                        {/* ACTIONS */}
-                        <div className="modalActions">
-
-                            <button onClick={() => setModalOpen(false)}>
-                                Cancelar
-                            </button>
-
-                            {selectedCard && (
-                                <button onClick={confirmPay}>
-                                    Confirmar pago
-                                </button>
-                            )}
-
-                        </div>
-
-                    </div>
-                </div>
+                <PaymentModal
+                    isOpen={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    cards={cards}
+                    selectedCard={selectedCard}
+                    setSelectedCard={setSelectedCard}
+                    onConfirm={confirmPay}
+                    reservaInfo={selectedPago}
+                    amount={selectedPago?.monto_deuda}
+                />
             )}
         </div>
     );

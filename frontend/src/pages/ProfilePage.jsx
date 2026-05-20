@@ -112,11 +112,11 @@ export default function ProfilePage() {
 
             {/* ACTIONS */}
             <div className="profileActions">
-                <button onClick={() => navigate("/books")}>
+                <button onClick={() => navigate("/mis-actividades")}>
                     Mis Reservas
                 </button>
 
-                <button onClick={() => navigate("/payments")}>
+                <button onClick={() => navigate("/mis-pagos")}>
                     Pagos Pendientes
                 </button>
             </div>
