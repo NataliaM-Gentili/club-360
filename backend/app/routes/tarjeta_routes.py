@@ -59,7 +59,7 @@ def obtener_tarjetas(id_cliente):
         "titular": t.titular,
         "fecha_vencimiento": t.fecha_vencimiento
     } for t in tarjetas]), 200
-    
+
     
 @tarjeta_bp.route('/pago_tarjeta', methods=['POST'])
 def pago_tarjeta():
@@ -113,4 +113,4 @@ def pago_tarjeta():
         TarjetaModel.registrar_abono_tarjeta(id_reserva, id_tarjeta)
     
     db.session.commit()
-    return jsonify({"mensaje": f"Pago realizado con exito! Se han descontado {abono.monto}"}), 200
+    return jsonify({"mensaje": f"Pago realizado con exito!"}), 200

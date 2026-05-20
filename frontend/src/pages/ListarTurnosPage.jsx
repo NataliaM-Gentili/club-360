@@ -117,7 +117,7 @@ export default function ListarTurnosPage() {
                 disciplina: turno.disciplina,
                 fecha: turno.fecha,
                 hora: turno.hora,
-                monto: turno.precio
+                monto: data.monto_total
             });
 
             setModalOpen(true);
@@ -147,17 +147,24 @@ export default function ListarTurnosPage() {
 
                 if (!res.ok || data.mensaje?.includes("insuficiente")) {
                     toast.error(data.mensaje);
+
+                     // ELIMINA LA RESERVA SI EL PAGO FALLA
+                    await handlePaymentCancelled(selectedReserva.id_reserva);
+                    setModalOpen(false);
+                    
                     return;
                 }
 
                 toast.success(data.mensaje);
-
                 setModalOpen(false);
 
                 // optional: refresh turnos instead of filtering pagos
                 // setTurnos(...)
             } catch (err) {
                 toast.error("Error procesando pago");
+                // Delete reservation if connection fails
+                await handlePaymentCancelled(selectedReserva.id_reserva);
+                setModalOpen(false);
             }
         };
 
@@ -217,6 +224,24 @@ export default function ListarTurnosPage() {
             toast.error('Error al cambiar estado de clase.');
         }
     };
+
+    const handlePaymentCancelled = async (reservaId) => {
+    try {
+        const res = await fetch(`/api/cancelar_reserva/${reservaId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+        if (!res.ok) {
+            toast.error('Error al cancelar la reserva');
+            return;
+        }
+
+        toast.info('No se confirmó la reserva debido a la falta de pago. El turno sigue disponible.');
+    } catch (error) {
+        toast.error('Error al cancelar la reserva');
+    }
+};
 
     const renderBotonAccion = (turno) => {
         const turnoLleno = turno.ocupados >= turno.cupo;
@@ -349,13 +374,16 @@ export default function ListarTurnosPage() {
 
                     <PaymentModal
                         isOpen={modalOpen}
-                        onClose={() => setModalOpen(false)}
+                        onClose={() => {
+                            handlePaymentCancelled(selectedReserva?.id_reserva);
+                            setModalOpen(false);
+                            }}
                         cards={cards}
                         selectedCard={selectedCard}
                         setSelectedCard={setSelectedCard}
                         onConfirm={confirmPay}
                         reservaInfo={selectedReserva}
-                        amount={selectedReserva?.monto}
+                        amount={selectedReserva?.monto ? (selectedReserva.monto / 2) + " - Seña del 50%" : 0}  // Show 50% for first payment
                     />
                 </div>
             )}

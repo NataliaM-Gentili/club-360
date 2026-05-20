@@ -8,7 +8,7 @@ from app.models.db_structure import EmpleadoRegistraAbono
 from app.models.db_structure import Usuario, Cliente
 from app.models.db_structure import Reserva, ReservaTurno
 from app.models.db_structure import Turno, Clase
-from app.models.db_structure import Abono
+from app.models.db_structure import Abono, AbonoTarjeta
 
 
 from sqlalchemy import exists
@@ -231,6 +231,7 @@ def reservar_turno():
     return jsonify({
         "mensaje": "Turno reservado con éxito",
         "id_reserva": reserva.id,
+        "monto_total": precio
     }), 201
 
 
@@ -303,6 +304,26 @@ def abonar_mensual():
     return jsonify(respuesta), 201
 
 
-
-
-
+# ELIMINAR RESERVA POR ID
+@reserva_bp.route('/cancelar_reserva/<int:id_reserva>', methods=['DELETE'])
+def cancelar_reserva(id_reserva):
+    """Cancela una reserva pendiente (para cuando falla el pago)"""
+    reserva = ReservaModel.obtener_reserva(id_reserva)
+    
+    if not reserva:
+        return jsonify({"mensaje": "Reserva no encontrada"}), 404
+    
+    # Solo se pueden cancelar reservas pendientes
+    if reserva.estado != "Pendiente":
+        return jsonify({"mensaje": "Solo se pueden cancelar reservas pendientes"}), 400
+    
+    # Eliminar registros relacionados
+    ReservaTurno.query.filter_by(id_reserva=id_reserva).delete()
+    ReservaClase.query.filter_by(id_reserva=id_reserva).delete()
+    Abono.query.filter_by(id_reserva=id_reserva).delete()
+    AbonoTarjeta.query.filter_by(id_abono=id_reserva).delete()
+    
+    db.session.delete(reserva)
+    db.session.commit()
+    
+    return jsonify({"mensaje": "Reserva cancelada"}), 200
