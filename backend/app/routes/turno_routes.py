@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, session, request
 from app.models.turno_model import TurnoModel
-from app.models.db_structure import ReservaTurno, Turno, Clase
+from app.models.db_structure import ReservaTurno, Turno, Clase, Reserva, ReservaClase
 from datetime import date
 
 turno_bp = Blueprint("turno_bp", __name__)
@@ -79,7 +79,9 @@ def buscar_turnos():
 
     resultado = []
     for t in turnos:
-        ocupados = ReservaTurno.query.filter_by(id_turno=t.id).count()
+        ocupados_turno = ReservaTurno.query.filter_by(id_turno=t.id).count()
+        ocupados_clase = ReservaClase.query.filter_by(id_clase=clase.id).count()
+        ocupados = ocupados_turno + ocupados_clase
         resultado.append(
             {
                 "id": t.id,
@@ -109,14 +111,23 @@ def buscar_turnos_de_cliente():
     except ValueError:
         return jsonify({"error": "id_usuario inválido"}), 400
 
-    reservas = ReservaTurno.query.filter_by(id_usuario=id_usuario).all()
+    # 1. Buscar todas las reservas del cliente
+    reservas = Reserva.query.filter_by(id_cliente=id_usuario).all()
+
 
     if not reservas:
         return jsonify({"turnos": []}), 200
 
+    ids_reservas = [r.id for r in reservas]
+
+    # 2. Buscar los ReservaTurno asociados a esas reservas
+    reservas_turno = ReservaTurno.query.filter(
+        ReservaTurno.id_reserva.in_(ids_reservas)
+    ).all()
+
     resultado = []
-    for reserva in reservas:
-        turno = Turno.query.get(reserva.id_turno)
+    for rt in reservas_turno:
+        turno = Turno.query.get(rt.id_turno)
         if not turno:
             continue
 
@@ -124,18 +135,15 @@ def buscar_turnos_de_cliente():
         if not clase:
             continue
 
-        resultado.append(
-            {
-                "id_reserva": reserva.id,
-                "id_turno": turno.id,
-                "fecha": turno.fecha.strftime("%d/%m/%Y"),
-                "disciplina": clase.disciplina,
-                "dia": clase.dia,
-                "hora": clase.hora,
-                "cupo": clase.cupo,
-                "habilitado": turno.habilitado,
-            }
-        )
+        resultado.append({
+            "id_reserva": rt.id_reserva,
+            "id_turno": turno.id,
+            "fecha": turno.fecha.strftime("%d/%m/%Y"),
+            "disciplina": clase.disciplina,
+            "dia": clase.dia,
+            "hora": clase.hora,
+            "cupo": clase.cupo,
+            "habilitado": turno.habilitado,
+        })
 
     return jsonify({"turnos": resultado}), 200
-

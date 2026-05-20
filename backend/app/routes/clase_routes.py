@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from app.models.clase_model import ClaseModel
-from app.models.db_structure import Clase, Turno, Reserva, ReservaTurno
+from app.models.db_structure import Clase, Turno, Reserva, ReservaTurno, ReservaClase
 from datetime import datetime, date, timedelta
 from app import db
 
@@ -190,3 +190,51 @@ def deshabilitar_clase():
         "message": f"Clase deshabilitada. Se bajaron {turnos_cancelados} turnos vacíos y quedaron {turnos_mantenidos} vivos con alumnos.",
         "habilitada": False
     }), 200
+    
+@clase_bp.route('/turnos_de_cliente_clase', methods=['GET'])
+def buscar_turnos_de_cliente_clase():
+        id_usuario = request.args.get("id_usuario")
+
+        if not id_usuario:
+            return jsonify({"error": "Parámetro faltante: id_usuario"}), 400
+
+        try:
+            id_usuario = int(id_usuario)
+        except ValueError:
+            return jsonify({"error": "id_usuario inválido"}), 400
+
+        # 1. Buscar todas las reservas del cliente
+        reservas = Reserva.query.filter_by(id_cliente=id_usuario).all()
+
+        if not reservas:
+            return jsonify({"turnos": []}), 200
+
+        ids_reservas = [r.id for r in reservas]
+
+        # 2. Buscar los ReservaClase asociados a esas reservas
+        reservas_clase = ReservaClase.query.filter(
+            ReservaClase.id_reserva.in_(ids_reservas)
+        ).all()
+
+        ids_clases = [rc.id_clase for rc in reservas_clase]
+
+        # 3. Buscar todos los turnos que pertenezcan a esas clases
+        turnos = Turno.query.filter(Turno.id_clase.in_(ids_clases)).all()
+
+        resultado = []
+        for turno in turnos:
+            clase = Clase.query.get(turno.id_clase)
+            if not clase:
+                continue
+
+            resultado.append({
+                "id_turno": turno.id,
+                "fecha": turno.fecha.strftime("%d/%m/%Y"),
+                "disciplina": clase.disciplina,
+                "dia": clase.dia,
+                "hora": clase.hora,
+                "cupo": clase.cupo,
+                "habilitado": turno.habilitado,
+            })
+
+        return jsonify({"turnos": resultado}), 200
