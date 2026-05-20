@@ -25,10 +25,11 @@ def all_routes(app):
     app.register_blueprint(turno_bp, url_prefix="/api")
 
     from app.routes.actividad_routes import actividad_bp
+    app.register_blueprint(actividad_bp, url_prefix="/api")
 
-    app.register_blueprint(actividad_bp)
     app.register_blueprint(clase_bp, url_prefix="/api")
     app.register_blueprint(reserva_bp, url_prefix="/api")
+    
     from app.routes.tarjeta_routes import tarjeta_bp
     app.register_blueprint(tarjeta_bp, url_prefix="/api")
     

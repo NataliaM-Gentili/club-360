@@ -1,3 +1,4 @@
+from app import db
 from flask import Blueprint, jsonify, session
 from app.models.actividad_model import ActividadModel
 from app.models.db_structure import Cliente
@@ -14,7 +15,7 @@ def get_mis_actividades():
 
     try:
         cliente_actual = Cliente.query.filter_by(id_usuario=id_usuario).first()
-        filas = ActividadModel.get_actividades_por_cliente(cliente_actual.id_usuario)
+        filas = ActividadModel.get_actividades(cliente_actual.id_usuario)
 
     except Exception as e:
         return jsonify({"error": "Error interno del servidor"}), 500
