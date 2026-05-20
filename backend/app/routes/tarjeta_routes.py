@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.models.reserva_model import ReservaModel
 from flask import Blueprint, request, jsonify, session
 from app import db
@@ -30,6 +32,10 @@ def registrar_tarjeta():
             "missing_fields": missing
         }), 400
 
+    fecha_venc = datetime.strptime(data["fecha_vencimiento"], "%Y-%m")
+    if fecha_venc.replace(day=1) < datetime.today().replace(day=1):
+        return jsonify({"error": "La tarjeta está vencida"}), 400
+    
     try:
         resultado = TarjetaModel.registrar_tarjeta_a_cliente(id, data)
         
@@ -81,7 +87,7 @@ def pago_tarjeta():
 
     # retorna el ID del usuario
     user_id = TarjetaModel.obtener_usuario_con_reserva(id_reserva)
-    if user_id == 2 or user_id == 3:
+    if user_id == 2:
         return jsonify({"mensaje": "Saldo insuficiente!"}), 200
     
     id_tarjeta = data.get('id_tarjeta')
@@ -90,4 +96,4 @@ def pago_tarjeta():
     TarjetaModel.registrar_abono_tarjeta(id_reserva, id_tarjeta)
     
     db.session.commit()
-    return jsonify({"mensaje": f"Pago realizado con exito! Se han descontado {abono.monto} de la tarjeta {id_tarjeta}"}), 200
+    return jsonify({"mensaje": f"Pago realizado con exito! Se han descontado {abono.monto}"}), 200

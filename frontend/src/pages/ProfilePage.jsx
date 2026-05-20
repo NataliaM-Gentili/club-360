@@ -43,7 +43,7 @@ export default function ProfilePage() {
                 return;
             }
 
-            navigate(`/reset-password?token=${json.token}`);
+            navigate(`/olvide-contrasena`);
 
         } catch (err) {
             console.error("Error al cambiar contraseña:", err);

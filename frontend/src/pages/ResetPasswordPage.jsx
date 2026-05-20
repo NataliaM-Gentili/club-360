@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -16,6 +16,37 @@ export default function ResetPasswordPage() {
     const [errors, setErrors] = useState({ contrasena: '', confirmar: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmar, setShowConfirmar] = useState(false);
+    const [enviado, setEnviado] = useState(false);
+    const [tokenValido, setTokenValido] = useState(null); // null = cargando
+
+    // Verificar token al cargar la página
+    useEffect(() => {
+        if (!token) {
+            setTokenValido(false);
+            return;
+        }
+
+        fetch('/api/verificar-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                setTokenValido(false);
+                toast.error('El link ya fue utilizado o expiró');
+                navigate('/olvide-contrasena');
+            } else {
+                setTokenValido(true);
+            }
+        })
+        .catch(() => {
+            setTokenValido(false);
+            toast.error('Error de conexión');
+            navigate('/olvide-contrasena');
+        });
+    }, [token]);
 
     const validateContrasena = (value) => {
         return value.length >= 7 ? '' : 'Mínimo 7 caracteres';
@@ -34,6 +65,8 @@ export default function ResetPasswordPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (enviado) return;
 
         if (formValue.contrasena !== formValue.confirmar) {
             setErrors({ ...errors, confirmar: 'Las contraseñas no coinciden' });
@@ -54,6 +87,7 @@ export default function ResetPasswordPage() {
                 return;
             }
 
+            setEnviado(true);
             toast.success(data.message);
             navigate('/login');
 
@@ -61,6 +95,11 @@ export default function ResetPasswordPage() {
             toast.error('Error de conexión con el servidor');
         }
     };
+
+    // Mientras verifica el token
+    if (tokenValido === null) {
+        return <p style={{ textAlign: 'center', marginTop: '2rem' }}>Verificando link...</p>;
+    }
 
     return (
         <div className="signupContainer">
@@ -74,7 +113,6 @@ export default function ResetPasswordPage() {
                 <h1 className="formTitle">Nueva contraseña</h1>
                 <form className="formRegister" onSubmit={handleSubmit}>
 
-                    {/* CONTRASEÑA */}
                     <div className="formInput">
                         <div className="labelRow">
                             <label>Nueva contraseña</label>
@@ -90,6 +128,7 @@ export default function ResetPasswordPage() {
                                 placeholder="Mínimo 7 caracteres"
                                 onChange={handleChange}
                                 required
+                                disabled={enviado}
                             />
                             <img
                                 src={showPassword ? eyeopen : eyeclosed}
@@ -99,7 +138,6 @@ export default function ResetPasswordPage() {
                         </div>
                     </div>
 
-                    {/* CONFIRMAR CONTRASEÑA */}
                     <div className="formInput">
                         <div className="labelRow">
                             <label>Confirmar contraseña</label>
@@ -115,6 +153,7 @@ export default function ResetPasswordPage() {
                                 placeholder="Repetí tu contraseña"
                                 onChange={handleChange}
                                 required
+                                disabled={enviado}
                             />
                             <img
                                 src={showConfirmar ? eyeopen : eyeclosed}
@@ -124,7 +163,12 @@ export default function ResetPasswordPage() {
                         </div>
                     </div>
 
-                    <input type="submit" className="signUpSubmit" value="Confirmar" />
+                    <input
+                        type="submit"
+                        className="signUpSubmit"
+                        value={enviado ? 'Contraseña actualizada ✓' : 'Confirmar'}
+                        disabled={enviado}
+                    />
 
                 </form>
             </div>

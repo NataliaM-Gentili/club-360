@@ -113,5 +113,6 @@ class UserModel:
         user.contrasena = generate_password_hash(nueva_contrasena)
         user.token = None  # invalida el token una vez usado
         db.session.commit()
+        print(f"[reset_password] Token invalidado para {user.email}, token ahora: {user.token}")
 
         return user, None

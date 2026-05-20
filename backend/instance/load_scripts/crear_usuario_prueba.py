@@ -13,7 +13,7 @@ from werkzeug.security import generate_password_hash
 app = create_app()
 
 with app.app_context():
-    email = "carlosgomez1235688@gmail.com"
+    email = "admin@gmail.com"
 
     # Verificar si ya existe
     if Usuario.query.filter_by(email=email).first():
@@ -21,11 +21,11 @@ with app.app_context():
     else:
         usuario = Usuario(
             email=email,
-            dni="88888888",
+            dni="88883288",
             nombres="Carlos",
             apellido="Gomez",
             contrasena=generate_password_hash("prueba123"),
-            rol_id=1,  # cliente
+            rol_id=2,  # cliente
         )
         db.session.add(usuario)
         db.session.flush()

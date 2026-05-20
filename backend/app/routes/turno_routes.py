@@ -56,7 +56,7 @@ def buscar_turnos():
         return jsonify({"turnos": []}), 200
 
     hoy = date.today()
-    primer_dia_mes = date(hoy.year, hoy.month, 1)
+    #EN CASO DE QUERER FILTRAR TODO EL MES -> primer_dia_mes = date(hoy.year, hoy.month, 1)
     if hoy.month == 12:
         ultimo_dia_mes = date(hoy.year + 1, 1, 1)
     else:
@@ -67,7 +67,7 @@ def buscar_turnos():
 
     query = Turno.query.filter(
         Turno.id_clase == clase.id,
-        Turno.fecha >= primer_dia_mes,
+        Turno.fecha >= hoy,
         Turno.fecha < ultimo_dia_mes,
     )
 

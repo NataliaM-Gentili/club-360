@@ -9,7 +9,6 @@ class TarjetaModel:
         .filter(ClienteTarjeta.id_cliente == id_cliente)\
         .all()
 
-
     @staticmethod
     def obtener_usuario_con_reserva(id_reserva):
         reserva = Reserva.query.filter_by(id=id_reserva).first()

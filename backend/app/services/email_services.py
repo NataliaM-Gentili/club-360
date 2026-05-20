@@ -1,7 +1,7 @@
 from flask import current_app
 from flask_mail import Message
 from app import mail  # instancia de Flask-Mail
-import qrcode 
+import qrcode   
 import io
 import base64
 from app.models.db_structure import Usuario
@@ -14,17 +14,47 @@ EMAIL_PRUEBAS = "juanmanuelperezz468@gmail.com"
 def send_password_reset_email(email, token):
     reset_url = f"http://localhost:5173/reset-password?token={token}"
 
+    html = f"""
+    <div style="background-color:#f0f0f0;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#333;padding:40px 16px;min-height:100vh">
+      <div style="max-width:520px;margin:0 auto;border-radius:24px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.09)">
+        <div style="background-color:#598849;padding:40px 40px 32px;color:#fafafa">
+          <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.85;margin-bottom:28px">Club 360</div>
+          <h1 style="font-size:26px;font-weight:700;margin:0 0 6px">Restablecer contraseña</h1>
+          <p style="font-size:14px;font-weight:300;opacity:0.85;margin:0"></p>
+        </div>
+        <div style="background-color:#fafafa;padding:32px 40px">
+          <p style="font-size:15px;color:#333;margin-bottom:28px;line-height:1.65">
+            Hola!,<br/>
+            Recibimos una solicitud para restablecer la clave de tu cuenta en Club 360.
+            Si fuiste vos, hacé clic en el botón de abajo para continuar.
+          </p>
+          
+          <div style="text-align:center;margin-bottom:28px">
+            <a href="{reset_url}" style="display:inline-block;background-color:#598849;color:#fafafa;text-decoration:none;font-size:15px;font-weight:600;padding:14px 36px;border-radius:20px">
+              Restablecer contraseña
+            </a>
+          </div>
+         
+          <p style="font-size:13px;color:rgba(0,0,0,0.45);line-height:1.65">
+            <strong style="color:rgba(0,0,0,0.65)">¿No solicitaste esto?</strong> Podés ignorar este correo con seguridad.
+            Tu contraseña no cambiará a menos que hagas clic en el enlace de arriba.
+          </p>
+        </div>
+        <div style="background-color:#fafafa;border-top:1px solid rgba(0,0,0,0.07);padding:24px 40px;text-align:center">
+          <p style="font-size:12px;color:rgba(0,0,0,0.35);line-height:1.7;margin:0">© 2026 Club 360.</p>
+        </div>
+      </div>
+    </div>
+    """
+
     msg = Message(
-        subject="Activá tu cuenta",
-        # SI quieren probar con un email que no este hardcodeado, pongan esto recipients=[email]
+        subject="Restablecer contraseña - Club 360",
         recipients=["juanmanuelperezz468@gmail.com"],
-        body=f"Hola!, hacé clic en el siguiente link para establecer tu contraseña. No tardes en unirte, te esperamos con ansias! {reset_url}",
+        html=html,  # ← acá el cambio clave
     )
 
     mail.send(msg)
-    return {
-        "message": "El mail para el reestablecimiento de contraseña ha sido enviado a juanmanuelperezz468@gmail.com"
-    }, 201
+    return {"message": "El mail fue enviado correctamente"}, 201
 
 def generar_qr_bytes(datos: str) -> bytes:
     """Genera un QR a partir de un string y lo retorna como bytes PNG."""

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 import '../assets/styles/SignUp.css';
@@ -7,10 +6,10 @@ import logo from '../assets/images/logo-club360.png';
 import redwarning from '../assets/images/warning-red.png';
 
 export default function OlvideContrasenaPage() {
-    const navigate = useNavigate();
 
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
+    const [enviado, setEnviado] = useState(false);
 
     const validateEmail = (value) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -25,11 +24,15 @@ export default function OlvideContrasenaPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (enviado) return;
+
         const emailError = validateEmail(email);
         if (emailError) {
             setError(emailError);
             return;
         }
+
+        setEnviado(true);
 
         try {
             const response = await fetch('/api/generar-token-email', {
@@ -42,13 +45,15 @@ export default function OlvideContrasenaPage() {
 
             if (!response.ok) {
                 toast.error(data.error || 'Error al procesar la solicitud');
+                setEnviado(false);
                 return;
             }
 
-            navigate(`/reset-password?token=${data.token}`);
+            toast.success(data.message);
 
         } catch (err) {
             toast.error('Error de conexión con el servidor');
+            setEnviado(false);
         }
     };
 
@@ -80,6 +85,7 @@ export default function OlvideContrasenaPage() {
                                 placeholder="tu-email@gmail.com"
                                 onChange={handleChange}
                                 required
+                                disabled={enviado}
                             />
                             {error && (
                                 <img src={redwarning} className="errorIcon" alt="error" />
@@ -87,7 +93,12 @@ export default function OlvideContrasenaPage() {
                         </div>
                     </div>
 
-                    <input type="submit" className="signUpSubmit" value="Continuar" />
+                    <input
+                        type="submit"
+                        className="signUpSubmit"
+                        value={enviado ? 'Email enviado ✓' : 'Continuar'}
+                        disabled={enviado}
+                    />
 
                 </form>
             </div>

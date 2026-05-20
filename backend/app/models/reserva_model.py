@@ -17,7 +17,7 @@ from decimal import Decimal
 
 PRECIOS_DISCIPLINA = {
     "futbol": 9000,
-    "padel": 12000,
+    "paddle": 12000,
     "voley": 8000,
     "basquet": 8500,
 }

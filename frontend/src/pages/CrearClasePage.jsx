@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -21,9 +20,7 @@ const ROL_ADMINISTRADOR = 2;
 export default function CrearClasePage() {
 
     const navigate = useNavigate();
-    
     const { rol_id, loading } = useAuth();
-
 
     const [formValue, setFormValue] = useState({
         disciplina: '',
@@ -34,17 +31,17 @@ export default function CrearClasePage() {
     });
 
     useEffect(() => {
-    if (loading) return;
+        if (loading) return;
+        if (rol_id === null || rol_id === undefined) return;
 
-    if (rol_id !== ROL_ADMINISTRADOR) {
-        navigate("/", { replace: true });
-    }
-}, [rol_id, loading, navigate]);
+        if (rol_id !== ROL_ADMINISTRADOR) {
+            navigate("/", { replace: true });
+        }
+    }, [rol_id, loading, navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        // si cambia la hora, resetear los minutos
         if (name === 'horaHH') {
             setFormValue({ ...formValue, horaHH: value, horaMM: '' });
             return;

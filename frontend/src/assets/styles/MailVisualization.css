@@ -1,0 +1,241 @@
+.emailWrapper {
+  background-color: #f0f0f0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #333;
+  padding: 40px 16px;
+  min-height: 100vh;
+}
+ 
+.emailCard {
+  max-width: 520px;
+  margin: 0 auto;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.09);
+}
+ 
+/* ── HEADER ── */
+ 
+.emailHeader {
+  background-color: #598849;
+  padding: 40px 40px 32px;
+  color: #fafafa;
+}
+ 
+.emailLogo {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 28px;
+}
+ 
+.emailIconCircle {
+  width: 54px;
+  height: 54px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+ 
+.emailIconCircle svg {
+  width: 26px;
+  height: 26px;
+  stroke: #fafafa;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+ 
+.emailHeader h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0 0 6px;
+}
+ 
+.emailHeader p {
+  font-size: 14px;
+  font-weight: 300;
+  opacity: 0.85;
+  margin: 0;
+}
+ 
+/* ── BODY ── */
+ 
+.emailBody {
+  background-color: #fafafa;
+  padding: 32px 40px;
+}
+ 
+.emailGreeting {
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 28px;
+  line-height: 1.65;
+}
+ 
+.emailGreeting strong {
+  font-weight: 600;
+}
+ 
+/* Aviso de expiración */
+.expiryNotice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #fff8ec;
+  border: 1px solid rgba(200, 140, 40, 0.25);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 28px;
+}
+ 
+.expiryNotice svg {
+  width: 18px;
+  height: 18px;
+  stroke: #c88c28;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+ 
+.expiryNotice span {
+  font-size: 13px;
+  color: #8a6010;
+  font-weight: 400;
+  line-height: 1.5;
+}
+ 
+/* CTA principal */
+.ctaBlock {
+  text-align: center;
+  margin-bottom: 28px;
+}
+ 
+.ctaBtn {
+  display: inline-block;
+  background-color: #598849;
+  color: #fafafa;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 36px;
+  border-radius: 20px;
+  letter-spacing: -0.1px;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+ 
+.ctaBtn:hover {
+  background-color: #4e7740;
+  transform: translateY(-1px);
+}
+ 
+/* Separador con texto */
+.orDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+ 
+.orDivider::before,
+.orDivider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+ 
+.orDivider span {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+ 
+/* Link alternativo */
+.linkBlock {
+  background-color: #f5f5f5;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 28px;
+}
+ 
+.linkBlock p {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+  margin-bottom: 6px;
+}
+ 
+.linkBlock a {
+  font-size: 12px;
+  color: #598849;
+  word-break: break-all;
+  font-weight: 500;
+  text-decoration: none;
+}
+ 
+/* Aviso de seguridad */
+.securityNote {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.45);
+  line-height: 1.65;
+  margin-bottom: 0;
+}
+ 
+.securityNote strong {
+  color: rgba(0, 0, 0, 0.65);
+  font-weight: 500;
+}
+ 
+/* ── FOOTER ── */
+ 
+.emailFooter {
+  background-color: #fafafa;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 0 0 24px 24px;
+  padding: 24px 40px;
+  text-align: center;
+}
+ 
+.emailFooter p {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.35);
+  line-height: 1.7;
+  margin: 0;
+}
+ 
+.emailFooter a {
+  color: #598849;
+  text-decoration: none;
+  font-weight: 500;
+}
+ 
+/* ── RESPONSIVE ── */
+ 
+@media (max-width: 560px) {
+  .emailHeader,
+  .emailBody,
+  .emailFooter {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+ 
+  .emailHeader h1 {
+    font-size: 22px;
+  }
+ 
+  .ctaBtn {
+    width: 100%;
+    text-align: center;
+  }
+}

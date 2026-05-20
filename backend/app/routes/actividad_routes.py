@@ -45,4 +45,5 @@ def get_mis_actividades():
         return jsonify(resultado), 200
 
     except Exception as e:
+        print(f"[actividad_routes] Error: {e}")
         return jsonify({"error": "Error al procesar datos"}), 500

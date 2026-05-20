@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, session
 from app.models.user_model import UserModel
 from app.services.email_services import send_password_reset_email
-from app.models.tarjeta_model import TarjetaModel
+from app.models.tarjeta_model import TarjetaModel, Usuario
 
 user_bp = Blueprint("user_bp", __name__)  # defines user blueprint for flask
 
@@ -162,7 +162,6 @@ def reset_password():
 
     return jsonify({"message": "Contraseña actualizada con éxito"}), 200
 
-
 # GENERAR TOKEN PARA CAMBIO DE CONTRASEÑA (usuario logueado)
 @user_bp.route("/generar-token-cambio", methods=["POST"])
 def generar_token_cambio():
@@ -176,7 +175,6 @@ def generar_token_cambio():
 
     token = UserModel.generate_reset_token(usuario.email)
     return jsonify({"token": token}), 200
-
 
 # GENERAR TOKEN POR EMAIL (usuario no logueado)
 @user_bp.route("/generar-token-email", methods=["POST"])
@@ -192,4 +190,26 @@ def generar_token_email():
         return jsonify({"error": "No existe una cuenta con ese email"}), 404
 
     token = UserModel.generate_reset_token(email)
-    return jsonify({"token": token}), 200
+
+    try:
+        send_password_reset_email(email, token)
+    except Exception as e:
+        print(f"Error al enviar email: {e}")
+        return jsonify({"error": "Error al enviar el email"}), 500
+
+    return jsonify({"message": "Te enviamos un email con el link para recuperar tu contraseña"}), 200
+
+# VERIFICAR Y CONSUMIR TOKEN (se llama al cargar la página de reset)
+@user_bp.route("/verificar-token", methods=["POST"])
+def verificar_token():
+    data = request.get_json()
+    token = data.get("token")
+
+    if not token:
+        return jsonify({"error": "Token requerido"}), 400
+
+    user = Usuario.query.filter_by(token=token).first()
+    if not user:
+        return jsonify({"error": "Token inválido o ya utilizado"}), 400
+
+    return jsonify({"message": "Token válido"}), 200

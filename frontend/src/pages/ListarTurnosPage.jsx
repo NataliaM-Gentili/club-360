@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/ListarTurnos.css';
 import lupa from '../assets/images/lupa.png';
+import ModalDialog from '../components/ModalDialog';
+import { toast } from 'react-toastify';
 
 const DISCIPLINAS = ['paddle', 'futbol', 'basquet', 'voley'];
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -59,7 +61,7 @@ export default function ListarTurnosPage() {
             setTurnos(data.turnos);
             setBuscado(true);
         } catch (error) {
-            console.error('Error al buscar turnos:', error);
+            toast.error('Error al buscar turnos.');
         } finally {
             setCargando(false);
         }
@@ -67,32 +69,84 @@ export default function ListarTurnosPage() {
 
     const handleAccionNoLogueado = () => navigate('/login');
 
+    const handleReservar = async (turno) => {
+        try {
+            const response = await fetch('/api/reservar_turno', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ id_turno: turno.id }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                toast.error(data.mensaje);
+                return;
+            }
+
+            localStorage.setItem('reserva_id', data.id_reserva);
+            navigate('/pay-with-card');
+
+        } catch (error) {
+            toast.error('No se pudo conectar con el servidor. Intentá de nuevo.');
+        }
+    };
+
+    const handleAbonarMensual = async () => {
+        const idClase = turnos[0]?.id_clase;
+        if (!idClase) {
+            toast.error('No se pudo determinar la clase. Buscá los turnos nuevamente.'); 
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/abonar_mensual', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ id_clase: idClase }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                toast.error(data.mensaje); 
+                return;
+            }
+
+            let mensaje = data.mensaje;
+            if (data.descuento) mensaje += ` | ${data.descuento}`;
+            if (data.monto_a_pagar) mensaje += ` | Monto: $${data.monto_a_pagar}`;
+
+            toast.success(mensaje); 
+
+        } catch (error) {
+            toast.error('No se pudo conectar con el servidor. Intentá de nuevo.'); 
+        }
+    };
+
     const handleToggleClase = async (idClase, estaHabilitada) => {
         try {
             const endpoint = estaHabilitada ? '/api/deshabilitarClase' : '/api/habilitarClase';
-
             const response = await fetch(endpoint, {
-                method: 'POST', 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ id_clase: idClase }) 
+                body: JSON.stringify({ id_clase: idClase })
             });
-            
+
             if (response.ok) {
-                
                 setTurnos(prev => prev.map(t =>
-                    t.id_clase === idClase
-                        ? { ...t, habilitada: !estaHabilitada } 
-                        : t
+                    t.id_clase === idClase ? { ...t, habilitada: !estaHabilitada } : t
                 ));
+                toast.success(estaHabilitada ? 'Clase deshabilitada.' : 'Clase habilitada.'); 
             } else {
                 const errData = await response.json();
-                console.error("Error del backend:", errData);
+                toast.error(errData.message || 'Error al cambiar estado de la clase.');
             }
         } catch (error) {
-            console.error('Error al cambiar estado de clase:', error);
+            toast.error('Error al cambiar estado de clase.');
         }
     };
 
@@ -113,7 +167,7 @@ export default function ListarTurnosPage() {
         return (
             <button
                 className="reservarBtn"
-                onClick={!logueado ? handleAccionNoLogueado : undefined}
+                onClick={!logueado ? handleAccionNoLogueado : () => handleReservar(turno)}
             >
                 Reservar
             </button>
@@ -126,7 +180,6 @@ export default function ListarTurnosPage() {
         <div className="listarTurnosContainer">
             <h1 className="listarTurnosTitle">Buscar Turnos</h1>
 
-            {/* FILTROS */}
             <form onSubmit={handleBuscar}>
                 <div className="filtrosContainer">
                     <select name="disciplina" value={filtros.disciplina} onChange={handleChange} required>
@@ -164,23 +217,20 @@ export default function ListarTurnosPage() {
                 </div>
             </form>
 
-            {/* RESULTADOS */}
             {buscado && (
                 <div className="resultadosContainer">
 
-                    {/* BOTON ABONAR - solo si no es personal interno */}
                     {!esPersonalInterno && (
                         <div className="abonarContainer">
                             <button
                                 className={`abonarBtn ${hayAlgunTurnoLleno ? 'listaEsperaBtn' : ''}`}
-                                onClick={!logueado ? handleAccionNoLogueado : undefined}
+                                onClick={!logueado ? handleAccionNoLogueado : handleAbonarMensual}
                             >
                                 {hayAlgunTurnoLleno ? 'Lista de espera (mensual)' : 'Abonar (mensual)'}
                             </button>
                         </div>
                     )}
 
-                    {/* TABLA */}
                     {turnos.length === 0 ? (
                         <p className="sinResultados">No hay turnos disponibles para este mes.</p>
                     ) : (
@@ -208,7 +258,7 @@ export default function ListarTurnosPage() {
                                             <td>
                                                 <button
                                                     className={turno.habilitada ? 'deshabilitarBtn' : 'habilitarBtn'}
-                                                    onClick={() => handleToggleClase(turno.id_clase, turno.habilitada)} 
+                                                    onClick={() => handleToggleClase(turno.id_clase, turno.habilitada)}
                                                 >
                                                     {turno.habilitada ? 'Deshabilitar clase' : 'Habilitar clase'}
                                                 </button>
@@ -223,7 +273,6 @@ export default function ListarTurnosPage() {
                         </table>
                     )}
 
-                    {/* MENSAJE SI NO ESTA LOGUEADO */}
                     {!logueado && (
                         <p className="loginAviso">
                             Para reservar o abonar turnos tenés que <span onClick={() => navigate('/login')}>iniciar sesión</span>.
