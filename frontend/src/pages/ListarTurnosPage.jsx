@@ -25,6 +25,7 @@ export default function ListarTurnosPage() {
     const [session, setSession] = useState(null);
     const [filtros, setFiltros] = useState({ disciplina: '', dia: '', horaHH: '', horaMM: '' });
     const [turnos, setTurnos] = useState([]);
+    const [turnosCliente, setTurnosCliente] = useState([]);
     const [buscado, setBuscado] = useState(false);
     const [cargando, setCargando] = useState(false);
 
@@ -246,7 +247,7 @@ export default function ListarTurnosPage() {
     const renderBotonAccion = (turno) => {
         const turnoLleno = turno.ocupados >= turno.cupo;
 
-        if (turnoLleno) {
+        if (turnoLleno && !inscripto) {
             return (
                 <button
                     className="listaEsperaBtn"
@@ -313,7 +314,7 @@ export default function ListarTurnosPage() {
             {buscado && (
                 <div className="resultadosContainer">
 
-                    {!esPersonalInterno && (
+                    {!esPersonalInterno && (turnos.length > 0) && (
                         <div className="abonarContainer">
                             <button
                                 className={`abonarBtn ${hayAlgunTurnoLleno ? 'listaEsperaBtn' : ''}`}

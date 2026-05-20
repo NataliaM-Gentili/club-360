@@ -95,3 +95,47 @@ def buscar_turnos():
         )
 
     return jsonify({"turnos": resultado}), 200
+
+
+@turno_bp.route('/turnos_de_cliente', methods=['GET'])
+def buscar_turnos_de_cliente():
+    id_usuario = request.args.get("id_usuario")
+
+    if not id_usuario:
+        return jsonify({"error": "Parámetro faltante: id_usuario"}), 400
+
+    try:
+        id_usuario = int(id_usuario)
+    except ValueError:
+        return jsonify({"error": "id_usuario inválido"}), 400
+
+    reservas = ReservaTurno.query.filter_by(id_usuario=id_usuario).all()
+
+    if not reservas:
+        return jsonify({"turnos": []}), 200
+
+    resultado = []
+    for reserva in reservas:
+        turno = Turno.query.get(reserva.id_turno)
+        if not turno:
+            continue
+
+        clase = Clase.query.get(turno.id_clase)
+        if not clase:
+            continue
+
+        resultado.append(
+            {
+                "id_reserva": reserva.id,
+                "id_turno": turno.id,
+                "fecha": turno.fecha.strftime("%d/%m/%Y"),
+                "disciplina": clase.disciplina,
+                "dia": clase.dia,
+                "hora": clase.hora,
+                "cupo": clase.cupo,
+                "habilitado": turno.habilitado,
+            }
+        )
+
+    return jsonify({"turnos": resultado}), 200
+
