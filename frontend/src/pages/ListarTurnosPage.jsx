@@ -43,6 +43,34 @@ export default function ListarTurnosPage() {
             .catch(() => setSession({ loggedIn: false }));
     }, []);
 
+    useEffect(() => {
+
+    if (!session?.loggedIn) return;
+
+    const fetchTurnosCliente = async () => {
+    try {
+        const [resTurno, resClase] = await Promise.all([
+            fetch(`/api/turnos_de_cliente?id_usuario=${session.user_id}`, { credentials: 'include' }),
+            fetch(`/api/turnos_de_cliente_clase?id_usuario=${session.user_id}`, { credentials: 'include' })
+        ]);
+
+        const dataTurno = await resTurno.json();
+        const dataClase = await resClase.json();
+
+        setTurnosCliente([
+            ...(dataTurno.turnos || []),
+            ...(dataClase.turnos || [])
+        ]);
+
+    } catch (error) {
+        console.error('Error obteniendo turnos del cliente');
+    }
+    };
+
+    fetchTurnosCliente();
+
+    }, [session]);
+
     const esAdmin = session?.rol_id === ROL_ADMINISTRADOR;
     const esEmpleado = session?.rol_id === ROL_EMPLEADO;
     const esPersonalInterno = esAdmin || esEmpleado;
@@ -245,7 +273,14 @@ export default function ListarTurnosPage() {
 };
 
     const renderBotonAccion = (turno) => {
+
         const turnoLleno = turno.ocupados >= turno.cupo;
+
+        const inscripto = turnosCliente.some(
+            t => t.id_turno === turno.id
+        );
+
+        if (inscripto || inscriptoEnTodosLosTurnos) return <></>;
 
         if (turnoLleno && !inscripto) {
             return (
@@ -257,7 +292,7 @@ export default function ListarTurnosPage() {
                 </button>
             );
         }
-
+        else if (!inscripto && !turnoLleno){
         return (
             <button
                 className="reservarBtn"
@@ -266,11 +301,20 @@ export default function ListarTurnosPage() {
                 Reservar
             </button>
         );
+        }
+        return(<></>);
     };
 
     const hayAlgunTurnoLleno = turnos.some(t => t.ocupados >= t.cupo);
 
-    return (
+    const inscriptoEnTodosLosTurnosLlenos = turnos
+        .filter(t => t.ocupados >= t.cupo)
+        .every(t => turnosCliente.some(tc => tc.id_turno === t.id));
+        
+    const inscriptoEnTodosLosTurnos = turnos.length > 0 &&
+    turnos.every(t => turnosCliente.some(tc => tc.id_turno === t.id));
+
+        return (
         <div className="listarTurnosContainer">
             <h1 className="listarTurnosTitle">Buscar Turnos</h1>
 
@@ -314,11 +358,17 @@ export default function ListarTurnosPage() {
             {buscado && (
                 <div className="resultadosContainer">
 
-                    {!esPersonalInterno && (turnos.length > 0) && (
+                    {!esPersonalInterno && turnos.length > 0 && !(hayAlgunTurnoLleno && inscriptoEnTodosLosTurnosLlenos) && (
                         <div className="abonarContainer">
                             <button
                                 className={`abonarBtn ${hayAlgunTurnoLleno ? 'listaEsperaBtn' : ''}`}
-                                onClick={!logueado ? handleAccionNoLogueado : handleAbonarMensual}
+                                onClick={
+                                    !logueado
+                                        ? handleAccionNoLogueado
+                                        : hayAlgunTurnoLleno
+                                            ? undefined
+                                            : handleAbonarMensual
+                                }
                             >
                                 {hayAlgunTurnoLleno ? 'Lista de espera (mensual)' : 'Abonar (mensual)'}
                             </button>
