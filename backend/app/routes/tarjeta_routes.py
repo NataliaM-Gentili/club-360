@@ -4,7 +4,7 @@ from app.models.reserva_model import ReservaModel
 from flask import Blueprint, request, jsonify, session
 from app import db
 from app.models.tarjeta_model import TarjetaModel
-from app.models.db_structure import ReservaTurno, Turno, Clase
+from app.models.db_structure import ReservaTurno, Turno, Clase, Tarjeta
 from app.models.db_structure import AbonoTarjeta
 
 tarjeta_bp = Blueprint('tarjeta', __name__)
@@ -84,12 +84,22 @@ def pago_tarjeta():
     if not abono:
         return jsonify({"mensaje": "Abono no encontrado"}), 404
 
+    id_tarjeta = data.get('id_tarjeta')
+
+    # Verificar que la tarjeta no esté vencida
+    tarjeta = Tarjeta.query.get(id_tarjeta)
+    if not tarjeta:
+        return jsonify({"error": "Tarjeta no encontrada"}), 404
+    
+    fecha_venc = datetime.strptime(tarjeta.fecha_vencimiento, "%Y-%m")
+    if fecha_venc.replace(day=1) < datetime.today().replace(day=1):
+        return jsonify({"error": "La tarjeta está vencida"}), 404
+
     # retorna el ID del usuario
     user_id = TarjetaModel.obtener_usuario_con_reserva(id_reserva)
     if user_id == 2:
         return jsonify({"mensaje": "Saldo insuficiente!"}), 200
     
-    id_tarjeta = data.get('id_tarjeta')
     abono.efectivo = False
     
     # Determinar si es standalone (ReservaTurno) o monthly (ReservaClase)

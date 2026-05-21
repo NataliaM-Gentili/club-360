@@ -96,8 +96,9 @@ export default function OlvideContrasenaPage() {
                     <input
                         type="submit"
                         className="signUpSubmit"
-                        value={enviado ? 'Email enviado ✓' : 'Continuar'}
+                        value={enviado ? '✓' : 'Enviar'}
                         disabled={enviado}
+
                     />
 
                 </form>

@@ -1,12 +1,10 @@
-from flask import current_app
+from flask import current_app, session
 from flask_mail import Message
 from app import mail  # instancia de Flask-Mail
 import qrcode   
 import io
 import base64
 from app.models.db_structure import Usuario
-
-
 
 EMAIL_PRUEBAS = "juanmanuelperezz468@gmail.com"
 
@@ -49,7 +47,7 @@ def send_password_reset_email(email, token):
 
     msg = Message(
         subject="Restablecer contraseña - Club 360",
-        recipients=["juanmanuelperezz468@gmail.com"],
+        recipients=[email],
         html=html,  # ← acá el cambio clave
     )
 

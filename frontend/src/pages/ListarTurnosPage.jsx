@@ -175,7 +175,11 @@ export default function ListarTurnosPage() {
                 const data = await res.json();
 
                 if (!res.ok || data.mensaje?.includes("insuficiente")) {
-                    toast.error(data.mensaje);
+                    toast.error(
+                        data.mensaje ||
+                        data.error ||
+                        "Error al procesar el pago"
+                    );
 
                      // ELIMINA LA RESERVA SI EL PAGO FALLA
                     await handlePaymentCancelled(selectedReserva.id_reserva);

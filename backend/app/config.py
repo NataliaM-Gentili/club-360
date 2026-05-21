@@ -11,5 +11,5 @@ class Config:
     MAIL_USERNAME = "juanmanuelperezz468@gmail.com"
     MAIL_PASSWORD = "eexflwujtcdrxafw"
     FRONTEND_URL = "http://localhost:5173/"  
-    MAIL_DEFAULT_SENDER = 'juanmanuelperezz468@gmail.com'
+    MAIL_DEFAULT_SENDER = 'club360@gmail.com'
 
