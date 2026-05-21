@@ -276,6 +276,33 @@ def abonar_mensual():
     # Calcular monto con reglas de negocio
     monto, descuento_aplicado = ReservaModel.calcular_monto_abono_mensual(precio, turnos_restantes)
 
+    # -----
+
+    # Verificar si el cliente ya tiene reservas sueltas
+    # para turnos de esta clase en el mes actual
+
+    turnos_clase_mes = ReservaModel.turnos_restantes_mes(id_clase)
+
+    ids_turnos_clase = [t.id for t in turnos_clase_mes]
+
+    reservas_cliente = Reserva.query.filter_by(
+        id_cliente=id_cliente
+    ).all()
+
+    ids_reservas_cliente = [r.id for r in reservas_cliente]
+
+    reservas_turno_existentes = ReservaTurno.query.filter(
+        ReservaTurno.id_reserva.in_(ids_reservas_cliente),
+        ReservaTurno.id_turno.in_(ids_turnos_clase)
+    ).first()
+
+    if reservas_turno_existentes:
+        return jsonify({
+            "mensaje": "Ya posee reservas individuales para esta clase en el mes actual"
+        }), 400
+
+    # -----
+
     # Crear reserva
     reserva, turnos = ReservaModel.abonar_mensual(
         id_cliente=id_cliente,
