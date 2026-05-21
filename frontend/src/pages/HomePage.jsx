@@ -70,6 +70,7 @@ export default function HomePage() {
                     <div className="login-prompt">
                         <Link to="/login"><button className='login-btn'>Iniciar Sesion</button></Link>
                         <Link to="/signup"><button className='login-btn'>Registrarse</button></Link>
+                        <Link to="/turnos"><button className='login-btn'>Buscar Turnos</button></Link>
                     </div> ) }
             </section>
 
