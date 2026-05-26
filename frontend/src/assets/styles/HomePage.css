@@ -1,215 +1,319 @@
-.home-root {
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap');
+
+/* ── WRAPPER PARA EL FONDO ONDULADO ── */
+.home-wrapper {
+    position: relative;
+    min-height: 100vh; /* Ocupa toda la pantalla */
+    background: linear-gradient(135deg, #e3eee1 0%, #add1a9 100%); /* Verde claro degradado */
+    overflow: hidden;
     display: flex;
-    gap: 24px;
-    min-height: calc(100vh - 100px); /* leave space for fixed navbar */
-    padding-top: 0; /* center vertically; navbar space already reserved by min-height */
-    max-width: 800px;
-    color: #222;
-    align-items: center; /* vertically center children */
-    align-self: center;
-    padding-left: 150px;
 }
 
-.hero {
-    flex: 0.65;
+/* La forma blanca ondulada */
+.home-wrapper::before {
+    content: "";
+    position: absolute;
+    top: -10%;
+    bottom: -10%;
+    left: -10%;
+    width: 65%; /* La ola cubre la mitad izquierda */
+    background: #ffffff;
+    /* La magia: radios asimétricos para hacer el efecto ola */
+    border-radius: 0 100% 60% 0 / 0 50% 80% 0; 
+    z-index: 0;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.04); /* Sombrita súper sutil */
+}
+
+/* ── ROOT ── */
+.home-root {
+    position: relative; 
+    z-index: 1;        
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    padding: 40px 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    font-family: 'Nunito', sans-serif;
+}
+
+/* ── LEFT ── */
+.home-left {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    overflow: visible;
+    gap: 20px;
+    animation: fadeUp 0.6s ease both;
 }
 
-.hero-content {
-    flex-shrink: 0;
-    text-align: right;
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.hero-image {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    flex-shrink: 0;
+.home-tag {
+    display: inline-block;
+    width: fit-content;
+    background: rgba(89, 136, 73, 0.12);
+    color: #598849;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
 }
 
-.hero-image img {
-    width: 100%;
-    max-width: 350px;
-    height: auto;
-    border-radius: 14px;
-    max-height: calc(100vh - 160px); /* keep image from forcing vertical scroll */
-    object-fit: cover;
+.home-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 6vw, 76px);
+    line-height: 1;
+    color: #1a1a1a;
+    margin: 0;
+    letter-spacing: 1px;
 }
 
-.hero h1 {
-    font-size: 36px;
-    margin: 0 0 8px 0;
+.home-title-accent {
     color: #598849;
 }
 
-.subtitle {
-    font-size: 16px;
-    color: rgba(0,0,0,0.7);
-    margin-bottom: 12px;
-}
-
-.description {
-    margin-bottom: 8px;
-    color: rgba(0,0,0,0.6);
-    font-size: 14px;
-}
-
-.address {
-    margin-top: 8px;
-    font-weight: 600;
+.home-sub {
+    font-size: 1rem;
     color: rgba(0,0,0,0.55);
-    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 420px;
 }
 
-.activities {
-    background: #fafafa;
+.home-address {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: rgba(0,0,0,0.4);
+    margin: 0;
+}
+
+/* ── ACTIVITIES ── */
+.home-activities {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.home-activities-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: rgba(0,0,0,0.35);
+    margin: 0;
+}
+
+.home-activities-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.activity-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.07);
     border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.activity-chip:hover {
+    box-shadow: 0 4px 12px rgba(89,136,73,0.15);
+    transform: translateY(-1px);
+}
+
+.activity-chip-emoji {
+    font-size: 1.2rem;
     flex-shrink: 0;
 }
 
-.activities h2 {
-    text-align: right;
-    margin: 0 0 10px 0;
-    color: #333;
-    font-size: 16px;
-}
-
-.activities ul {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 12px 0;
-}
-
-.activity-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    background: white;
-    align-items: center;
-    font-size: 14px;
-}
-
-.activity-name { font-weight: 600; }
-.activity-price { color: rgba(0,0,0,0.6); }
-
-.cta-row { display: flex; gap: 10px; margin-top: 8px; }
-.cta { padding: 8px 14px; border-radius: 8px; background: #598849; color: #fff; text-decoration: none; font-weight: 700; font-size: 13px; }
-.cta.outline { background: transparent; border: 1px solid #598849; color: #598849; }
-
-.login-prompt {
-    display: flex;
-    margin-top: 12px;
-    text-align: right;
-    align-items: flex-end;
-    align-content: flex-end;
-}
-.login-prompt p {
-    margin: 0;
-    font-weight: 600;
-    color: gray;
-    font-size: small;
-    padding: 5px;
-}
-.login-btn {
-    padding: 5px;
-    border-color: transparent;
-    border-radius: 8px;
-    background: #598849;
-    color: #fff;
-    text-decoration: none;
+.activity-chip-name {
+    font-size: 0.85rem;
     font-weight: 700;
-    margin: 5px;
-    align-self: flex-end;
+    color: #222;
+    flex: 1;
 }
 
-@media (max-width: 1024px) {
-    .home-root { flex-direction: column; height: auto; }
-    .hero { flex-direction: row; }
-    .hero-image { flex: none; }
-    .hero-image img { max-width: 200px; }
-    .hero h1 { font-size: 28px; }
+.activity-chip-price {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #598849;
 }
 
+/* ── CTA BUTTONS ── */
+.home-cta-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
 
-@media (max-width: 600px) {
+.home-btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.home-btn-primary {
+    background: #598849;
+    color: white;
+}
+
+.home-btn-primary:hover {
+    background: #4e7740;
+    transform: translateY(-1px);
+}
+
+.home-btn-outline {
+    background: transparent;
+    color: #598849;
+    border: 1.5px solid #598849;
+}
+
+.home-btn-outline:hover {
+    background: rgba(89,136,73,0.08);
+    transform: translateY(-1px);
+}
+
+.home-btn-ghost {
+    background: transparent;
+    color: rgba(0,0,0,0.45);
+    padding-left: 0;
+    font-size: 0.82rem;
+}
+
+.home-btn-ghost:hover {
+    color: #598849;
+}
+
+/* ── RIGHT ── */
+.home-right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end; /* la manda hacia la derecha */
+    align-items: center;
+    animation: fadeUp 0.6s 0.15s ease both;
+    padding-left: 20px;
+}
+
+.home-image-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    height: 480px; /* altura fija */
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.14);
+    transform: translateX(40px);
+}
+
+.home-image {
+    width: 100%;
+    height: 100%; /* ocupa todo */
+    object-fit: cover; /* rellena sin dejar bordes */
+    display: block;
+}
+
+/* floating badge */
+.home-image-badge {
+    position: absolute;
+    bottom: 20px;
+    left: 16px; /* antes -20px */
+    z-index: 5;
+    background: white;
+    border-radius: 14px;
+    padding: 10px 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.1;
+}
+
+.badge-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: #598849;
+    letter-spacing: 1px;
+}
+
+.badge-text {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(0,0,0,0.4);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+    /* Cambiamos la ola de vertical a horizontal para celulares */
+    .home-wrapper::before {
+        width: 120%;
+        height: 65%; /* Cubre la mitad superior */
+        top: -10%;
+        left: -10%;
+        /* Curva hacia abajo */
+        border-radius: 0 0 60% 60% / 0 0 30% 30%; 
+    }
+
     .home-root {
         flex-direction: column;
-        padding: 16px;
-        padding-left: 16px; /* override the 150px */
-        gap: 16px;
-        align-items: center;
+        padding: 32px 24px;
+        gap: 32px;
+    }
+
+    .home-right {
+        width: 100%;
+    }
+
+    .home-image-wrap {
         max-width: 100%;
     }
 
-    .hero {
-        width: 100%;
+    .home-image {
+        max-height: 280px;
+    }
+
+    .home-image-badge {
+        left: 12px;
+        bottom: 12px;
+    }
+}
+
+@media (max-width: 500px) {
+    .home-title {
+        font-size: 52px;
+    }
+
+    .home-activities-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-cta-row {
         flex-direction: column;
-        align-items: center;
-        gap: 12px;
     }
 
-    .hero-content {
-        text-align: center; /* important for mobile readability */
-    }
-
-    .hero h1 {
-        font-size: 24px;
-    }
-
-    .subtitle {
-        font-size: 14px;
-    }
-
-    .description {
-        font-size: 13px;
-    }
-
-    .address {
-        font-size: 13px;
-    }
-
-    .activities {
+    .home-btn {
         width: 100%;
-        padding: 10px;
-    }
-
-    .activities h2 {
         text-align: center;
-        font-size: 15px;
-    }
-
-    .activity-row {
-        font-size: 13px;
-        padding: 6px 10px;
-    }
-
-    .hero-image {
-        order: -1; /* moves image to top (optional, but nice UX) */
-        width: 100%;
-        justify-content: center;
-    }
-
-    .hero-image img {
-        max-width: 90%;
-        max-height: 200px;
-        border-radius: 12px;
-    }
-
-    .login-prompt {
-        width: 100%;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .login-btn {
-        width: 100%;
-        max-width: 200px;
-        padding: 8px;
-        font-size: 14px;
     }
 }
