@@ -17,6 +17,10 @@ export default function RegisterCashPaymentPage() {
       const res = await axios.post("/api/revisar-reserva", { email });
 
       setResults(res.data);
+
+      setMonto(res.data[0].monto_deuda)
+      console.log(monto)
+      
       setSelectedReserva(null);
 
     } catch (err) {
@@ -124,12 +128,12 @@ export default function RegisterCashPaymentPage() {
             Monto deuda: <strong>${selectedReserva.monto_deuda}</strong>
           </p>
 
-          <input
+          {/*<input
             className="cash-input"
             placeholder="Monto ingresado"
             value={monto}
             onChange={(e) => setMonto(e.target.value)}
-          />
+          />*/}
 
           <button className="cash-button success" onClick={registrarPago}>
             Registrar Pago Efectivo

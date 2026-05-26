@@ -402,7 +402,7 @@ export default function ListarTurnosPage() {
                                         <td>{turno.dia}</td>
                                         <td>{turno.hora}</td>
                                         {esPersonalInterno && <td>{turno.ocupados}/{turno.cupo}</td>}
-                                        {esAdmin && (
+                                        {esAdmin && turno.ocupados == 0 && (
                                             <td>
                                                 <button
                                                     className={turno.habilitada ? 'deshabilitarBtn' : 'habilitarBtn'}
