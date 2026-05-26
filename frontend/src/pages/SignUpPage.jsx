@@ -84,7 +84,15 @@ export default function SignUpPage(){
         });
     };
 
-    
+    const isFormValid = 
+        formValue.email.trim() !== "" &&
+        formValue.name.trim() !== "" &&
+        formValue.dni.trim() !== "" &&
+        formValue.password.trim() !== "" &&
+        errors.email === "" &&
+        errors.name === "" &&
+        errors.dni === "" &&
+        errors.password === "";
 
     // backend api communication is be here!!
     
@@ -296,7 +304,7 @@ export default function SignUpPage(){
                     </div>
                 </div>
 
-                <input type="submit" className="signUpSubmit" value="Enviar"/>
+                <input type="submit" className="signUpSubmit" value="Enviar" disabled={!isFormValid}/>
 
                 </form>
                 </div>

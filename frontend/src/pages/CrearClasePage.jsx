@@ -50,6 +50,14 @@ export default function CrearClasePage() {
         setFormValue({ ...formValue, [name]: value });
     };
 
+    const isFormValid = 
+        formValue.disciplina !== '' &&
+        formValue.dia !== '' &&
+        formValue.horaHH !== '' &&
+        formValue.horaMM !== '' &&
+        formValue.cupo !== '' &&
+        parseInt(formValue.cupo) > 0;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -151,7 +159,7 @@ export default function CrearClasePage() {
                         />
                     </div>
 
-                    <input type="submit" className="crearClaseSubmit" value="Crear" />
+                    <input type="submit" className="crearClaseSubmit" value="Crear" disabled={!isFormValid} />
 
                 </form>
             </div>

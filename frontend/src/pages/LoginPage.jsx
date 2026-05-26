@@ -59,7 +59,10 @@ export default function SignUpPage(){
         });
     };
 
-    
+    const isFormValid = 
+        formValue.email.trim() !== "" &&
+        formValue.password.trim() !== "" &&
+        errors.email === "";
 
     // backend api communication is here!!
     
@@ -181,7 +184,7 @@ export default function SignUpPage(){
                 </div>
             </div>
 
-            <input type="submit" className="signUpSubmit" value="Enviar"/>
+            <input type="submit" className="signUpSubmit" value="Enviar" disabled={!isFormValid}/>
 
               {/* OLVIDE CONTRASEÑA */}
             <p className="olvidéLink">

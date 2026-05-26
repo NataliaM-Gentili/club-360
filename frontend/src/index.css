@@ -12,3 +12,12 @@ body {
     display: flex;
     flex-direction: column;
 }
+
+/* Botones de envío deshabilitados (Validación estricta) */
+button:disabled,
+input[type="submit"]:disabled {
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}

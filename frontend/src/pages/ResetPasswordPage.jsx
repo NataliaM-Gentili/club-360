@@ -63,6 +63,13 @@ export default function ResetPasswordPage() {
         if (name === 'confirmar') setErrors({ ...errors, confirmar: validateConfirmar(value) });
     };
 
+    const isFormValid =
+        formValue.contrasena.trim() !== '' &&
+        formValue.confirmar.trim() !== '' &&
+        errors.contrasena === '' &&
+        formValue.contrasena === formValue.confirmar &&
+        !enviado;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -167,7 +174,7 @@ export default function ResetPasswordPage() {
                         type="submit"
                         className="signUpSubmit"
                         value={enviado ? 'Contraseña actualizada ✓' : 'Confirmar'}
-                        disabled={enviado}
+                        disabled={!isFormValid}
                     />
 
                 </form>
