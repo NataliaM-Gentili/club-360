@@ -186,7 +186,7 @@ export default function SignUpPage(){
               {/* OLVIDE CONTRASEÑA */}
             <p className="olvidéLink">
                 <span onClick={() => navigate('/olvide-contrasena')}>
-                    Olvide mi contraseña
+                    Recuperar Contraseña
                 </span>
             </p>
 

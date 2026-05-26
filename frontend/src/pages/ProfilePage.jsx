@@ -83,7 +83,7 @@ export default function ProfilePage() {
                     className="cambiarContrasenaBtn"
                     onClick={handleCambiarContrasena}
                 >
-                    Olvidé mi contraseña 
+                    Recuperar Contraseña 
                 </button>
 
             </div>
