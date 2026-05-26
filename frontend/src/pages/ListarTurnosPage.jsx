@@ -29,12 +29,10 @@ export default function ListarTurnosPage() {
     const [buscado, setBuscado] = useState(false);
     const [cargando, setCargando] = useState(false);
 
-    // para el modal de pagos
     const [modalOpen, setModalOpen] = useState(false);
     const [cards, setCards] = useState([]);
     const [selectedCard, setSelectedCard] = useState(null);
     const [selectedReserva, setSelectedReserva] = useState(null);
-    
 
     useEffect(() => {
         fetch('/api/auth/status', { credentials: 'include' })
@@ -44,31 +42,28 @@ export default function ListarTurnosPage() {
     }, []);
 
     useEffect(() => {
+        if (!session?.loggedIn) return;
 
-    if (!session?.loggedIn) return;
+        const fetchTurnosCliente = async () => {
+            try {
+                const [resTurno, resClase] = await Promise.all([
+                    fetch(`/api/turnos_de_cliente?id_usuario=${session.user_id}`, { credentials: 'include' }),
+                    fetch(`/api/turnos_de_cliente_clase?id_usuario=${session.user_id}`, { credentials: 'include' })
+                ]);
 
-    const fetchTurnosCliente = async () => {
-    try {
-        const [resTurno, resClase] = await Promise.all([
-            fetch(`/api/turnos_de_cliente?id_usuario=${session.user_id}`, { credentials: 'include' }),
-            fetch(`/api/turnos_de_cliente_clase?id_usuario=${session.user_id}`, { credentials: 'include' })
-        ]);
+                const dataTurno = await resTurno.json();
+                const dataClase = await resClase.json();
 
-        const dataTurno = await resTurno.json();
-        const dataClase = await resClase.json();
+                setTurnosCliente([
+                    ...(dataTurno.turnos || []),
+                    ...(dataClase.turnos || [])
+                ]);
+            } catch (error) {
+                console.error('Error obteniendo turnos del cliente');
+            }
+        };
 
-        setTurnosCliente([
-            ...(dataTurno.turnos || []),
-            ...(dataClase.turnos || [])
-        ]);
-
-    } catch (error) {
-        console.error('Error obteniendo turnos del cliente');
-    }
-    };
-
-    fetchTurnosCliente();
-
+        fetchTurnosCliente();
     }, [session]);
 
     const esAdmin = session?.rol_id === ROL_ADMINISTRADOR;
@@ -108,18 +103,12 @@ export default function ListarTurnosPage() {
     const handleAccionNoLogueado = () => navigate('/login');
 
     const handleReservar = async (turno) => {
-
         try {
-
             const response = await fetch('/api/reservar_turno', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({
-                    id_turno: turno.id
-                }),
+                body: JSON.stringify({ id_turno: turno.id }),
             });
 
             const data = await response.json();
@@ -129,18 +118,11 @@ export default function ListarTurnosPage() {
                 return;
             }
 
-            const resCards = await fetch(
-                `/api/tarjetas/${session.user_id}`,
-                {
-                    credentials: 'include'
-                }
-            );
-
+            const resCards = await fetch(`/api/tarjetas/${session.user_id}`, { credentials: 'include' });
             const cardsData = await resCards.json();
 
             setCards(cardsData);
             setSelectedCard(cardsData[0]);
-
             setSelectedReserva({
                 id_reserva: data.id_reserva,
                 disciplina: turno.disciplina,
@@ -150,61 +132,45 @@ export default function ListarTurnosPage() {
             });
 
             setModalOpen(true);
-
         } catch (error) {
-
-            toast.error(
-                'No se pudo conectar con el servidor.'
-            );
+            toast.error('No se pudo conectar con el servidor.');
         }
     };
 
-        // PAGAR (boton del modal)
-        const confirmPay = async () => {
-            try {
-                const res = await fetch("/api/pago_tarjeta", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({
-                        id_reserva: selectedReserva.id_reserva,
-                        id_tarjeta: selectedCard.id,
-                    }),
-                });
+    const confirmPay = async () => {
+        try {
+            const res = await fetch("/api/pago_tarjeta", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    id_reserva: selectedReserva.id_reserva,
+                    id_tarjeta: selectedCard.id,
+                }),
+            });
 
-                const data = await res.json();
+            const data = await res.json();
 
-                if (!res.ok || data.mensaje?.includes("insuficiente")) {
-                    toast.error(
-                        data.mensaje ||
-                        data.error ||
-                        "Error al procesar el pago"
-                    );
-
-                     // ELIMINA LA RESERVA SI EL PAGO FALLA
-                    await handlePaymentCancelled(selectedReserva.id_reserva);
-                    setModalOpen(false);
-                    
-                    return;
-                }
-
-                toast.success(data.mensaje);
-                setModalOpen(false);
-
-                // optional: refresh turnos instead of filtering pagos
-                // setTurnos(...)
-            } catch (err) {
-                toast.error("Error procesando pago");
-                // Delete reservation if connection fails
+            if (!res.ok || data.mensaje?.includes("insuficiente")) {
+                toast.error(data.mensaje || data.error || "Error al procesar el pago");
                 await handlePaymentCancelled(selectedReserva.id_reserva);
                 setModalOpen(false);
+                return;
             }
-        };
+
+            toast.success(data.mensaje);
+            setModalOpen(false);
+        } catch (err) {
+            toast.error("Error procesando pago");
+            await handlePaymentCancelled(selectedReserva.id_reserva);
+            setModalOpen(false);
+        }
+    };
 
     const handleAbonarMensual = async () => {
         const idClase = turnos[0]?.id_clase;
         if (!idClase) {
-            toast.error('No se pudo determinar la clase. Buscá los turnos nuevamente.'); 
+            toast.error('No se pudo determinar la clase. Buscá los turnos nuevamente.');
             return;
         }
 
@@ -219,7 +185,7 @@ export default function ListarTurnosPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                toast.error(data.mensaje); 
+                toast.error(data.mensaje);
                 return;
             }
 
@@ -227,10 +193,9 @@ export default function ListarTurnosPage() {
             if (data.descuento) mensaje += ` | ${data.descuento}`;
             if (data.monto_a_pagar) mensaje += ` | Monto: $${data.monto_a_pagar}`;
 
-            toast.success(mensaje); 
-
+            toast.success(mensaje);
         } catch (error) {
-            toast.error('No se pudo conectar con el servidor. Intentá de nuevo.'); 
+            toast.error('No se pudo conectar con el servidor. Intentá de nuevo.');
         }
     };
 
@@ -248,7 +213,7 @@ export default function ListarTurnosPage() {
                 setTurnos(prev => prev.map(t =>
                     t.id_clase === idClase ? { ...t, habilitada: !estaHabilitada } : t
                 ));
-                toast.success(estaHabilitada ? 'Clase deshabilitada.' : 'Clase habilitada.'); 
+                toast.success(estaHabilitada ? 'Clase deshabilitada.' : 'Clase habilitada.');
             } else {
                 const errData = await response.json();
                 toast.error(errData.message || 'Error al cambiar estado de la clase.');
@@ -259,66 +224,52 @@ export default function ListarTurnosPage() {
     };
 
     const handlePaymentCancelled = async (reservaId) => {
-    try {
-        const res = await fetch(`/api/cancelar_reserva/${reservaId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
+        try {
+            const res = await fetch(`/api/cancelar_reserva/${reservaId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
 
-        if (!res.ok) {
+            if (!res.ok) {
+                toast.error('Error al cancelar la reserva');
+                return;
+            }
+
+            toast.info('No se confirmó la reserva debido a la falta de pago. El turno sigue disponible.');
+        } catch (error) {
             toast.error('Error al cancelar la reserva');
-            return;
         }
+    };
 
-        toast.info('No se confirmó la reserva debido a la falta de pago. El turno sigue disponible.');
-    } catch (error) {
-        toast.error('Error al cancelar la reserva');
-    }
-};
+    const inscriptoEnTodosLosTurnos = turnos.length > 0 &&
+        turnos.every(t => turnosCliente.some(tc => tc.id_turno === t.id));
+
+    const todosLosTurnosLlenos = turnos.length > 0 &&
+        turnos.every(t => t.ocupados >= t.cupo);
 
     const renderBotonAccion = (turno) => {
-
         const turnoLleno = turno.ocupados >= turno.cupo;
-
-        const inscripto = turnosCliente.some(
-            t => t.id_turno === turno.id
-        );
+        const inscripto = turnosCliente.some(t => t.id_turno === turno.id);
 
         if (inscripto || inscriptoEnTodosLosTurnos) return <></>;
 
-        if (turnoLleno && !inscripto) {
-            return (
-                <button
-                    className="listaEsperaBtn"
-                    onClick={!logueado ? handleAccionNoLogueado : undefined}
-                >
-                    Lista de espera
-                </button>
-            );
-        }
-        else if (!inscripto && !turnoLleno){
         return (
             <button
                 className="reservarBtn"
-                onClick={!logueado ? handleAccionNoLogueado : () => handleReservar(turno)}
+                onClick={
+                    !logueado
+                        ? handleAccionNoLogueado
+                        : turnoLleno
+                            ? () => toast.warning("El cupo de este turno ya está lleno.")
+                            : () => handleReservar(turno)
+                }
             >
                 Reservar
             </button>
         );
-        }
-        return(<></>);
     };
 
-    const hayAlgunTurnoLleno = turnos.some(t => t.ocupados >= t.cupo);
-
-    const inscriptoEnTodosLosTurnosLlenos = turnos
-        .filter(t => t.ocupados >= t.cupo)
-        .every(t => turnosCliente.some(tc => tc.id_turno === t.id));
-        
-    const inscriptoEnTodosLosTurnos = turnos.length > 0 &&
-    turnos.every(t => turnosCliente.some(tc => tc.id_turno === t.id));
-
-        return (
+    return (
         <div className="listarTurnosContainer">
             <h1 className="listarTurnosTitle">Buscar Turnos</h1>
 
@@ -362,19 +313,19 @@ export default function ListarTurnosPage() {
             {buscado && (
                 <div className="resultadosContainer">
 
-                    {!esPersonalInterno && turnos.length > 0 && !(hayAlgunTurnoLleno && inscriptoEnTodosLosTurnosLlenos) && (
+                    {!esPersonalInterno && turnos.length > 0 && !inscriptoEnTodosLosTurnos && (
                         <div className="abonarContainer">
                             <button
-                                className={`abonarBtn ${hayAlgunTurnoLleno ? 'listaEsperaBtn' : ''}`}
+                                className="abonarBtn"
                                 onClick={
                                     !logueado
                                         ? handleAccionNoLogueado
-                                        : hayAlgunTurnoLleno
-                                            ? undefined
+                                        : todosLosTurnosLlenos
+                                            ? () => toast.warning("El cupo de todos los turnos ya está lleno.")
                                             : handleAbonarMensual
                                 }
                             >
-                                {hayAlgunTurnoLleno ? 'Lista de espera (mensual)' : 'Abonar (mensual)'}
+                                Abonar (mensual)
                             </button>
                         </div>
                     )}
@@ -432,13 +383,13 @@ export default function ListarTurnosPage() {
                         onClose={() => {
                             handlePaymentCancelled(selectedReserva?.id_reserva);
                             setModalOpen(false);
-                            }}
+                        }}
                         cards={cards}
                         selectedCard={selectedCard}
                         setSelectedCard={setSelectedCard}
                         onConfirm={confirmPay}
                         reservaInfo={selectedReserva}
-                        amount={selectedReserva?.monto ? (selectedReserva.monto / 2) + " - Seña del 50%" : 0}  // Show 50% for first payment
+                        amount={selectedReserva?.monto ? (selectedReserva.monto / 2) + " - Seña del 50%" : 0}
                     />
                 </div>
             )}

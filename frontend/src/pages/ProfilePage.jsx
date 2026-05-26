@@ -83,7 +83,7 @@ export default function ProfilePage() {
                     className="cambiarContrasenaBtn"
                     onClick={handleCambiarContrasena}
                 >
-                    Cambiar contraseña
+                    Olvidé mi contraseña 
                 </button>
 
             </div>
@@ -113,7 +113,7 @@ export default function ProfilePage() {
             {/* ACTIONS */}
             <div className="profileActions">
                 <button onClick={() => navigate("/mis-actividades")}>
-                    Mis Reservas
+                    Mis actividades
                 </button>
 
                 <button onClick={() => navigate("/mis-pagos")}>
