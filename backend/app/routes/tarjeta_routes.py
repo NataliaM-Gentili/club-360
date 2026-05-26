@@ -108,7 +108,7 @@ def pago_tarjeta():
 
     # retorna el ID del usuario
     user_id = TarjetaModel.obtener_usuario_con_reserva(id_reserva)
-    if user_id == 2:
+    if user_id == 4:
         return jsonify({"mensaje": "Saldo insuficiente!"}), 200
 
     abono.efectivo = False
