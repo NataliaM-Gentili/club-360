@@ -77,6 +77,16 @@ export default function RegisterClientAsEmployee() {
     });
   };
 
+  const isFormValid =
+    formValue.email.trim() !== "" &&
+    formValue.name.trim() !== "" &&
+    formValue.dni.trim() !== "" &&
+    formValue.password.trim() !== "" &&
+    errors.email === "" &&
+    errors.name === "" &&
+    errors.dni === "" &&
+    errors.password === "";
+
   // ---------------- HANDLE SUBMIT ----------------
 
   const handleSubmit = async (e) => {
@@ -246,6 +256,7 @@ export default function RegisterClientAsEmployee() {
             type="submit"
             className="signUpSubmit"
             value="Enviar"
+            disabled={!isFormValid}
           />
         </form>
       </div>

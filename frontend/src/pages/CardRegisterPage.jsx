@@ -56,6 +56,14 @@ export default function CardRegisterPage(){
 
     };
 
+	const isFormValid = 
+		formValue.number.trim() !== "" &&
+		formValue.expirationDate.trim() !== "" &&
+		formValue.owner.trim() !== "" &&
+		formValue.cvv.trim() !== "" &&
+		errors.number === "" &&
+		errors.expirationDate === "" &&
+		errors.cvv === "";
 	
 	// BACKEND INTEGRATION
 	const handleSubmit = async (e) => {
@@ -203,7 +211,7 @@ export default function CardRegisterPage(){
 						</div>
 					</div>
 
-					<input type="submit" className="cardRegisterSUbmit" value="Registrar Tarjeta"/>
+					<input type="submit" className="cardRegisterSUbmit" value="Registrar Tarjeta" disabled={!isFormValid}/>
 
 				</form>
 			</div>

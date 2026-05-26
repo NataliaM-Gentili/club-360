@@ -21,6 +21,8 @@ export default function OlvideContrasenaPage() {
         setError(validateEmail(e.target.value));
     };
 
+    const isFormValid = email.trim() !== '' && error === '' && !enviado;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -97,7 +99,7 @@ export default function OlvideContrasenaPage() {
                         type="submit"
                         className="signUpSubmit"
                         value={enviado ? '✓' : 'Enviar'}
-                        disabled={enviado}
+                        disabled={!isFormValid}
 
                     />
 

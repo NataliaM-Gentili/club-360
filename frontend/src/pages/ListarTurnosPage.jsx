@@ -80,6 +80,8 @@ export default function ListarTurnosPage() {
         setFiltros({ ...filtros, [name]: value });
     };
 
+    const isFormValid = filtros.disciplina !== '' && filtros.dia !== '' && filtros.horaHH !== '' && filtros.horaMM !== '';
+
     const handleBuscar = async (e) => {
         e.preventDefault();
         setCargando(true);
@@ -304,7 +306,7 @@ export default function ListarTurnosPage() {
                         </select>
                     </div>
 
-                    <button type="submit" className="buscarBtn">
+                    <button type="submit" className="buscarBtn" disabled={!isFormValid}>
                         <img src={lupa} alt="buscar" />
                     </button>
                 </div>
