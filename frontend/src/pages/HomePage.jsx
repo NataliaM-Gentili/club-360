@@ -26,12 +26,14 @@ export default function HomePage() {
                 
                 const data = await response.json();
                 
+                /*
                 // Redirección automática si es Cliente (Rol 1)
                 const rolId = data.rol_id || data.user?.rol_id;
                 if (rolId === 1) {
                     navigate("/mis-Actividades");
                     return; 
                 }
+                */
 
                 setIsLoggedIn(!!(data.loggedIn || data.logged_in || data.authenticated || data.user));
             } catch {
@@ -61,7 +63,7 @@ export default function HomePage() {
                         Reservá tu turno y viví el deporte en comunidad.
                     </p>
 
-                    <p className="home-address">📍 Av. Principal 1234, Ciudad</p>
+                    <p className="home-address">📍 Av. 1234 N°567, La Plata, ARG</p>
 
                     {/* ACTIVITIES */}
                     <div className="home-activities">
