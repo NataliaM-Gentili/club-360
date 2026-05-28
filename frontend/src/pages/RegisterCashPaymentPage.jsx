@@ -71,7 +71,10 @@ export default function RegisterCashPaymentPage() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        <button className="cash-button primary" onClick={buscarReservas}>
+        <button className="cash-button primary"
+          onClick={buscarReservas}
+          disabled = {!email.trim()}
+        >
           Buscar deudas
         </button>
 

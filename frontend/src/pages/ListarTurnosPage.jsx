@@ -253,7 +253,13 @@ export default function ListarTurnosPage() {
         const turnoLleno = turno.ocupados >= turno.cupo;
         const inscripto = turnosCliente.some(t => t.id_turno === turno.id);
 
-        if (inscripto || inscriptoEnTodosLosTurnos) return <></>;
+        if (inscripto || inscriptoEnTodosLosTurnos) {
+            return (
+                <button className="reservarBtn" disabled>
+                    Reservar
+                </button>
+            );
+        }
 
         return (
             <button
@@ -315,10 +321,11 @@ export default function ListarTurnosPage() {
             {buscado && (
                 <div className="resultadosContainer">
 
-                    {!esPersonalInterno && turnos.length > 0 && !inscriptoEnTodosLosTurnos && (
+                    {!esPersonalInterno && turnos.length > 0 && (
                         <div className="abonarContainer">
                             <button
                                 className="abonarBtn"
+                                disabled={inscriptoEnTodosLosTurnos}
                                 onClick={
                                     !logueado
                                         ? handleAccionNoLogueado

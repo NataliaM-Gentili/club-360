@@ -119,3 +119,11 @@
   margin-bottom: 12px;
   font-size: 14px;
 }
+
+.reservaBtn:disabled,
+.abonarBtn:disabled {
+    background-color: #b0b0b0;
+    color: #ffffff;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
