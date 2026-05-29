@@ -129,7 +129,7 @@ export default function MisPagos() {
         const data = await res.json();
 
         if (!res.ok || data.mensaje.includes("insuficiente")) {
-            toast.error(data.mensaje);
+            toast.error(data.mensaje || data.error || "Error al procesar el pago");
             return;
         }
 
