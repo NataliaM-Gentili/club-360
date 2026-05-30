@@ -201,6 +201,54 @@ export default function ListarTurnosPage() {
         }
     };
 
+    
+    const handleListaEsperaNoAbonado = async (turno) => {
+        try {
+            const response = await fetch(`/api/lista-espera-no-abonado/${session.user_id}/${turno.id}`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                toast.error(data.mensaje || 'Error al agregar a lista de espera');
+                return;
+            }
+
+            toast.success(data.mensaje || 'Te has agregado a la lista de espera');
+        } catch (error) {
+            toast.error('No se pudo conectar con el servidor.');
+        }
+    };
+
+    // falta ver si se puede anotar cuando ya está en lista de espera de un turno suelto para esa clase
+    const handleListaEsperaAbonado = async () => {
+        const idClase = turnos[0]?.id_clase;
+        if (!idClase) {
+            toast.error('No se pudo determinar la clase.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/lista-espera-abonado/${session.user_id}/${idClase}`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                toast.error(data.mensaje || 'Error al agregar a lista de espera');
+                return;
+            }
+
+            toast.success(data.mensaje || 'Te has agregado a la lista de espera mensual');
+        } catch (error) {
+            toast.error('No se pudo conectar con el servidor.');
+        }
+    };
+
     const handleToggleClase = async (idClase, estaHabilitada) => {
         try {
             const endpoint = estaHabilitada ? '/api/deshabilitarClase' : '/api/habilitarClase';
@@ -261,15 +309,28 @@ export default function ListarTurnosPage() {
             );
         }
 
+        if (turnoLleno) {
+            return (
+                <button
+                    className="listaEsperaBtn"
+                    onClick={
+                        !logueado
+                            ? handleAccionNoLogueado
+                            : () => handleListaEsperaNoAbonado(turno)
+                    }
+                >
+                    Lista de Espera
+                </button>
+            );
+        }
+
         return (
             <button
                 className="reservarBtn"
                 onClick={
                     !logueado
                         ? handleAccionNoLogueado
-                        : turnoLleno
-                            ? () => toast.warning("El cupo de este turno ya está lleno.")
-                            : () => handleReservar(turno)
+                        : () => handleReservar(turno)
                 }
             >
                 Reservar
@@ -323,19 +384,30 @@ export default function ListarTurnosPage() {
 
                     {!esPersonalInterno && turnos.length > 0 && (
                         <div className="abonarContainer">
-                            <button
-                                className="abonarBtn"
-                                disabled={inscriptoEnTodosLosTurnos}
-                                onClick={
-                                    !logueado
-                                        ? handleAccionNoLogueado
-                                        : todosLosTurnosLlenos
-                                            ? () => toast.warning("El cupo de todos los turnos ya está lleno.")
+                            {todosLosTurnosLlenos ? (
+                                <button
+                                    className="listaEsperaBtn"
+                                    onClick={
+                                        !logueado
+                                            ? handleAccionNoLogueado
+                                            : handleListaEsperaAbonado
+                                    }
+                                >
+                                    Lista de Espera (mensual)
+                                </button>
+                            ) : (
+                                <button
+                                    className="abonarBtn"
+                                    disabled={inscriptoEnTodosLosTurnos}
+                                    onClick={
+                                        !logueado
+                                            ? handleAccionNoLogueado
                                             : handleAbonarMensual
-                                }
-                            >
-                                Abonar (mensual)
-                            </button>
+                                    }
+                                >
+                                    Abonar (mensual)
+                                </button>
+                            )}
                         </div>
                     )}
 

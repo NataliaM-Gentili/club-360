@@ -204,6 +204,7 @@ class ListaEspera(db.Model):
     )
     clase_id = db.Column(db.Integer, db.ForeignKey("clase.id"), nullable=True)
     turno_id = db.Column(db.Integer, db.ForeignKey("turno.id"), nullable=True)
+    fecha_inscripcion = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Restricción CHECK de exclusividad
     __table_args__ = (
