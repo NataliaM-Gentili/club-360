@@ -40,13 +40,13 @@ def lista_espera_no_abonado(id_cliente, id_turno):
         return jsonify({"mensaje": "Ya está anotado en esta lista de espera"}), 400
 
     # INSERCIÓN EN LISTA DE ESPERA
-    ListaEsperaModel.crear_lista_espera_no_abonado(
+    lista = ListaEsperaModel.crear_lista_espera_no_abonado(
         id_cliente=id_cliente,
         tipo_lista_id=tipo_lista.id,
         id_turno=id_turno,
     )
 
-    return jsonify({"mensaje": "Se agregó a la lista de espera no abonado"}), 201
+    return jsonify({"mensaje": "Se agregó a la lista de espera no abonado", "id": lista.id}), 201
 
 
 # ABONADOS
@@ -82,10 +82,53 @@ def lista_espera_abonado(id_cliente, id_clase):
         return jsonify({"mensaje": "Ya está anotado en esta lista de espera"}), 400
 
     # INSERCIÓN EN LISTA DE ESPERA
-    ListaEsperaModel.crear_lista_espera_abonado(
+    lista = ListaEsperaModel.crear_lista_espera_abonado(
         id_cliente=id_cliente,
         tipo_lista_id=tipo_lista.id,
         id_clase=id_clase,
     )
 
-    return jsonify({"mensaje": "Se agregó a la lista de espera abonado"}), 201
+    return jsonify({"mensaje": "Se agregó a la lista de espera abonado", "id": lista.id}), 201
+
+
+# BUSCAR TODAS LAS INSTANCIAS DE UN USUARIO EN AMBAS LISTAS
+@lista_espera_bp.route('/listas-espera/<int:id_cliente>')
+def buscar_cliente_id(id_cliente):
+    if not session.get('usuario_id'):
+        return jsonify({"mensaje": "No autenticado"}), 401
+
+    if session.get('usuario_id') != id_cliente:
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    cliente = ListaEsperaModel.obtener_cliente(id_cliente)
+    if not cliente:
+        return jsonify({"mensaje": "Cliente no encontrado"}), 404
+
+    listas = ListaEsperaModel.obtener_listas_por_cliente(id_cliente)
+    return jsonify({
+        "listas": [lista.to_dict() for lista in listas]
+    }), 200
+
+
+# ELIMINA FILA DE LISTA_ESPERA
+@lista_espera_bp.route('/lista-espera/salir/<int:id_lista>/<int:id_cliente>', methods=['DELETE'])
+def salir_lista_espera(id_lista, id_cliente):
+    if not session.get('usuario_id'):
+        return jsonify({"mensaje": "No autenticado"}), 401
+
+    if session.get('usuario_id') != id_cliente:
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    lista = ListaEsperaModel.obtener_lista_por_id(id_lista)
+    if not lista:
+        return jsonify({"mensaje": "Registro de lista de espera no encontrado"}), 404
+
+    if lista.id_cliente != id_cliente:
+        return jsonify({"mensaje": "El cliente no pertenece a esta lista de espera"}), 403
+
+    if not ListaEsperaModel.eliminar_lista_espera(id_lista):
+        return jsonify({"mensaje": "No se pudo eliminar la lista de espera"}), 500
+
+    return jsonify({"mensaje": "Se ha salido de la lista de espera"}), 200
+
+

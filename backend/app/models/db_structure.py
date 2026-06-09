@@ -213,6 +213,15 @@ class ListaEspera(db.Model):
             name="check_exclusividad",
         ),
     )
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "id_cliente": self.id_cliente,
+            "tipo_lista_id": self.tipo_lista_id,
+            "clase_id": self.clase_id,
+            "turno_id": self.turno_id
+        }
 
 
 def insertar_roles_y_listas(*args, **kwargs):

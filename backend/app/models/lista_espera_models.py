@@ -4,8 +4,12 @@ from app.models.db_structure import Cliente, TipoLista, ListaEspera, Turno, Clas
 
 class ListaEsperaModel:
     @staticmethod
-    def obtener_cliente(id_cliente):
+    def obtener_cliente(id_cliente): # busca en tabla cliente
         return Cliente.query.filter_by(id_usuario=id_cliente).first()
+
+    @staticmethod
+    def obtener_listas_por_cliente(id_cliente): # todas las filas coincidentes
+        return ListaEspera.query.filter_by(id_cliente=id_cliente).all()  # .all() en lugar de .first()
 
     @staticmethod
     def obtener_turno(id_turno):
@@ -28,6 +32,19 @@ class ListaEsperaModel:
             clase_id=clase_id,
         )
         return query.first() is not None
+
+    @staticmethod
+    def obtener_lista_por_id(id_lista):
+        return ListaEspera.query.get(id_lista)
+
+    @staticmethod
+    def eliminar_lista_espera(id_lista):
+        lista = ListaEspera.query.get(id_lista)
+        if not lista:
+            return False
+        db.session.delete(lista)
+        db.session.commit()
+        return True
 
     @staticmethod
     def crear_lista_espera_no_abonado(id_cliente, tipo_lista_id, id_turno):
