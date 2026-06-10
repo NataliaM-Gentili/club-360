@@ -356,6 +356,34 @@ export default function ListarTurnosPage() {
         }
     };
 
+    const handleCancelarTurno = async (idTurno) => {
+        if (!window.confirm('¿Cancelar turno?')) return;
+
+        try {
+            const response = await fetch('/api/cancelar_turno', {
+                method: 'POST',
+                // ESTA ES LA LÍNEA QUE EVITA EL ERROR 415:
+                headers: { 
+                    'Content-Type': 'application/json' 
+                },
+                credentials: 'include',
+                body: JSON.stringify({ id_turno: idTurno })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                toast.success(data.mensaje);
+                setTurnos(prev => prev.filter(t => t.id !== idTurno));
+            } else {
+                toast.error(data.error || 'Error al cancelar');
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            toast.error('Error de conexión con el servidor');
+        }
+    };
+
     const handlePaymentCancelled = async (reservaId) => {
         try {
             const res = await fetch(`/api/cancelar_reserva/${reservaId}`, {
@@ -571,16 +599,43 @@ export default function ListarTurnosPage() {
                                         <td>{turno.dia}</td>
                                         <td>{turno.hora}</td>
                                         {esPersonalInterno && <td>{turno.ocupados}/{turno.cupo}</td>}
-                                        {/*{esAdmin && turno.ocupados == 0 && (
+                                        {/* ACCIONES DE ADMINISTRADOR */}
+                                        {esAdmin && (
                                             <td>
-                                                <button
-                                                    className={turno.habilitada ? 'deshabilitarBtn' : 'habilitarBtn'}
-                                                    onClick={() => handleToggleClase(turno.id_clase, turno.habilitada)}
-                                                >
-                                                    {turno.habilitada ? 'Deshabilitar clase' : 'Habilitar clase'}
-                                                </button>
+                                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                                    {/* BOTÓN SIEMPRE VISIBLE */}
+                                                    <button
+                                                        className={turno.habilitada ? 'deshabilitarBtn' : 'habilitarBtn'}
+                                                        style={{ 
+                                                            padding: '6px 16px', 
+                                                            fontSize: '0.85rem',
+                                                            borderRadius: '20px' 
+                                                        }}
+                                                        onClick={() => handleToggleClase(turno.id_clase, turno.habilitada)}
+                                                    >
+                                                        {turno.habilitada ? 'Deshabilitar Clase' : 'Habilitar Clase'}
+                                                    </button>
+
+                                                    {/* BOTÓN DE CANCELAR TURNO */}
+                                                    <button
+                                                        className="cancelarTurnoBtn"
+                                                        style={{ 
+                                                            backgroundColor: '#dc3545', 
+                                                            color: 'white', 
+                                                            border: '1px solid #dc3545', 
+                                                            padding: '6px 16px', 
+                                                            borderRadius: '20px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.85rem',
+                                                            fontWeight: 'bold'
+                                                        }}
+                                                        onClick={() => handleCancelarTurno(turno.id)}
+                                                    >
+                                                        Cancelar turno
+                                                    </button>
+                                                </div>
                                             </td>
-                                        )}*/}
+                                        )}
                                         {!esPersonalInterno && (
                                             <td>{renderBotonAccion(turno)}</td>
                                         )}

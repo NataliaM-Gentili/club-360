@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify, session, request
 from app.models.turno_model import TurnoModel
-from app.models.db_structure import ReservaTurno, Turno, Clase, Reserva, ReservaClase
+from app.models.db_structure import ReservaTurno, Turno, Clase, Reserva, ReservaClase, Abono, Usuario
 from datetime import date
+from app.services.email_services import send_cancellation_email
+from app import db
 
 turno_bp = Blueprint("turno_bp", __name__)
 
@@ -147,3 +149,65 @@ def buscar_turnos_de_cliente():
         })
 
     return jsonify({"turnos": resultado}), 200
+
+@turno_bp.route("/cancelar_turno", methods=["POST"])
+def cancelar_turno_admin():
+    datos = request.get_json()
+
+    if not datos or "id_turno" not in datos:
+        return jsonify({"error": "No se recibió el id_turno en la petición"}), 400
+    
+    id_turno = datos.get("id_turno")
+    # 1. Validar que sea administrador (Rol 2)
+    if session.get("rol_id") != 2:
+        return jsonify({"error": "Acceso denegado. Se requiere rol de administrador"}), 403
+
+    turno = Turno.query.get(id_turno)
+    if not turno:
+        return jsonify({"error": "Turno no encontrado"}), 404
+
+    clase = Clase.query.get(turno.id_clase)
+
+    # 2. Cambiar el estado del turno (lo saca de la cartelera)
+    turno.habilitado = False 
+
+    # 3. Buscar si hay inscriptos
+    reservas_turno = ReservaTurno.query.filter_by(id_turno=id_turno).all()
+    inscriptos_afectados = 0
+
+    for rt in reservas_turno:
+        reserva = Reserva.query.get(rt.id_reserva)
+        
+        if reserva and reserva.estado != "Cancelada":
+            reserva.estado = "Cancelada"
+            inscriptos_afectados += 1
+            
+            # Buscar datos del cliente y el monto
+            usuario = Usuario.query.get(reserva.id_cliente)
+            abono = Abono.query.filter_by(id_reserva=reserva.id).first()
+            monto_a_devolver = float(abono.monto) if abono else 0.0
+
+            # Disparar el correo electrónico con tu servicio centralizado
+            send_cancellation_email(
+                email_destino=usuario.email,
+                nombre=usuario.nombres,
+                disciplina=clase.disciplina.capitalize(),
+                fecha=turno.fecha.strftime("%d/%m/%Y"),
+                hora=clase.hora,
+                monto=monto_a_devolver
+            )
+
+    try:
+        db.session.commit()
+        
+        mensaje = "Turno cancelado exitosamente."
+        if inscriptos_afectados > 0:
+            mensaje += f" Se notificó a {inscriptos_afectados} inscripto(s) sobre la devolución."
+        else:
+            mensaje += " El turno no tenía inscriptos."
+            
+        return jsonify({"mensaje": mensaje}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Ocurrió un error al intentar cancelar el turno."}), 500

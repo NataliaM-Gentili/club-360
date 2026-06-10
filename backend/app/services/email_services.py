@@ -148,3 +148,76 @@ def enviar_comprobantes_qr_clase(id_cliente, id_reserva, disciplina, hora, turno
         print(f"[email_services] Error al enviar QRs clase: {e}")
 
 
+
+def send_cancellation_email(email_destino, nombre, disciplina, fecha, hora, monto):
+    """
+    Envía un correo notificando la cancelación de un turno y la devolución del dinero (si aplica).
+    """
+    try:
+        asunto = f"Cancelación de turno de {disciplina.capitalize()} - Club 360"
+
+        # Mensaje base
+        mensaje_devolucion = ""
+        if monto and float(monto) > 0:
+            mensaje_devolucion = f"""
+            <div style="background-color:#e6f4ea;border-left:4px solid #598849;padding:16px;margin:24px 0;border-radius:4px">
+                <p style="margin:0;font-size:14px;color:#1a432b;font-weight:600">
+                    ℹ️ Información sobre tu pago
+                </p>
+                <p style="margin:8px 0 0;font-size:14px;color:#2d5e3c;line-height:1.5">
+                    Como ya habías abonado el turno, se realizará la devolución automática de <strong>${float(monto):.2f}</strong>. 
+                    El dinero se verá reflejado en la cuenta con la que hiciste el pago dentro de las próximas <strong>72 horas hábiles</strong>.
+                </p>
+            </div>
+            """
+
+        html = f"""
+        <div style="background-color:#f0f0f0;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#333;padding:40px 16px;min-height:100vh">
+        <div style="max-width:520px;margin:0 auto;border-radius:24px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.09)">
+            
+            <div style="background-color:#598849;padding:40px 40px 32px;color:#fafafa">
+            <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.85;margin-bottom:28px">Club 360</div>
+            <h1 style="font-size:26px;font-weight:700;margin:0 0 6px">Turno Cancelado</h1>
+            </div>
+            
+            <div style="background-color:#fafafa;padding:32px 40px">
+            <p style="font-size:16px;color:#333;margin-bottom:20px;line-height:1.65">
+                Hola <strong>{nombre}</strong>,  </p>
+            
+            <p style="font-size:15px;color:#333;margin-bottom:24px;line-height:1.65">
+                Lamentamos informarte que por motivos de organización de la administración, tu turno programado ha sido <strong>cancelado</strong>.
+            </p>
+              
+              <div style="background-color:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:20px;margin-bottom:24px">
+                <p style="margin:0 0 8px;font-size:14px;color:#666"><strong>Disciplina:</strong> {disciplina.capitalize()}</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#666"><strong>Fecha:</strong> {fecha}</p>
+                <p style="margin:0;font-size:14px;color:#666"><strong>Hora:</strong> {hora}</p>
+              </div>
+
+              {mensaje_devolucion}
+              
+              <p style="font-size:15px;color:#333;margin-top:28px;line-height:1.65">
+                Te pedimos disculpas por los inconvenientes ocasionados.<br/>
+                Saludos cordiales,<br/>
+                <strong>Equipo Club 360</strong>
+              </p>
+            </div>
+            
+            <div style="background-color:#fafafa;border-top:1px solid rgba(0,0,0,0.07);padding:24px 40px;text-align:center">
+              <p style="font-size:12px;color:rgba(0,0,0,0.35);line-height:1.7;margin:0">© 2026 Club 360. Todos los derechos reservados.</p>
+            </div>
+          </div>
+        </div>
+        """
+
+        msg = Message(
+            subject=asunto,
+            recipients=[email_destino],
+            html=html
+        )
+
+        mail.send(msg)
+        print(f"[email_services] ✅ Email de cancelación enviado a: {email_destino}")
+        
+    except Exception as e:
+        print(f"[email_services] ❌ Error al enviar email de cancelación a {email_destino}: {e}")
