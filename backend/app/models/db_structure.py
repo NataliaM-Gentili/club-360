@@ -247,3 +247,73 @@ def insertar_roles_y_listas(*args, **kwargs):
 
 # Esto se ejecuta automáticamente DESPUÉS de que db.create_all() hace su trabajo
 event.listen(db.metadata, "after_create", insertar_roles_y_listas)
+
+
+##---------------
+from datetime import datetime
+
+class OfrecimientoReserva(db.Model):
+    __tablename__ = "ofrecimiento_reserva"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    id_cliente = db.Column(
+        db.Integer,
+        db.ForeignKey("cliente.id_usuario"),
+        nullable=False
+    )
+
+    id_turno = db.Column(
+        db.Integer,
+        db.ForeignKey("turno.id"),
+        nullable=True
+    )
+
+    id_clase = db.Column(
+        db.Integer,
+        db.ForeignKey("clase.id"),
+        nullable=True
+    )
+
+    fecha_envio = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+    fecha_vencimiento = db.Column(
+        db.DateTime,
+        nullable=False
+    )
+
+    estado = db.Column(
+        db.String(20),
+        nullable=False,
+        default="Pendiente"
+    )
+
+    cliente = db.relationship("Cliente")
+    turno = db.relationship("Turno")
+    clase = db.relationship("Clase")
+
+    __table_args__ = (
+        db.CheckConstraint(
+            """
+            (id_clase IS NOT NULL AND id_turno IS NULL)
+            OR
+            (id_clase IS NULL AND id_turno IS NOT NULL)
+            """,
+            name="check_exclusividad"
+        ),
+        db.CheckConstraint(
+            """
+            estado IN (
+                'Pendiente',
+                'Aceptado',
+                'Rechazado',
+                'Vencido'
+            )
+            """,
+            name="check_estado"
+        ),
+    )
