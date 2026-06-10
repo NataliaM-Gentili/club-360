@@ -45,36 +45,36 @@ export default function ListarTurnosPage() {
             .catch(() => setSession({ loggedIn: false }));
     }, []);
 
-    useEffect(() => {
+    const fetchTurnosCliente = async () => {
         if (!session?.loggedIn) return;
 
-        const fetchTurnosCliente = async () => {
-            try {
-                const [resTurno, resClase, resListasEspera] = await Promise.all([
-                    fetch(`/api/turnos_de_cliente?id_usuario=${session.user_id}`, { credentials: 'include' }),
-                    fetch(`/api/turnos_de_cliente_clase?id_usuario=${session.user_id}`, { credentials: 'include' }),
-                    fetch(`/api/listas-espera/${session.user_id}`, { credentials: 'include' })
-                ]);
+        try {
+            const [resTurno, resClase, resListasEspera] = await Promise.all([
+                fetch(`/api/turnos_de_cliente?id_usuario=${session.user_id}`, { credentials: 'include' }),
+                fetch(`/api/turnos_de_cliente_clase?id_usuario=${session.user_id}`, { credentials: 'include' }),
+                fetch(`/api/listas-espera/${session.user_id}`, { credentials: 'include' })
+            ]);
 
-                const dataTurno = await resTurno.json();
-                const dataClase = await resClase.json();
-                const dataListasEspera = await resListasEspera.json();
+            const dataTurno = await resTurno.json();
+            const dataClase = await resClase.json();
+            const dataListasEspera = await resListasEspera.json();
 
-                setTurnosCliente([
-                    ...(dataTurno.turnos || []),
-                    ...(dataClase.turnos || [])
-                ]);
+            setTurnosCliente([
+                ...(dataTurno.turnos || []),
+                ...(dataClase.turnos || [])
+            ]);
 
-                const listas = dataListasEspera.listas || [];
-                setListasEspera({
-                    abonado: listas.filter(item => item.clase_id != null),
-                    noAbonado: listas.filter(item => item.turno_id != null),
-                });
-            } catch (error) {
-                console.error('Error obteniendo turnos del cliente');
-            }
-        };
+            const listas = dataListasEspera.listas || [];
+            setListasEspera({
+                abonado: listas.filter(item => item.clase_id != null),
+                noAbonado: listas.filter(item => item.turno_id != null),
+            });
+        } catch (error) {
+            console.error('Error obteniendo turnos del cliente');
+        }
+    };
 
+    useEffect(() => {
         fetchTurnosCliente();
     }, [session]);
 
@@ -222,6 +222,7 @@ export default function ListarTurnosPage() {
             if (data.monto_a_pagar) mensaje += ` | Monto: $${data.monto_a_pagar}`;
 
             toast.success(mensaje);
+            await fetchTurnosCliente();
         } catch (error) {
             toast.error('No se pudo conectar con el servidor. Intentá de nuevo.');
         }
