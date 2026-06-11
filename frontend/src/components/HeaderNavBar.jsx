@@ -83,7 +83,7 @@ export default function HeaderNavBar(){
             case 3: // EMPLOYEE
                 return (
                     <>
-                        {/*<li><Link to="/qr">Escanear QR</Link></li>*/}
+                        <li><Link to="/asistencia-qr">Escanear QR</Link></li>
                         {/*<li><Link to="/attendance">Asistencia Manual</Link></li>*/}
                         <li><Link to="/register-client">Registrar Cliente</Link></li>
                         <li><Link to="/register-cash">Registrar Pago</Link></li>

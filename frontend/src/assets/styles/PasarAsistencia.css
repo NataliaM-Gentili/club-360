@@ -1,0 +1,159 @@
+/* frontend/src/assets/styles/PasarAsistencia.css */
+
+.pa-page {
+  padding: 2rem 4rem;
+  background-color: #fafafa;
+  min-height: 100vh;
+  margin-top: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pa-card {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* Header */
+.pa-header {
+  background-color: #598849;
+  padding: 28px 32px 24px;
+  color: #fafafa;
+}
+
+.pa-logo-tag {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.pa-titulo {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Pantallas */
+.pa-pantalla {
+  padding: 2rem 2.5rem;
+}
+
+.pa-pantalla--center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  text-align: center;
+}
+
+/* Ícono QR decorativo */
+.pa-qr-icono {
+  margin-top: 0.5rem;
+  opacity: 0.85;
+}
+
+.pa-instruccion {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.55);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Área de la cámara — html5-qrcode inyecta el video aquí */
+.pa-qr-reader {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  min-height: 280px;
+}
+
+/* Spinner */
+.pa-spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid #ddd;
+  border-top-color: #598849;
+  border-radius: 50%;
+  animation: pa-spin 0.75s linear infinite;
+  margin-top: 1rem;
+}
+@keyframes pa-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Botones */
+.pa-btn {
+  padding: 10px 28px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.pa-btn--primary {
+  background-color: #598849;
+  color: #fafafa;
+}
+.pa-btn--primary:hover {
+  background-color: #4e7740;
+  transform: translateY(-1px);
+}
+
+.pa-btn--secondary {
+  background-color: transparent;
+  color: #598849;
+  border: 1px solid #598849;
+}
+.pa-btn--secondary:hover {
+  background-color: #598849;
+  color: #fafafa;
+}
+
+.pa-btn-grupo {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Alerta pago incompleto */
+.pa-alerta {
+  width: 100%;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  text-align: left;
+}
+.pa-alerta--amarillo {
+  background-color: #fef9c3;
+  border: 1.5px solid #fde047;
+}
+.pa-alerta__titulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: #713f12;
+  margin: 0 0 4px;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .pa-page {
+    padding: 1rem;
+    margin-top: 80px;
+  }
+  .pa-pantalla {
+    padding: 1.5rem 1.25rem;
+  }
+}
