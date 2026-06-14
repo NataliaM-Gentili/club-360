@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from app import db
+from datetime import date
 
 from app.models.reserva_model import ReservaModel
 from app.models.tarjeta_model import TarjetaModel
@@ -281,21 +282,30 @@ def abonar_mensual():
 
     # Verificar si el cliente ya tiene reservas sueltas
     # para turnos de esta clase en el mes actual
+    
+    hoy = date.today()
+    if hoy.month == 12:
+        primer_dia_sig = date(hoy.year + 1, 1, 1)
+    else:
+        primer_dia_sig = date(hoy.year, hoy.month + 1, 1)
 
-    turnos_clase_mes, _ = ReservaModel.turnos_restantes_mes(id_clase)
+    ids_turnos_clase = [t.id for t in Turno.query.filter(
+        Turno.id_clase == id_clase,
+        Turno.habilitado == True,
+        Turno.fecha >= hoy,
+        Turno.fecha < primer_dia_sig,
+    ).all()]
 
-    ids_turnos_clase = [t.id for t in turnos_clase_mes]
-
-    reservas_cliente = Reserva.query.filter_by(
-        id_cliente=id_cliente
-    ).all()
-
-    ids_reservas_cliente = [r.id for r in reservas_cliente]
-
-    reservas_turno_existentes = ReservaTurno.query.filter(
-        ReservaTurno.id_reserva.in_(ids_reservas_cliente),
-        ReservaTurno.id_turno.in_(ids_turnos_clase)
-    ).first()
+    reservas_turno_existentes = (
+        db.session.query(ReservaTurno)
+        .join(Reserva, ReservaTurno.id_reserva == Reserva.id)
+        .filter(
+            ReservaTurno.id_turno.in_(ids_turnos_clase),
+            Reserva.id_cliente == id_cliente,
+            Reserva.estado != "Cancelada",
+        )
+        .first()
+    )
 
     if reservas_turno_existentes:
         return jsonify({
