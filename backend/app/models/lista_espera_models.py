@@ -54,6 +54,10 @@ class ListaEsperaModel:
         return deleted > 0
 
     @staticmethod
+    def contar_interesados_por_turno(id_turno):
+        return ListaEspera.query.filter_by(turno_id=id_turno).count()
+
+    @staticmethod
     def crear_lista_espera_no_abonado(id_cliente, tipo_lista_id, id_turno):
         nueva_lista = ListaEspera(
             id_cliente=id_cliente,

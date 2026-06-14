@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, session
 from app.models.db_structure import Turno, Clase
 from app.models.reserva_model import ReservaModel
 from app.models.lista_espera_models import ListaEsperaModel
+from app.services.email_services import send_admin_waitlist_warning
 
 lista_espera_bp = Blueprint("lista_espera_bp", __name__)
 
@@ -48,6 +49,10 @@ def lista_espera_no_abonado(id_cliente, id_turno, tipo_lista):
         tipo_lista_id=tipo_lista, 
         id_turno=id_turno,
     )
+
+    interesados = ListaEsperaModel.contar_interesados_por_turno(id_turno)
+    if interesados == 10:
+        send_admin_waitlist_warning(turno, interesados)
 
     return jsonify({"mensaje": "Se agregó a la lista de espera no abonado", "id": lista.id}), 201
 

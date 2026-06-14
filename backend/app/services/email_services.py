@@ -4,7 +4,7 @@ from app import mail  # instancia de Flask-Mail
 import qrcode   
 import io
 import base64
-from app.models.db_structure import Usuario
+from app.models.db_structure import Usuario, Clase
 
 EMAIL_PRUEBAS = "juanmanuelperezz468@gmail.com"
 
@@ -71,6 +71,57 @@ def _obtener_email_cliente(id_cliente: int) -> str:
     if usuario and usuario.email:
         return usuario.email
     return EMAIL_PRUEBAS
+
+
+def send_admin_waitlist_warning(turno, interesados_count=10):
+    """
+    Envía un aviso al administrador cuando la lista de espera de un turno alcanza 10 interesados.
+    """
+    try:
+        clase = Clase.query.get(turno.id_clase)
+        disciplina = clase.disciplina.capitalize() if clase else "N/A"
+        hora = clase.hora if clase else "N/A"
+        fecha = turno.fecha.strftime("%d/%m/%Y") if turno.fecha else "N/A"
+        detalles_turno = f"Turno ID: {turno.id} | Disciplina: {disciplina} | Fecha: {fecha} | Hora: {hora}"
+
+        html = f"""
+        <div style=\"background-color:#f7faf7;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#1f2937;padding:40px 16px;min-height:100vh\">
+          <div style=\"max-width:600px;margin:0 auto;border-radius:24px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.12)\">
+            <div style=\"background:linear-gradient(135deg,#386a2a 0%,#598849 100%);padding:38px 40px;color:#f8fafc\">
+              <div style=\"font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.85;margin-bottom:24px\">Club 360 - Administración</div>
+              <h1 style=\"font-size:28px;font-weight:800;margin:0 0 8px\">Alerta de lista de espera</h1>
+              <p style=\"font-size:16px;opacity:0.92;line-height:1.7;margin:0\">La lista de espera del turno ha alcanzado <strong>10 interesados</strong>.</p>
+            </div>
+            <div style=\"background-color:#ffffff;padding:32px 40px;line-height:1.7;color:#334155\">
+              <p style=\"font-size:15px;margin:0 0 20px\">Estimado administrador,</p>
+              <p style=\"font-size:15px;margin:0 0 20px\">El turno detallado a continuación ha superado el umbral de <strong>10 interesados</strong> en la lista de espera.</p>
+              <div style=\"background:#f0fdf4;border:1px solid #d1fae5;border-radius:16px;padding:22px;margin:24px 0\">
+                <p style=\"margin:0 0 10px;font-size:15px;color:#0f5132\"><strong>Detalles del turno</strong></p>
+                <p style=\"margin:4px 0;font-size:14px;color:#334155\"><strong>Disciplina:</strong> {disciplina}</p>
+                <p style=\"margin:4px 0;font-size:14px;color:#334155\"><strong>Fecha:</strong> {fecha}</p>
+                <p style=\"margin:4px 0;font-size:14px;color:#334155\"><strong>Hora:</strong> {hora}</p>
+                <p style=\"margin:4px 0;font-size:14px;color:#334155\"><strong>Cupo:</strong> {clase.cupo if clase else 'N/A'}</p>
+              </div>
+              <p style=\"font-size:14px;color:#475569;margin:0\">Este correo se envía automáticamente para avisar que la demanda del turno ha superado el umbral definido.</p>
+            </div>
+            <div style=\"background-color:#f8fafc;border-top:1px solid rgba(15,23,42,0.08);padding:24px 40px;text-align:center\">
+              <p style=\"font-size:12px;color:#475569;line-height:1.7;margin:0\">© 2026 Club 360. Administrador - Lista de espera</p>
+            </div>
+          </div>
+        </div>
+        """
+
+        msg = Message(
+            subject="Alerta: lista de espera con 10 interesados - Club 360",
+            recipients=[EMAIL_PRUEBAS],
+            html=html,
+        )
+        mail.send(msg)
+        return True
+
+    except Exception as e:
+        print(f"[email_services] Error al enviar alerta de lista de espera: {e}")
+        return False
 
 
 # NO ABONADO
