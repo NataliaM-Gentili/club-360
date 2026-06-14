@@ -47,6 +47,13 @@ class ListaEsperaModel:
         return True
 
     @staticmethod
+    def eliminar_por_cliente_turno(id_cliente, id_turno):
+        # Elimina todas las entradas de lista_espera para un cliente y un turno específico
+        deleted = ListaEspera.query.filter_by(id_cliente=id_cliente, turno_id=id_turno).delete()
+        db.session.commit()
+        return deleted > 0
+
+    @staticmethod
     def crear_lista_espera_no_abonado(id_cliente, tipo_lista_id, id_turno):
         nueva_lista = ListaEspera(
             id_cliente=id_cliente,

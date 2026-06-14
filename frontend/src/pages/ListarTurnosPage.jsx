@@ -37,6 +37,8 @@ export default function ListarTurnosPage() {
     const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
     const [listaAEliminar, setListaAEliminar] = useState(null);
     const [esListaMensual, setEsListaMensual] = useState(false);
+    const [abonoModalOpen, setAbonoModalOpen] = useState(false);
+    const [abonoModalData, setAbonoModalData] = useState(null);
 
     useEffect(() => {
         fetch('/api/auth/status', { credentials: 'include' })
@@ -217,12 +219,29 @@ export default function ListarTurnosPage() {
                 return;
             }
 
+            await fetchTurnosCliente();
+
+            const ocupadosIds = data.turnos_ocupados || [];
+            const ocupados = turnos.filter((turno) => ocupadosIds.includes(turno.id));
+            const inscriptos = turnos.filter((turno) => !ocupadosIds.includes(turno.id));
+
+            if (ocupados.length > 0) {
+                const montoInfo = `Monto: $${data.monto_a_pagar}` + (data.descuento ? ` | ${data.descuento}` : '');
+                const message = `Te inscribiste en ${inscriptos.length} turno(s).\n` +
+                    `Los siguientes turnos están completos:\n` +
+                    ocupados.map((turno) => `- ${turno.fecha} ${turno.hora}`).join('\n') +
+                    `\n\n${montoInfo}\n\n¿Querés inscribirte en lista de espera para esos turnos?`;
+
+                setAbonoModalData({ ocupados, inscriptos, mensaje: message });
+                setAbonoModalOpen(true);
+                return;
+            }
+
             let mensaje = data.mensaje;
             if (data.descuento) mensaje += ` | ${data.descuento}`;
             if (data.monto_a_pagar) mensaje += ` | Monto: $${data.monto_a_pagar}`;
 
             toast.success(mensaje);
-            await fetchTurnosCliente();
         } catch (error) {
             toast.error('No se pudo conectar con el servidor. Intentá de nuevo.');
         }
@@ -231,7 +250,7 @@ export default function ListarTurnosPage() {
     
     const handleListaEsperaNoAbonado = async (turno) => {
         try {
-            const response = await fetch(`/api/lista-espera-no-abonado/${session.user_id}/${turno.id}`, {
+            const response = await fetch(`/api/lista-espera/${session.user_id}/${turno.id}/3`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -261,6 +280,58 @@ export default function ListarTurnosPage() {
         }
     };
 
+    // sería como handleListaEsperaAbonado
+    const handleInscribirseListaEsperaTurnosOcupados = async () => {
+        if (!abonoModalData?.ocupados?.length) {
+            setAbonoModalOpen(false);
+            return;
+        }
+
+        // inscribe en lista de espera en carácter de abonado (id tipo_lista 2)
+        const resultados = await Promise.all(abonoModalData.ocupados.map(async (turno) => {
+            try {
+                const response = await fetch(`/api/lista-espera/${session.user_id}/${turno.id}/2`, {
+                    method: 'POST',
+                    credentials: 'include',
+                });
+                const data = await response.json();
+                return { turno, ok: response.ok, data };
+            } catch (error) {
+                return { turno, ok: false, data: { mensaje: 'Error de conexión' } };
+            }
+        }));
+
+        const exitosos = resultados.filter(r => r.ok);
+        const fallidos = resultados.filter(r => !r.ok);
+
+        if (exitosos.length > 0) {
+            setListasEspera(prev => ({
+                abonado: prev.abonado,
+                noAbonado: [
+                    ...prev.noAbonado,
+                    ...exitosos.map((resultado) => ({
+                        id: resultado.data.id,
+                        id_cliente: session.user_id,
+                        clase_id: null,
+                        turno_id: resultado.turno.id,
+                        tipo_lista_id: 3,
+                    }))
+                ]
+            }));
+        }
+
+        if (fallidos.length > 0) {
+            toast.error(`No se pudo inscribir en lista de espera para ${fallidos.length} turno(s).`);
+        }
+
+        if (exitosos.length > 0) {
+            toast.success(`Te inscribiste en lista de espera para ${exitosos.length} turno(s).`);
+        }
+
+        setAbonoModalOpen(false);
+        setAbonoModalData(null);
+    };
+
     const handleSalirListaEspera = (idLista, esMensual) => {
         setListaAEliminar(idLista);
         setEsListaMensual(esMensual);
@@ -269,9 +340,12 @@ export default function ListarTurnosPage() {
 
     const confirmSalirListaEspera = async () => {
         try {
-            const response = await fetch(`/api/lista-espera/salir/${listaAEliminar}/${session.user_id}`, {
+            let response;
+            
+            // lista individual: listaAEliminar es turno_id
+            response = await fetch(`/api/lista-espera/salir/${session.user_id}/${listaAEliminar}`, {
                 method: 'DELETE',
-                credentials: 'include',
+                 credentials: 'include',
             });
 
             const data = await response.json();
@@ -283,7 +357,7 @@ export default function ListarTurnosPage() {
 
             setListasEspera(prev => ({
                 abonado: esListaMensual ? prev.abonado.filter(item => item.id !== listaAEliminar) : prev.abonado,
-                noAbonado: !esListaMensual ? prev.noAbonado.filter(item => item.id !== listaAEliminar) : prev.noAbonado,
+                noAbonado: !esListaMensual ? prev.noAbonado.filter(item => item.turno_id !== listaAEliminar) : prev.noAbonado,
             }));
 
             toast.success(data.mensaje || 'Saliste de la lista de espera');
@@ -293,7 +367,8 @@ export default function ListarTurnosPage() {
         }
     };
 
-    // falta ver si se puede anotar cuando ya está en lista de espera de un turno suelto para esa clase
+    /* CÓDIGO OBSOLETO NO DESCOMENTAR
+
     const handleListaEsperaAbonado = async () => {
         const idClase = turnos[0]?.id_clase;
         if (!idClase) {
@@ -331,6 +406,7 @@ export default function ListarTurnosPage() {
             toast.error('No se pudo conectar con el servidor.');
         }
     };
+    */
 
     const handleToggleClase = async (idClase, estaHabilitada) => {
         try {
@@ -405,9 +481,6 @@ export default function ListarTurnosPage() {
     const inscriptoEnTodosLosTurnos = turnos.length > 0 &&
         turnos.every(t => turnosCliente.some(tc => tc.id_turno === t.id));
 
-    const algunTurnoLleno = turnos.length > 0 &&
-        turnos.some(t => t.ocupados >= t.cupo);
-
     const estaEnListaEsperaMensual = (idClase) => {
         return listasEspera.abonado.some(item => item.clase_id === idClase);
     };
@@ -415,6 +488,12 @@ export default function ListarTurnosPage() {
     const estaEnListaEsperaIndividual = (idTurno) => {
         return listasEspera.noAbonado.some(item => item.turno_id === idTurno);
     };
+
+    const todosTurnosCubiertosPorReservaOLista = turnos.length > 0 &&
+        turnos.every(t =>
+            turnosCliente.some(tc => tc.id_turno === t.id) ||
+            estaEnListaEsperaIndividual(t.id)
+        );
 
     const entradaMensualBusqueda = turnos.length > 0
         ? listasEspera.abonado.find(item => item.clase_id === turnos[0].id_clase)
@@ -430,6 +509,22 @@ export default function ListarTurnosPage() {
         const enListaMensual = !!entradaMensual;
         const enListaIndividual = !!entradaIndividual;
 
+                    if (enListaIndividual) {
+            return (
+                <button
+                    className="listaEsperaBtn"
+                    style={{ backgroundColor: '#c0392b', borderColor: '#c0392b', color: '#fff' }}
+                    onClick={
+                        !logueado
+                            ? handleAccionNoLogueado
+                            : () => handleSalirListaEspera(turno.id, false)
+                    }
+                >
+                    Salir de lista de espera
+                </button>
+            );
+        }
+
         if (inscripto || inscriptoEnTodosLosTurnos) {
             return (
                 <button className="reservarBtn" disabled>
@@ -442,22 +537,6 @@ export default function ListarTurnosPage() {
             return (
                 <button className="listaEsperaBtn" disabled>
                     En lista de espera mensual
-                </button>
-            );
-        }
-
-        if (enListaIndividual) {
-            return (
-                <button
-                    className="listaEsperaBtn"
-                    style={{ backgroundColor: '#c0392b', borderColor: '#c0392b', color: '#fff' }}
-                    onClick={
-                        !logueado
-                            ? handleAccionNoLogueado
-                            : () => handleSalirListaEspera(entradaIndividual.id, false)
-                    }
-                >
-                    Salir de lista de espera
                 </button>
             );
         }
@@ -535,44 +614,18 @@ export default function ListarTurnosPage() {
             {buscado && (
                 <div className="resultadosContainer">
 
-                    {!esPersonalInterno && turnos.length > 0 && !inscriptoEnTodosLosTurnos && (
+                    {!esPersonalInterno && turnos.length > 0 && !inscriptoEnTodosLosTurnos && !todosTurnosCubiertosPorReservaOLista && (
                         <div className="abonarContainer">
-                            {/* Si ya está en lista de espera mensual, se muestra el botón de salida. */}
-                            {enListaEsperaMensualBusqueda ? (
-                                <button
-                                    className="listaEsperaBtn"
-                                    style={{ backgroundColor: '#c0392b', borderColor: '#c0392b', color: '#fff' }}
-                                    onClick={
-                                        !logueado
-                                            ? handleAccionNoLogueado
-                                            : () => handleSalirListaEspera(entradaMensualBusqueda.id, true)
-                                    }
-                                >
-                                    Salir de lista de espera mensual
-                                </button>
-                            ) : algunTurnoLleno ? (
-                                <button
-                                    className="listaEsperaBtn"
-                                    onClick={
-                                        !logueado
-                                            ? handleAccionNoLogueado
-                                            : handleListaEsperaAbonado
-                                    }
-                                >
-                                    Lista de Espera (mensual)
-                                </button>
-                            ) : (
-                                <button
-                                    className="abonarBtn"
-                                    onClick={
-                                        !logueado
-                                            ? handleAccionNoLogueado
-                                            : handleAbonarMensual
-                                    }
-                                >
-                                    Abonar (mensual)
-                                </button>
-                            )}
+                            <button
+                                className="abonarBtn"
+                                onClick={
+                                    !logueado
+                                        ? handleAccionNoLogueado
+                                        : handleAbonarMensual
+                                }
+                            >
+                                Abonar (mensual)
+                            </button>
                         </div>
                     )}
 
@@ -674,6 +727,23 @@ export default function ListarTurnosPage() {
                         secondaryText="Cancelar"
                         onPrimary={confirmSalirListaEspera}
                         onSecondary={() => setConfirmDeleteModal(false)}
+                    />
+
+                    <ModalDialog
+                        open={abonoModalOpen}
+                        onClose={() => {
+                            setAbonoModalOpen(false);
+                            setAbonoModalData(null);
+                        }}
+                        title="Abono mensual"
+                        message={abonoModalData?.mensaje || ''}
+                        primaryText="Sí, inscribirme en lista de espera"
+                        secondaryText="Cerrar"
+                        onPrimary={handleInscribirseListaEsperaTurnosOcupados}
+                        onSecondary={() => {
+                            setAbonoModalOpen(false);
+                            setAbonoModalData(null);
+                        }}
                     />
                 </div>
             )}

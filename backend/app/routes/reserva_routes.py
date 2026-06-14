@@ -269,7 +269,8 @@ def abonar_mensual():
         return jsonify({"mensaje": "No se pudo determinar el precio de la disciplina"}), 400
 
     # Obtener turnos restantes del mes (sin feriados)
-    turnos_restantes = ReservaModel.turnos_restantes_mes(id_clase)
+    # También retorna aquellos id_turno que no estén disponibles por cupo lleno
+    turnos_restantes, turnos_ocupados = ReservaModel.turnos_restantes_mes(id_clase)
     if not turnos_restantes:
         return jsonify({"mensaje": "No hay turnos disponibles para esta clase en el mes actual"}), 400
 
@@ -281,7 +282,7 @@ def abonar_mensual():
     # Verificar si el cliente ya tiene reservas sueltas
     # para turnos de esta clase en el mes actual
 
-    turnos_clase_mes = ReservaModel.turnos_restantes_mes(id_clase)
+    turnos_clase_mes, _ = ReservaModel.turnos_restantes_mes(id_clase)
 
     ids_turnos_clase = [t.id for t in turnos_clase_mes]
 
@@ -304,7 +305,7 @@ def abonar_mensual():
     # -----
 
     # Crear reserva
-    reserva, turnos = ReservaModel.abonar_mensual(
+    reserva, turnos, turnos_ocupados = ReservaModel.abonar_mensual(
         id_cliente=id_cliente,
         id_clase=id_clase,
         monto=monto,
@@ -324,6 +325,7 @@ def abonar_mensual():
         "id_reserva": reserva.id,
         "monto_a_pagar": float(monto),
         "turnos_reservados": len(turnos),
+        "turnos_ocupados": turnos_ocupados,
     }
     if descuento_aplicado:
         respuesta["descuento"] = "20% aplicado por reserva después del día 15"

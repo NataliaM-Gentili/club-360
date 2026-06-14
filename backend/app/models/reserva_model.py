@@ -111,7 +111,33 @@ class ReservaModel:
             .all()
         )
 
-        return [t for t in turnos if t.fecha not in FERIADOS_2026]
+        disponibles = []
+        ocupados_ids = []
+
+        for t in turnos:
+            # excluir feriados
+            if t.fecha in FERIADOS_2026:
+                continue
+
+            clase = Clase.query.get(t.id_clase)
+            if not clase:
+                continue
+
+            # contar reservas activas (no Canceladas) para este turno
+            ocupados = (
+                db.session.query(ReservaTurno)
+                .join(Reserva, ReservaTurno.id_reserva == Reserva.id)
+                .filter(ReservaTurno.id_turno == t.id, Reserva.estado != "Cancelada")
+                .count()
+            )
+
+            if ocupados >= clase.cupo:
+                ocupados_ids.append(t.id)
+            else:
+                disponibles.append(t)
+
+        # Retorna (turnos_disponibles, ids_turnos_ocupados)
+        return disponibles, ocupados_ids
     
         
     @staticmethod
@@ -173,7 +199,7 @@ class ReservaModel:
         El pago se gestiona posteriormente.
         Retorna (reserva, turnos_restantes).
         """
-        turnos_restantes = ReservaModel.turnos_restantes_mes(id_clase)
+        turnos_restantes, turnos_ocupados = ReservaModel.turnos_restantes_mes(id_clase)
 
         reserva = Reserva(id_cliente=id_cliente, estado="Pendiente")
         db.session.add(reserva)
@@ -188,7 +214,7 @@ class ReservaModel:
         ))
 
         db.session.commit()
-        return reserva, turnos_restantes
+        return reserva, turnos_restantes, turnos_ocupados
 
     
     
