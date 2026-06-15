@@ -81,9 +81,17 @@ def buscar_turnos():
 
     resultado = []
     for t in turnos:
-        ocupados_turno = ReservaTurno.query.filter_by(id_turno=t.id).count()
-        ocupados_clase = ReservaClase.query.filter_by(id_clase=clase.id).count()
+        # Sumamos SOLO los inscriptos cuyo estado NO sea 'Cancelada'
+        ocupados_turno = ReservaTurno.query.join(Reserva).filter(
+            ReservaTurno.id_turno == t.id, Reserva.estado != 'Cancelada'
+        ).count()
+        
+        ocupados_clase = ReservaClase.query.join(Reserva).filter(
+            ReservaClase.id_clase == clase.id, Reserva.estado != 'Cancelada'
+        ).count()
+        
         ocupados = ocupados_turno + ocupados_clase
+        
         resultado.append(
             {
                 "id": t.id,
@@ -92,9 +100,10 @@ def buscar_turnos():
                 "dia": clase.dia,
                 "hora": clase.hora,
                 "cupo": clase.cupo,
-                "ocupados": ocupados,
+                "ocupados": ocupados, # <-- Ahora este número será real
                 "id_clase": clase.id,
                 "habilitada": clase.habilitada,
+                "turno_cancelado": not t.habilitado
             }
         )
 
@@ -149,65 +158,61 @@ def buscar_turnos_de_cliente():
         })
 
     return jsonify({"turnos": resultado}), 200
-
-@turno_bp.route("/cancelar_turno", methods=["POST"])
-def cancelar_turno_admin():
-    datos = request.get_json()
-
-    if not datos or "id_turno" not in datos:
-        return jsonify({"error": "No se recibió el id_turno en la petición"}), 400
     
-    id_turno = datos.get("id_turno")
-    # 1. Validar que sea administrador (Rol 2)
-    if session.get("rol_id") != 2:
-        return jsonify({"error": "Acceso denegado. Se requiere rol de administrador"}), 403
-
-    turno = Turno.query.get(id_turno)
-    if not turno:
-        return jsonify({"error": "Turno no encontrado"}), 404
-
+# Endpoint para calcular impacto antes de cancelar
+@turno_bp.route("/calcular_impacto_clase/<int:id_clase>", methods=["GET"])
+def calcular_impacto(id_clase):
+    try:
+        # 1. Buscamos turnos vigentes (como vos indicaste, esto está bien)
+        turnos = Turno.query.filter_by(id_clase=id_clase, habilitado=True).all()
+        total_inscriptos = 0
+        
+        # 2. Contamos a los inscriptos a turnos individuales (que no estén cancelados)
+        for t in turnos:
+            total_inscriptos += ReservaTurno.query.join(Reserva).filter(
+                ReservaTurno.id_turno == t.id, Reserva.estado != 'Cancelada'
+            ).count()
+            
+        # 3. Contamos a los inscriptos mensuales de toda la clase (que no estén cancelados)
+        total_inscriptos += ReservaClase.query.join(Reserva).filter(
+            ReservaClase.id_clase == id_clase, Reserva.estado != 'Cancelada'
+        ).count()
+            
+        return jsonify({"total_inscriptos": total_inscriptos}), 200
+    except Exception as e:
+        return jsonify({"error": "Falla interna al calcular impacto"}), 500
+    
+def procesar_cancelacion_turno(turno):
     clase = Clase.query.get(turno.id_clase)
-
-    # 2. Cambiar el estado del turno (lo saca de la cartelera)
     turno.habilitado = False 
-
-    # 3. Buscar si hay inscriptos
-    reservas_turno = ReservaTurno.query.filter_by(id_turno=id_turno).all()
+    reservas_turno = ReservaTurno.query.filter_by(id_turno=turno.id).all()
     inscriptos_afectados = 0
 
     for rt in reservas_turno:
         reserva = Reserva.query.get(rt.id_reserva)
-        
         if reserva and reserva.estado != "Cancelada":
             reserva.estado = "Cancelada"
             inscriptos_afectados += 1
-            
-            # Buscar datos del cliente y el monto
             usuario = Usuario.query.get(reserva.id_cliente)
             abono = Abono.query.filter_by(id_reserva=reserva.id).first()
-            monto_a_devolver = float(abono.monto) if abono else 0.0
-
-            # Disparar el correo electrónico con tu servicio centralizado
-            send_cancellation_email(
-                email_destino=usuario.email,
-                nombre=usuario.nombres,
-                disciplina=clase.disciplina.capitalize(),
-                fecha=turno.fecha.strftime("%d/%m/%Y"),
-                hora=clase.hora,
-                monto=monto_a_devolver
-            )
-
-    try:
-        db.session.commit()
-        
-        mensaje = "Turno cancelado exitosamente."
-        if inscriptos_afectados > 0:
-            mensaje += f" Se notificó a {inscriptos_afectados} inscripto(s) sobre la devolución."
-        else:
-            mensaje += " El turno no tenía inscriptos."
+            monto = float(abono.monto) if abono else 0.0
             
-        return jsonify({"mensaje": mensaje}), 200
-        
+            send_cancellation_email(usuario.email, usuario.nombres, clase.disciplina.capitalize(), 
+                                    turno.fecha.strftime("%d/%m/%Y"), clase.hora, monto)
+    return inscriptos_afectados
+
+@turno_bp.route("/cancelar_turno", methods=["POST"])
+def cancelar_turno_admin():
+    datos = request.get_json()
+    id_turno = datos.get("id_turno")
+    turno = Turno.query.get(id_turno)
+    
+    if not turno: return jsonify({"error": "Turno no encontrado"}), 404
+    
+    try:
+        procesar_cancelacion_turno(turno)
+        db.session.commit()
+        return jsonify({"mensaje": "Turno cancelado exitosamente."}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Ocurrió un error al intentar cancelar el turno."}), 500
@@ -232,3 +237,29 @@ def get_turnos_hoy():
         })
 
     return jsonify({"turnos": resultado}), 200
+
+@turno_bp.route("/cancelar_clase", methods=["POST"])
+def cancelar_clase_admin():
+    datos = request.get_json()
+    id_clase = datos.get("id_clase")
+    
+    if session.get("rol_id") != 2:
+        return jsonify({"error": "Acceso denegado"}), 403
+
+    turnos = Turno.query.filter_by(id_clase=id_clase).all()
+    
+    try:
+        # 1. Cancelamos todos los turnos y mandamos mails
+        for t in turnos:
+            procesar_cancelacion_turno(t)
+            
+        # 2. NUEVO: Deshabilitamos la clase real en la base de datos
+        clase = Clase.query.get(id_clase)
+        if clase:
+            clase.habilitada = False
+            
+        db.session.commit()
+        return jsonify({"mensaje": "Clase cancelada y usuarios notificados"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500

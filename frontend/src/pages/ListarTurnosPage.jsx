@@ -40,6 +40,14 @@ export default function ListarTurnosPage() {
     const [abonoModalOpen, setAbonoModalOpen] = useState(false);
     const [abonoModalData, setAbonoModalData] = useState(null);
 
+    // Estados para los modales de cancelación
+    const [turnoACancelar, setTurnoACancelar] = useState(null);
+    const [confirmCancelarClase, setConfirmCancelarClase] = useState({ 
+        open: false, 
+        id_clase: null, 
+        total_inscriptos: 0 
+    });
+
     useEffect(() => {
         fetch('/api/auth/status', { credentials: 'include' })
             .then(res => res.json())
@@ -247,7 +255,6 @@ export default function ListarTurnosPage() {
         }
     };
 
-    
     const handleListaEsperaNoAbonado = async (turno) => {
         try {
             const response = await fetch(`/api/lista-espera/${session.user_id}/${turno.id}/3`, {
@@ -262,7 +269,6 @@ export default function ListarTurnosPage() {
                 return;
             }
 
-            // Actualizar listasEspera con la nueva entrada individual
             setListasEspera(prev => ({
                 abonado: prev.abonado,
                 noAbonado: [...prev.noAbonado, {
@@ -280,14 +286,12 @@ export default function ListarTurnosPage() {
         }
     };
 
-    // sería como handleListaEsperaAbonado
     const handleInscribirseListaEsperaTurnosOcupados = async () => {
         if (!abonoModalData?.ocupados?.length) {
             setAbonoModalOpen(false);
             return;
         }
 
-        // inscribe en lista de espera en carácter de abonado (id tipo_lista 2)
         const resultados = await Promise.all(abonoModalData.ocupados.map(async (turno) => {
             try {
                 const response = await fetch(`/api/lista-espera/${session.user_id}/${turno.id}/2`, {
@@ -340,12 +344,9 @@ export default function ListarTurnosPage() {
 
     const confirmSalirListaEspera = async () => {
         try {
-            let response;
-            
-            // lista individual: listaAEliminar es turno_id
-            response = await fetch(`/api/lista-espera/salir/${session.user_id}/${listaAEliminar}`, {
+            let response = await fetch(`/api/lista-espera/salir/${session.user_id}/${listaAEliminar}`, {
                 method: 'DELETE',
-                 credentials: 'include',
+                credentials: 'include',
             });
 
             const data = await response.json();
@@ -367,47 +368,6 @@ export default function ListarTurnosPage() {
         }
     };
 
-    /* CÓDIGO OBSOLETO NO DESCOMENTAR
-
-    const handleListaEsperaAbonado = async () => {
-        const idClase = turnos[0]?.id_clase;
-        if (!idClase) {
-            toast.error('No se pudo determinar la clase.');
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/lista-espera-abonado/${session.user_id}/${idClase}`, {
-                method: 'POST',
-                credentials: 'include',
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                toast.error(data.mensaje || 'Error al agregar a lista de espera');
-                return;
-            }
-
-            // Actualizar listasEspera con la nueva entrada mensual
-            setListasEspera(prev => ({
-                abonado: [...prev.abonado, {
-                    id: data.id,
-                    id_cliente: session.user_id,
-                    clase_id: idClase,
-                    turno_id: null,
-                    tipo_lista_id: 2
-                }],
-                noAbonado: prev.noAbonado,
-            }));
-
-            toast.success(data.mensaje || 'Te has agregado a la lista de espera mensual');
-        } catch (error) {
-            toast.error('No se pudo conectar con el servidor.');
-        }
-    };
-    */
-
     const handleToggleClase = async (idClase, estaHabilitada) => {
         try {
             const endpoint = estaHabilitada ? '/api/deshabilitarClase' : '/api/habilitarClase';
@@ -420,7 +380,13 @@ export default function ListarTurnosPage() {
 
             if (response.ok) {
                 setTurnos(prev => prev.map(t =>
-                    t.id_clase === idClase ? { ...t, habilitada: !estaHabilitada } : t
+                    t.id_clase === idClase ? { 
+                        ...t, 
+                        habilitada: !estaHabilitada,
+                        // SI estamos deshabilitando (true) y el turno no tiene inscriptos, lo marcamos como cancelado
+                        // SI estamos habilitando de nuevo (false), limpiamos la cancelación para que vuelvan a estar activos
+                        turno_cancelado: estaHabilitada ? (t.ocupados === 0 ? true : t.turno_cancelado) : false
+                    } : t
                 ));
                 toast.success(estaHabilitada ? 'Clase deshabilitada.' : 'Clase habilitada.');
             } else {
@@ -432,16 +398,20 @@ export default function ListarTurnosPage() {
         }
     };
 
-    const handleCancelarTurno = async (idTurno) => {
-        if (!window.confirm('¿Cancelar turno?')) return;
+    // Nueva lógica de Cancelar Turno (con modal)
+    const intentarCancelarTurno = (turno) => {
+        if (turno.ocupados > 0) {
+            setTurnoACancelar(turno);
+        } else {
+            ejecutarCancelacionTurno(turno.id);
+        }
+    };
 
+    const ejecutarCancelacionTurno = async (idTurno) => {
         try {
             const response = await fetch('/api/cancelar_turno', {
                 method: 'POST',
-                // ESTA ES LA LÍNEA QUE EVITA EL ERROR 415:
-                headers: { 
-                    'Content-Type': 'application/json' 
-                },
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify({ id_turno: idTurno })
             });
@@ -450,13 +420,58 @@ export default function ListarTurnosPage() {
             
             if (response.ok) {
                 toast.success(data.mensaje);
-                setTurnos(prev => prev.filter(t => t.id !== idTurno));
+                // NUEVO: Lo dejamos en pantalla, le ponemos ocupados 0 y avisamos que está cancelado
+                setTurnos(prev => prev.map(t => 
+                    t.id === idTurno ? { ...t, ocupados: 0, turno_cancelado: true } : t
+                ));
+                setTurnoACancelar(null); 
             } else {
                 toast.error(data.error || 'Error al cancelar');
             }
         } catch (error) {
             console.error("Error:", error);
             toast.error('Error de conexión con el servidor');
+        }
+    };
+
+    // Lógica para Cancelar Clase (con modal)
+    const prepararCancelacionClase = async (idClase) => {
+        try {
+            const res = await fetch(`/api/calcular_impacto_clase/${idClase}`);
+            const data = await res.json();
+            if (data.total_inscriptos === 0) {
+                ejecutarCancelacionClase(idClase);
+            } else {
+                setConfirmCancelarClase({ 
+                    open: true, 
+                    id_clase: idClase, 
+                    total_inscriptos: data.total_inscriptos 
+                });
+            }
+        } catch (error) {
+            toast.error("Error al calcular impacto");
+        }
+    };
+
+    const ejecutarCancelacionClase = async (idClase) => {
+        try {
+            const response = await fetch('/api/cancelar_clase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ id_clase: idClase })
+            });
+
+            if (response.ok) {
+                toast.success("Clase cancelada correctamente");
+                setConfirmCancelarClase({ ...confirmCancelarClase, open: false });
+                
+                setTurnos(prev => prev.map(t => 
+                    t.id_clase === idClase ? { ...t, habilitada: false, ocupados: 0, turno_cancelado: true } : t
+                ));
+            }
+        } catch (error) {
+            toast.error("Error al cancelar la clase");
         }
     };
 
@@ -481,10 +496,6 @@ export default function ListarTurnosPage() {
     const inscriptoEnTodosLosTurnos = turnos.length > 0 &&
         turnos.every(t => turnosCliente.some(tc => tc.id_turno === t.id));
 
-    const estaEnListaEsperaMensual = (idClase) => {
-        return listasEspera.abonado.some(item => item.clase_id === idClase);
-    };
-
     const estaEnListaEsperaIndividual = (idTurno) => {
         return listasEspera.noAbonado.some(item => item.turno_id === idTurno);
     };
@@ -495,12 +506,6 @@ export default function ListarTurnosPage() {
             estaEnListaEsperaIndividual(t.id)
         );
 
-    const entradaMensualBusqueda = turnos.length > 0
-        ? listasEspera.abonado.find(item => item.clase_id === turnos[0].id_clase)
-        : null;
-
-    const enListaEsperaMensualBusqueda = !!entradaMensualBusqueda;
-
     const renderBotonAccion = (turno) => {
         const turnoLleno = turno.ocupados >= turno.cupo;
         const inscripto = turnosCliente.some(t => t.id_turno === turno.id);
@@ -509,7 +514,7 @@ export default function ListarTurnosPage() {
         const enListaMensual = !!entradaMensual;
         const enListaIndividual = !!entradaIndividual;
 
-                    if (enListaIndividual) {
+        if (enListaIndividual) {
             return (
                 <button
                     className="listaEsperaBtn"
@@ -652,40 +657,71 @@ export default function ListarTurnosPage() {
                                         <td>{turno.dia}</td>
                                         <td>{turno.hora}</td>
                                         {esPersonalInterno && <td>{turno.ocupados}/{turno.cupo}</td>}
-                                        {/* ACCIONES DE ADMINISTRADOR */}
                                         {esAdmin && (
                                             <td>
-                                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                                    {/* BOTÓN SIEMPRE VISIBLE */}
-                                                    <button
-                                                        className={turno.habilitada ? 'deshabilitarBtn' : 'habilitarBtn'}
-                                                        style={{ 
-                                                            padding: '6px 16px', 
-                                                            fontSize: '0.85rem',
-                                                            borderRadius: '20px' 
-                                                        }}
-                                                        onClick={() => handleToggleClase(turno.id_clase, turno.habilitada)}
-                                                    >
-                                                        {turno.habilitada ? 'Deshabilitar Clase' : 'Habilitar Clase'}
-                                                    </button>
+                                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                    
+                                                    {/* COLUMN 1: ESTADO Y ACCIÓN DEL TURNO INDIVIDUAL */}
+                                                    {!turno.turno_cancelado ? (
+                                                        <button 
+                                                            className="cancelarTurnoBtn" 
+                                                            style={{ 
+                                                                backgroundColor: '#dc3545', 
+                                                                color: 'white', 
+                                                                border: 'none', 
+                                                                padding: '6px 16px', 
+                                                                borderRadius: '20px',
+                                                                cursor: 'pointer',
+                                                                fontSize: '0.85rem',
+                                                                fontWeight: 'bold'
+                                                            }}
+                                                            onClick={() => intentarCancelarTurno(turno)} 
+                                                        >
+                                                            Cancelar turno
+                                                        </button>
+                                                    ) : (
+                                                        <span style={{ fontSize: '0.85rem', color: '#dc3545', fontWeight: 'bold', padding: '6px 10px' }}>
+                                                            Turno Cancelado
+                                                        </span>
+                                                    )}
 
-                                                    {/* BOTÓN DE CANCELAR TURNO */}
-                                                    <button
-                                                        className="cancelarTurnoBtn"
-                                                        style={{ 
-                                                            backgroundColor: '#dc3545', 
-                                                            color: 'white', 
-                                                            border: '1px solid #dc3545', 
-                                                            padding: '6px 16px', 
-                                                            borderRadius: '20px',
-                                                            cursor: 'pointer',
-                                                            fontSize: '0.85rem',
-                                                            fontWeight: 'bold'
-                                                        }}
-                                                        onClick={() => handleCancelarTurno(turno.id)}
-                                                    >
-                                                        Cancelar turno
-                                                    </button>
+                                                    {/* COLUMN 2: ESTADO Y ACCIÓN DE LA CLASE COMPLETA */}
+                                                    {turno.habilitada ? (
+                                                        <button 
+                                                            className="cancelarClaseBtn" 
+                                                            style={{ 
+                                                                backgroundColor: '#6c757d', 
+                                                                color: 'white', 
+                                                                border: 'none', 
+                                                                padding: '6px 16px', 
+                                                                borderRadius: '20px',
+                                                                cursor: 'pointer',
+                                                                fontSize: '0.85rem',
+                                                                fontWeight: 'bold'
+                                                            }}
+                                                            onClick={() => prepararCancelacionClase(turno.id_clase)} 
+                                                        >
+                                                            Cancelar clase
+                                                        </button>
+                                                    ) : (
+                                                        <button 
+                                                            className="habilitarBtn" 
+                                                            style={{ 
+                                                                backgroundColor: '#28a745', 
+                                                                color: 'white', 
+                                                                border: 'none', 
+                                                                padding: '6px 16px', 
+                                                                borderRadius: '20px',
+                                                                cursor: 'pointer',
+                                                                fontSize: '0.85rem',
+                                                                fontWeight: 'bold'
+                                                            }}
+                                                            onClick={() => handleToggleClase(turno.id_clase, false)}
+                                                        >
+                                                            Habilitar clase
+                                                        </button>
+                                                    )}
+                                                    
                                                 </div>
                                             </td>
                                         )}
@@ -722,7 +758,7 @@ export default function ListarTurnosPage() {
                         open={confirmDeleteModal}
                         onClose={() => setConfirmDeleteModal(false)}
                         title="⚠️ Atención"
-                        message={"¿Está seguro quie quiere salir de la lista de espera? Ésta acción no se puede deshacer y perderá su prioridad."}
+                        message={"¿Está seguro que quiere salir de la lista de espera? Ésta acción no se puede deshacer y perderá su prioridad."}
                         primaryText="Confirmar"
                         secondaryText="Cancelar"
                         onPrimary={confirmSalirListaEspera}
@@ -743,6 +779,33 @@ export default function ListarTurnosPage() {
                         onSecondary={() => {
                             setAbonoModalOpen(false);
                             setAbonoModalData(null);
+                        }}
+                    />
+
+                    {/* NUEVO MODAL: Confirmación individual de Turno */}
+                    <ModalDialog
+                        open={turnoACancelar !== null}
+                        onClose={() => setTurnoACancelar(null)}
+                        title="Cancelar Turno"
+                        message={`Este turno tiene ${turnoACancelar?.ocupados} inscripto(s). Se les notificará por correo y se procesará la devolución del dinero. ¿Desea continuar?`}
+                        primaryText="Sí, cancelar turno"
+                        secondaryText="Cerrar"
+                        onPrimary={() => ejecutarCancelacionTurno(turnoACancelar?.id)}
+                        onSecondary={() => setTurnoACancelar(null)}
+                    />
+
+                    {/* MODAL EXISTENTE: Confirmación para toda la Clase */}
+                    <ModalDialog
+                        open={confirmCancelarClase.open}
+                        onClose={() => setConfirmCancelarClase({ ...confirmCancelarClase, open: false })}
+                        title="Cancelar Clase Completa"
+                        message={`En esta clase hay ${confirmCancelarClase.total_inscriptos} inscripto(s) en total. ¿Desea continuar con la cancelación? Puede optar por deshabilitar la clase para eliminar solo los turnos sin inscriptos.`}
+                        primaryText="Continuar (Cancelar todo)"
+                        secondaryText="Deshabilitar turnos vacíos"
+                        onPrimary={() => ejecutarCancelacionClase(confirmCancelarClase.id_clase)}
+                        onSecondary={() => {
+                            handleToggleClase(confirmCancelarClase.id_clase, true);
+                            setConfirmCancelarClase({ ...confirmCancelarClase, open: false });
                         }}
                     />
                 </div>
