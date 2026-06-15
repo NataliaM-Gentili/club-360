@@ -211,3 +211,24 @@ def cancelar_turno_admin():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Ocurrió un error al intentar cancelar el turno."}), 500
+    
+    
+# /TURNOS_HOY --> lista los turnos de hoy para que el empleado pueda pasar asistencia manual
+@turno_bp.route("/turnos_hoy", methods=["GET"])
+def get_turnos_hoy():
+    if session.get("rol_id") != 3:
+        return jsonify({"error": "Acceso denegado. Se requiere rol de empleado"}), 403
+
+    turnos_data = TurnoModel.get_turnos_de_hoy()
+
+    resultado = []
+    for turno, clase in turnos_data:
+        resultado.append({
+            "id_turno": turno.id,
+            "disciplina": clase.disciplina,
+            "dia": clase.dia,
+            "hora": clase.hora,
+            "fecha": turno.fecha.strftime("%d/%m/%Y"),
+        })
+
+    return jsonify({"turnos": resultado}), 200
