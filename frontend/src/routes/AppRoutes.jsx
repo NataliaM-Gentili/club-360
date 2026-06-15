@@ -14,6 +14,8 @@ import RegisterClientAsEmployee from "../pages/RegisterClientAsEmployeePage.jsx"
 import RegisterCashPaymentPage from "../pages/RegisterCashPaymentPage.jsx";
 import MisPagos from "../pages/MisPagosPage.jsx";
 import PasarAsistenciaPage from "../pages/PasarAsistenciaPage.jsx";
+import PasarAsistenciaManualPage from "../pages/PasarAsistenciaManualPage";
+
 
 export default function AppRoutes() {
   return (
@@ -38,6 +40,7 @@ export default function AppRoutes() {
           <Route path="register-cash" element={<RegisterCashPaymentPage/>}/>
           <Route path="/mis-pagos" element={<MisPagos />} />
           <Route path="/asistencia-qr" element={<PasarAsistenciaPage />} />
+          <Route path="/asistencia-manual" element={<PasarAsistenciaManualPage />} />
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
         </Route>
 

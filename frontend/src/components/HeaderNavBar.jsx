@@ -84,7 +84,7 @@ export default function HeaderNavBar(){
                 return (
                     <>
                         <li><Link to="/asistencia-qr">Escanear QR</Link></li>
-                        {/*<li><Link to="/attendance">Asistencia Manual</Link></li>*/}
+                        <li><Link to="/asistencia-manual">Asistencia Manual</Link></li>
                         <li><Link to="/register-client">Registrar Cliente</Link></li>
                         <li><Link to="/register-cash">Registrar Pago</Link></li>
                         <li><button className="logoutBtn" onClick={logout}>Cerrar Sesión</button></li>
