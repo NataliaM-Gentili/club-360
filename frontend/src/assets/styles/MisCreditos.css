@@ -1,0 +1,170 @@
+/* ============================================================
+   MisCreditos.css
+   ============================================================ */
+
+.creditosContainer {
+    padding: 2rem 4rem;
+    background-color: #fafafa;
+    min-height: 100vh;
+    margin-top: 100px;
+}
+
+.creditosTitle {
+    font-size: 28pt;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.4rem;
+    color: black;
+}
+
+.creditosSubtitulo {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.5);
+    margin-bottom: 2rem;
+}
+
+.creditosHeader {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.creditosHeaderIcon {
+    font-size: 2rem;
+    line-height: 1;
+    margin-top: 4px;
+}
+
+/* GRID DE CARDS */
+
+.creditosGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 1.25rem;
+}
+
+/* CARD */
+
+.creditoCard {
+    background-color: #ffffff;
+    border: 1px solid rgba(89, 136, 73, 0.2);
+    border-radius: 12px;
+    padding: 1.4rem 1.2rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.creditoCard:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.creditoCardIcon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.4rem;
+}
+
+.creditoCardIcon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.creditoCardNombre {
+    font-size: 16px;
+    font-weight: 700;
+    color: black;
+    margin: 0;
+}
+
+.creditoCardDesc {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.45);
+    margin: 0;
+}
+
+.creditoCardCantidad {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+}
+
+/* BOTÓN */
+
+.creditoCardBtn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    background-color: transparent;
+    border: 1px solid #598849;
+    border-radius: 20px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #598849;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.creditoCardBtn:hover:not(:disabled) {
+    background-color: #598849;
+    color: #fafafa;
+}
+
+.creditoCardBtnAgotado {
+    border-color: #ccc;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+.creditoCardBtnArrow {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* ESTADO VACÍO */
+
+.creditosVacio {
+    text-align: center;
+    color: rgba(0, 0, 0, 0.4);
+    font-size: 14px;
+    padding: 3rem;
+}
+
+/* CARGANDO */
+
+.creditosCargando {
+    text-align: center;
+    color: rgba(0, 0, 0, 0.4);
+    font-size: 14px;
+    padding: 3rem;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+    .creditosContainer {
+        padding: 1.5rem 1rem;
+    }
+
+    .creditosTitle {
+        font-size: 20pt;
+    }
+
+    .creditosGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .creditoCardBtn {
+        font-size: 12px;
+        padding: 7px 12px;
+    }
+}

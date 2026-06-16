@@ -10,6 +10,7 @@ from app.models.db_structure import (
 )
 from datetime import datetime, timedelta
 
+
 class AsistenciaManualModel:
 
     @staticmethod
@@ -19,7 +20,9 @@ class AsistenciaManualModel:
         a partir de su email. Retorna (ok: bool, mensaje: str).
         """
         MSG_TURNO_NO_ENCONTRADO = "El turno indicado no existe."
-        MSG_NO_INSCRIPTO = "El cliente no se encuentra entre los inscriptos a dicho turno"
+        MSG_NO_INSCRIPTO = (
+            "El cliente no se encuentra entre los inscriptos a dicho turno"
+        )
         MSG_SIN_PAGO = "No se ha podido registrar la asistencia, el cliente debe regularizar su situación de pago"
         MSG_FUERA_HORARIO = "No se ha podido registrar la asistencia, el horario está fuera del permitido"
         MSG_YA_REGISTRADO = "La asistencia de este cliente para este turno ya fue registrada previamente"

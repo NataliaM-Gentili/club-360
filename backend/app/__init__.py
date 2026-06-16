@@ -34,6 +34,7 @@ def create_app():
     from app.routes.lista_espera_routes import lista_espera_bp
     from app.routes.asistencia_qr_routes import asistencia_bp
     from app.routes.asistencia_manual_routes import asistencia_manual_bp
+    from app.routes.credito_routes import credito_bp
 
     # app.register_blueprint(user_bp)
     app.register_blueprint(user_bp)
@@ -45,6 +46,7 @@ def create_app():
     app.register_blueprint(lista_espera_bp)
     app.register_blueprint(asistencia_bp)
     app.register_blueprint(asistencia_manual_bp)
+    app.register_blueprint(credito_bp)
     # from app.routes.user_routes import main as main_blueprint
     # app.register_blueprint(main_blueprint)
     # from app.routes import main

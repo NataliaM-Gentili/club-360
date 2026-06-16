@@ -15,6 +15,7 @@ import RegisterCashPaymentPage from "../pages/RegisterCashPaymentPage.jsx";
 import MisPagos from "../pages/MisPagosPage.jsx";
 import PasarAsistenciaPage from "../pages/PasarAsistenciaPage.jsx";
 import PasarAsistenciaManualPage from "../pages/PasarAsistenciaManualPage";
+import MisCreditosPage from "../pages/MisCreditosPage.jsx";
 
 
 export default function AppRoutes() {
@@ -29,7 +30,7 @@ export default function AppRoutes() {
 
         {/* 2. RUTAS PROTEGIDAS (Usan el Layout con Navbar) */}
         <Route element={<ProtectedLayout />}>
-          
+
           <Route path="/" element={<HomePage/>} />
           <Route path="/card-register" element={<CardRegisterPage/>}/>
           <Route path="/mis-Actividades" element={<MisActividaes/>}/>
@@ -41,6 +42,7 @@ export default function AppRoutes() {
           <Route path="/mis-pagos" element={<MisPagos />} />
           <Route path="/asistencia-qr" element={<PasarAsistenciaPage />} />
           <Route path="/asistencia-manual" element={<PasarAsistenciaManualPage />} />
+          <Route path="/mis-creditos" element={<MisCreditosPage />} />
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
         </Route>
 

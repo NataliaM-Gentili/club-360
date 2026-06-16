@@ -24,7 +24,6 @@ class Usuario(db.Model):
     rol_id = db.Column(db.Integer, db.ForeignKey("rol.id"))
     token = db.Column(db.String(256))
 
-
     def to_dict(self):
         return {
             "id": self.id,
@@ -33,8 +32,9 @@ class Usuario(db.Model):
             "nombres": self.nombres,
             "apellido": self.apellido,
             "fecha_alta": self.fecha_alta.isoformat() if self.fecha_alta else None,
-            "rol_id": self.rol_id
+            "rol_id": self.rol_id,
         }
+
 
 class Administrador(db.Model):
     __tablename__ = "administrador"
@@ -73,25 +73,20 @@ class Tarjeta(db.Model):
             "id": self.id,
             "numero": self.numero,
             "fecha_vencimiento": self.fecha_vencimiento,
-            "titular": self.titular
+            "titular": self.titular,
         }
 
+
 class ClienteTarjeta(db.Model):
-    __tablename__ = 'cliente_tarjeta'
+    __tablename__ = "cliente_tarjeta"
 
     id_cliente = db.Column(
-        "id_usuario",
-        db.Integer,
-        db.ForeignKey('cliente.id_usuario'),
-        primary_key=True
+        "id_usuario", db.Integer, db.ForeignKey("cliente.id_usuario"), primary_key=True
     )
 
-    id_tarjeta = db.Column(
-        db.Integer,
-        db.ForeignKey('tarjeta.id'),
-        primary_key=True
-    )
-    
+    id_tarjeta = db.Column(db.Integer, db.ForeignKey("tarjeta.id"), primary_key=True)
+
+
 # Tabla intermedia Cliente_Tarjeta
 # cliente_tarjeta = db.Table('cliente_tarjeta',
 #    db.Column('id_usuario', db.Integer, db.ForeignKey('cliente.id_usuario'), primary_key=True),
@@ -184,6 +179,15 @@ class EmpleadoRegistraAbono(db.Model):
     )
 
 
+# --- CREDITOS ---
+class Credito(db.Model):
+    __tablename__ = "credito"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    disciplina = db.Column(db.String(100), nullable=False)
+    id_usuario = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
+    activo = db.Column(db.Boolean, nullable=False, default=True)
+
+
 # --- LISTA DE ESPERA ---
 
 
@@ -204,7 +208,9 @@ class ListaEspera(db.Model):
     )
     clase_id = db.Column(db.Integer, db.ForeignKey("clase.id"), nullable=True)
     turno_id = db.Column(db.Integer, db.ForeignKey("turno.id"), nullable=True)
-    fecha_inscripcion = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    fecha_inscripcion = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
 
     # Restricción CHECK de exclusividad
     __table_args__ = (
@@ -213,14 +219,14 @@ class ListaEspera(db.Model):
             name="check_exclusividad",
         ),
     )
-    
+
     def to_dict(self):
         return {
             "id": self.id,
             "id_cliente": self.id_cliente,
             "tipo_lista_id": self.tipo_lista_id,
             "clase_id": self.clase_id,
-            "turno_id": self.turno_id
+            "turno_id": self.turno_id,
         }
 
 
@@ -252,45 +258,25 @@ event.listen(db.metadata, "after_create", insertar_roles_y_listas)
 ##---------------
 from datetime import datetime
 
+
 class OfrecimientoReserva(db.Model):
     __tablename__ = "ofrecimiento_reserva"
 
     id = db.Column(db.Integer, primary_key=True)
 
     id_cliente = db.Column(
-        db.Integer,
-        db.ForeignKey("cliente.id_usuario"),
-        nullable=False
+        db.Integer, db.ForeignKey("cliente.id_usuario"), nullable=False
     )
 
-    id_turno = db.Column(
-        db.Integer,
-        db.ForeignKey("turno.id"),
-        nullable=True
-    )
+    id_turno = db.Column(db.Integer, db.ForeignKey("turno.id"), nullable=True)
 
-    id_clase = db.Column(
-        db.Integer,
-        db.ForeignKey("clase.id"),
-        nullable=True
-    )
+    id_clase = db.Column(db.Integer, db.ForeignKey("clase.id"), nullable=True)
 
-    fecha_envio = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=datetime.utcnow
-    )
+    fecha_envio = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    fecha_vencimiento = db.Column(
-        db.DateTime,
-        nullable=False
-    )
+    fecha_vencimiento = db.Column(db.DateTime, nullable=False)
 
-    estado = db.Column(
-        db.String(20),
-        nullable=False,
-        default="Pendiente"
-    )
+    estado = db.Column(db.String(20), nullable=False, default="Pendiente")
 
     cliente = db.relationship("Cliente")
     turno = db.relationship("Turno")
@@ -303,7 +289,7 @@ class OfrecimientoReserva(db.Model):
             OR
             (id_clase IS NULL AND id_turno IS NOT NULL)
             """,
-            name="check_exclusividad"
+            name="check_exclusividad",
         ),
         db.CheckConstraint(
             """
@@ -314,6 +300,6 @@ class OfrecimientoReserva(db.Model):
                 'Vencido'
             )
             """,
-            name="check_estado"
+            name="check_estado",
         ),
     )
