@@ -4,7 +4,7 @@ from app import mail  # instancia de Flask-Mail
 import qrcode   
 import io
 import base64
-from app.models.db_structure import Usuario, Clase
+from app.models.db_structure import Usuario, Clase, Cliente, ReservaTurno, ReservaClase, Turno, Reserva, OfrecimientoReserva
 
 EMAIL_PRUEBAS = "juanmanuelperezz468@gmail.com"
 
@@ -272,3 +272,176 @@ def send_cancellation_email(email_destino, nombre, disciplina, fecha, hora, mont
         
     except Exception as e:
         print(f"[email_services] ❌ Error al enviar email de cancelación a {email_destino}: {e}")
+
+from flask_mail import Message
+from flask import current_app
+
+def send_ofrecimiento_turno_mail(ofrecimiento, id_cliente_elegido, id_turno, cliente_emisor):
+
+    cliente = Cliente.query.get(ofrecimiento.id_cliente)
+    usuario = Usuario.query.get(cliente.id_usuario)
+
+    reserva_turno = ReservaTurno.query.filter_by(
+        id_reserva=ofrecimiento.id_reserva
+    ).first()
+
+    if not reserva_turno:
+        raise ValueError(
+            f"La reserva {ofrecimiento.id_reserva} no posee un turno asociado"
+        )
+
+    turno = Turno.query.get(reserva_turno.id_turno)
+
+    if not turno:
+        raise ValueError(
+            f"No existe el turno {reserva_turno.id_turno}"
+        )
+
+    clase = Clase.query.get(turno.id_clase)
+
+    frontend_url = current_app.config["FRONTEND_URL"]
+
+    aceptar_url = (
+        f"{frontend_url}/ofrecer/aceptar/{ofrecimiento.id}/{id_cliente_elegido}"
+    )
+
+    rechazar_url = (
+        f"{frontend_url}/ofrecer/rechazar/{ofrecimiento.id}/{id_turno}/{cliente_emisor}"
+    )
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="
+        margin:0;
+        padding:0;
+        background:#f4f4f4;
+        font-family:Arial, Helvetica, sans-serif;
+    ">
+
+        <div style="
+            max-width:650px;
+            margin:30px auto;
+            background:white;
+            border-radius:12px;
+            overflow:hidden;
+            box-shadow:0 2px 10px rgba(0,0,0,0.1);
+        ">
+
+            <div style="
+                background:#1e3a8a;
+                color:white;
+                padding:25px;
+                text-align:center;
+            ">
+                <h1 style="margin:0;">
+                    Club 360
+                </h1>
+            </div>
+
+            <div style="padding:30px;">
+
+                <h2 style="color:#1e3a8a;">
+                    ¡Hay una vacante disponible para vos!
+                </h2>
+
+                <p>
+                    Hola <strong>{usuario.nombres}</strong>,
+                </p>
+
+                <p>
+                    Se liberó un turno y, por tu inscripción en la lista de espera,
+                    tenés prioridad para reservarlo.
+                </p>
+
+                <div style="
+                    background:#f8fafc;
+                    border-left:5px solid #1e3a8a;
+                    padding:20px;
+                    margin:25px 0;
+                ">
+
+                    <h3 style="margin-top:0;">
+                        Detalle del turno
+                    </h3>
+
+                    <p>
+                        <strong>Disciplina:</strong>
+                        {clase.disciplina}
+                    </p>
+
+                    <p>
+                        <strong>Fecha:</strong>
+                        {turno.fecha.strftime('%d/%m/%Y')}
+                    </p>
+
+                    <p>
+                        <strong>Día:</strong>
+                        {clase.dia}
+                    </p>
+
+                    <p>
+                        <strong>Horario:</strong>
+                        {clase.hora}
+                    </p>
+
+                </div>
+
+                <p>
+                    Tenés tiempo hasta el
+                    <strong>
+                        {ofrecimiento.fecha_vencimiento.strftime('%d/%m/%Y')}
+                    </strong>
+                    para responder.
+                </p>
+
+                <div style="
+                    text-align:center;
+                    margin:35px 0;
+                ">
+
+                    <a href="{aceptar_url}"
+                       style="
+                           background:#16a34a;
+                           color:white;
+                           text-decoration:none;
+                           padding:14px 28px;
+                           border-radius:6px;
+                           margin-right:10px;
+                           display:inline-block;
+                           font-weight:bold;
+                       ">
+                        Aceptar
+                    </a>
+
+                    <a href="{rechazar_url}"
+                       style="
+                           background:#dc2626;
+                           color:white;
+                           text-decoration:none;
+                           padding:14px 28px;
+                           border-radius:6px;
+                           display:inline-block;
+                           font-weight:bold;
+                       ">
+                        Rechazar
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </body>
+    </html>
+    """
+
+    msg = Message(
+        subject="Club 360 - Vacante disponible",
+        recipients=[EMAIL_PRUEBAS] # siempre se envía a juanmanuelperezz
+    )
+
+    msg.html = html
+
+    mail.send(msg)
