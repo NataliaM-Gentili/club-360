@@ -388,6 +388,8 @@ def reset_reserva(id_reserva):
     if abono:
         # 5. abono.efectivo = 0
         abono.efectivo = 0
+
+        abono.monto = abono.monto * 2 # duplica el precio porque el nuevo cliente no habrá pagado la seña
         
         # 6. Buscar abono_tarjeta el que corresponda para abono.id_reserva (abono_tarjeta.id_abono = abono.id_reserva)
         abono_tarjeta = AbonoTarjeta.query.filter_by(id_abono=abono.id_reserva).first()

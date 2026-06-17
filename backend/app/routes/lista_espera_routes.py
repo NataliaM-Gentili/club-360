@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from app.models.db_structure import (
     Turno, Clase, Reserva, ReservaTurno, ReservaClase, 
-    Abono, ListaEspera, OfrecimientoReserva
+    Abono, ListaEspera, OfrecimientoReserva, AbonoTarjeta
 )
 from app.models.reserva_model import ReservaModel
 from app.models.lista_espera_models import ListaEsperaModel
@@ -163,18 +163,40 @@ def ofrecimiento_turno(cliente_emisor, id_reserva, id_turno):
                 .first()
             )
 
-
             if (not cliente_elegido):
+                # comportamiento cuando no hay clientes en lista de espera: 
+                # se elimina 100% la reserva para liberar el cupo
+
+                abono = Abono.query.filter_by(id_reserva=id_reserva).first()
+                abono_tarjeta = AbonoTarjeta.query.get(abono.id_reserva)
+                reserva_turno = ReservaTurno.query.get(id_reserva)
+                reserva = Reserva.query.get(id_reserva)
+
+                if abono_tarjeta:
+                    db.session.delete(abono_tarjeta)
+                
+                if abono:
+                    db.session.delete(abono)
+
+                if reserva_turno:
+                    db.session.delete(reserva_turno)
+                
+                if reserva:
+                    db.session.delete(reserva)
+                    
+                db.session.commit()
+
                 return jsonify({
-                    "mensaje": "No hay clientes en lista de espera"
+                    "mensaje": "Reserva eliminada correctamente"
                 }), 200
             
-            id_cliente_elegido = cliente_elegido.id_cliente
+            else:
+                id_cliente_elegido = cliente_elegido.id_cliente
 
-            inscripcion = ListaEspera.query.filter_by(id_cliente=id_cliente_elegido, turno_id=id_turno).first()
-            db.session.delete(inscripcion)
+                inscripcion = ListaEspera.query.filter_by(id_cliente=id_cliente_elegido, turno_id=id_turno).first()
+                db.session.delete(inscripcion)
 
-            reset_reserva(id_reserva)
+                reset_reserva(id_reserva)
         
         else:
             # 2. si no corresponde a un no abonado, se fija si corresponde a un abonado
@@ -190,7 +212,7 @@ def ofrecimiento_turno(cliente_emisor, id_reserva, id_turno):
                 if (not cliente_elegido):
                     return jsonify({
                         "mensaje": "No hay clientes en lista de espera"
-                    }), 200
+                    }), 400
 
                 id_cliente_elegido = cliente_elegido.id_cliente
             
@@ -250,6 +272,7 @@ def ofrecimiento_turno(cliente_emisor, id_reserva, id_turno):
         }), 201
     
     except Exception as e:
+        print(str(e))
         return jsonify({"mensaje": str(e)}), 500
 
 
@@ -276,7 +299,7 @@ def aceptar_ofrecimiento(id_ofrecimento, id_cliente_elegido):
         ofrecimiento.estado = "Aceptado"
 
         # 2. Para la reserva en ofrecimiento.id_reserva, cambiar reserva.id_cliente a id_cliente_elegido
-        reserva_ofrecida = Reserva.query.get(id=ofrecimiento.id_reserva)
+        reserva_ofrecida = Reserva.query.get(ofrecimiento.id_reserva)
         if not reserva_ofrecida :
             return jsonify({"error": "La reserva no existe"}), 404
         
@@ -284,7 +307,10 @@ def aceptar_ofrecimiento(id_ofrecimento, id_cliente_elegido):
 
         db.session.commit()
 
+        return jsonify({"mensaje": "Turno aceptado con éxito"}), 200
+
     except Exception as e:
+        print(str(e))
         return jsonify({"mensaje": "Ocurrió un error"}), 500
 
 
@@ -297,11 +323,18 @@ def rechazar_ofrecimiento(id_ofrecimento, id_turno, cliente_emisor):
         if not ofrecimiento:
             return jsonify({"error": "El ofrecimiento no existe"}), 404
 
+        if ofrecimiento.estado != "Pendiente":
+            return jsonify({
+                "error": "Este ofrecimiento ya fue procesado"
+            }), 400
+
         ofrecimiento.estado = "Rechazado"
 
         db.session.commit()
 
-        ofrecimiento_turno(ofrecimiento.id_reserva, id_turno, cliente_emisor)
+        print(ofrecimiento_turno(cliente_emisor, ofrecimiento.id_reserva, id_turno))
+
+        return jsonify({"mensaje": "Turno rechazado con éxito"}), 200
     
     except Exception as e:
         return jsonify({"mensaje": "Ocurrió un error"}), 500

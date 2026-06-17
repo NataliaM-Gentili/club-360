@@ -302,11 +302,11 @@ def send_ofrecimiento_turno_mail(ofrecimiento, id_cliente_elegido, id_turno, cli
     frontend_url = current_app.config["FRONTEND_URL"]
 
     aceptar_url = (
-        f"{frontend_url}/ofrecer/aceptar/{ofrecimiento.id}/{id_cliente_elegido}"
+        f"{frontend_url}ofrecer/aceptar/{ofrecimiento.id}/{id_cliente_elegido}"
     )
 
     rechazar_url = (
-        f"{frontend_url}/ofrecer/rechazar/{ofrecimiento.id}/{id_turno}/{cliente_emisor}"
+        f"{frontend_url}ofrecer/rechazar/{ofrecimiento.id}/{id_turno}/{cliente_emisor}"
     )
 
     html = f"""
