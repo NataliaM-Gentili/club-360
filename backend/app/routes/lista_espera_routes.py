@@ -8,7 +8,7 @@ from app.models.db_structure import (
 )
 from app.models.reserva_model import ReservaModel
 from app.models.lista_espera_models import ListaEsperaModel
-from app.services.email_services import send_admin_waitlist_warning, send_ofrecimiento_turno_mail
+from app.services.email_services import send_admin_waitlist_warning, send_ofrecimiento_turno_mail, enviar_comprobante_qr_turno
 from app.routes.reserva_routes import reset_reserva
 
 lista_espera_bp = Blueprint("lista_espera_bp", __name__)
@@ -280,6 +280,9 @@ def ofrecimiento_turno(cliente_emisor, id_reserva, id_turno):
 def aceptar_ofrecimiento(id_ofrecimento, id_cliente_elegido):
 
     ofrecimiento = OfrecimientoReserva.query.get(id_ofrecimento)
+    reserva_turno = ReservaTurno.query.get(ofrecimiento.id_reserva)
+    turno = Turno.query.filter_by(id=reserva_turno.id_turno).first()
+    clase = Clase.query.get(turno.id_clase)
 
     if not ofrecimiento:
         return jsonify({"error": "El ofrecimiento no existe"}), 404
@@ -306,6 +309,8 @@ def aceptar_ofrecimiento(id_ofrecimento, id_cliente_elegido):
         reserva_ofrecida.id_cliente = id_cliente_elegido
 
         db.session.commit()
+
+        enviar_comprobante_qr_turno(id_cliente_elegido, ofrecimiento.id_reserva, turno.id, clase.disciplina, turno.fecha, clase.hora)
 
         return jsonify({"mensaje": "Turno aceptado con éxito"}), 200
 

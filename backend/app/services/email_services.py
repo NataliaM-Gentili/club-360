@@ -351,7 +351,7 @@ def send_ofrecimiento_turno_mail(ofrecimiento, id_cliente_elegido, id_turno, cli
 
                 <p>
                     Se liberó un turno y, por tu inscripción en la lista de espera,
-                    tenés prioridad para reservarlo.
+                    tenés prioridad para reservarlo. En caso de aceptar, debes completar el pago.
                 </p>
 
                 <div style="
