@@ -134,7 +134,7 @@ class Reserva(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
     id_cliente = db.Column(
-        db.Integer, db.ForeignKey("cliente.id_usuario"), nullable=False
+        db.Integer, db.ForeignKey("cliente.id_usuario"), nullable=True
     )
     estado = db.Column(db.String(20), default="Pendiente")
 
@@ -268,9 +268,17 @@ class OfrecimientoReserva(db.Model):
         db.Integer, db.ForeignKey("cliente.id_usuario"), nullable=False
     )
 
-    id_turno = db.Column(db.Integer, db.ForeignKey("turno.id"), nullable=True)
+    cliente_emisor = db.Column(
+        db.Integer,
+        db.ForeignKey("cliente.id_usuario"),
+        nullable=False
+    )
 
-    id_clase = db.Column(db.Integer, db.ForeignKey("clase.id"), nullable=True)
+    id_reserva = db.Column(
+        db.Integer,
+        db.ForeignKey("reserva.id"),
+        nullable=False
+    )
 
     fecha_envio = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
@@ -278,19 +286,19 @@ class OfrecimientoReserva(db.Model):
 
     estado = db.Column(db.String(20), nullable=False, default="Pendiente")
 
-    cliente = db.relationship("Cliente")
-    turno = db.relationship("Turno")
-    clase = db.relationship("Clase")
+    cliente = db.relationship(
+        "Cliente",
+        foreign_keys=[id_cliente]
+    )
+
+    emisor = db.relationship(
+        "Cliente",
+        foreign_keys=[cliente_emisor]
+    )
+
+    reserva = db.relationship("Reserva")
 
     __table_args__ = (
-        db.CheckConstraint(
-            """
-            (id_clase IS NOT NULL AND id_turno IS NULL)
-            OR
-            (id_clase IS NULL AND id_turno IS NOT NULL)
-            """,
-            name="check_exclusividad",
-        ),
         db.CheckConstraint(
             """
             estado IN (
