@@ -186,6 +186,7 @@ class Credito(db.Model):
     disciplina = db.Column(db.String(100), nullable=False)
     id_usuario = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
     activo = db.Column(db.Boolean, nullable=False, default=True)
+    id_turno = db.Column(db.Integer, nullable=True)
 
 
 # --- LISTA DE ESPERA ---
