@@ -366,3 +366,37 @@ def cancelar_reserva(id_reserva):
     db.session.commit()
     
     return jsonify({"mensaje": "Reserva cancelada"}), 200
+
+
+# FUNCION AUXILIAR DE OFRECIMIENTO DE TURNOS LIBERADOS
+def reset_reserva(id_reserva):
+    # 1. Buscar la reserva cuyo id = id.reserva
+    reserva = Reserva.query.filter_by(id=id_reserva).first()
+    
+    if not reserva:
+        return False
+    
+    # 2. reserva.id_cliente = None (la desvinculamos del cliente original)
+    reserva.id_cliente = None
+    
+    # 3. reserva.estado = "Pendiente"
+    reserva.estado = "Pendiente"
+    
+    # 4. Buscar en tabla abono el que corresponda para reserva.id
+    abono = Abono.query.filter_by(id_reserva=id_reserva).first()
+    
+    if abono:
+        # 5. abono.efectivo = 0
+        abono.efectivo = 0
+
+        abono.monto = abono.monto * 2 # duplica el precio porque el nuevo cliente no habrá pagado la seña
+        
+        # 6. Buscar abono_tarjeta el que corresponda para abono.id_reserva (abono_tarjeta.id_abono = abono.id_reserva)
+        abono_tarjeta = AbonoTarjeta.query.filter_by(id_abono=abono.id_reserva).first()
+        
+        # 7. Eliminar esa fila de abono_tarjeta si existe
+        if abono_tarjeta:
+            db.session.delete(abono_tarjeta)
+    
+    db.session.commit()
+    return True

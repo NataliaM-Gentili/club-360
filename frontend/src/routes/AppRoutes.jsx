@@ -15,8 +15,12 @@ import RegisterCashPaymentPage from "../pages/RegisterCashPaymentPage.jsx";
 import MisPagos from "../pages/MisPagosPage.jsx";
 import PasarAsistenciaPage from "../pages/PasarAsistenciaPage.jsx";
 import PasarAsistenciaManualPage from "../pages/PasarAsistenciaManualPage";
+import AcceptPage from "../pages/AcceptPage.jsx";
+import RejectPage from "../pages/RejectPage.jsx";
 import MisCreditosPage from "../pages/MisCreditosPage.jsx";
 import HistorialPagosPage from "../pages/HistorialPagosPage.jsx";
+import CardEditPage from "../pages/CardEditPage.jsx";
+import ListarClasesPage from "../pages/ListarClasesPage.jsx";
 
 
 export default function AppRoutes() {
@@ -28,6 +32,9 @@ export default function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/olvide-contrasena" element={<OlvideContrasenaPage />} />
+        <Route path="/ofrecer/aceptar/:idOfrecimiento/:idClienteElegido" element={<AcceptPage />}/>
+        <Route path="/ofrecer/rechazar/:idOfrecimiento/:idTurno/:clienteEmisor" element={<RejectPage />}/>
+
 
         {/* 2. RUTAS PROTEGIDAS (Usan el Layout con Navbar) */}
         <Route element={<ProtectedLayout />}>
@@ -46,6 +53,8 @@ export default function AppRoutes() {
           <Route path="/mis-creditos" element={<MisCreditosPage />} />
           <Route path="/historial-pagos" element={<HistorialPagosPage/>} />
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
+          <Route path="/edit-card/:id" element={<CardEditPage />} />
+          <Route path="/clases" element={<ListarClasesPage />} />
         </Route>
 
       </Routes>
