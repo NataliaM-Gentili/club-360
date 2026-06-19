@@ -18,6 +18,8 @@ import PasarAsistenciaManualPage from "../pages/PasarAsistenciaManualPage";
 import AcceptPage from "../pages/AcceptPage.jsx";
 import RejectPage from "../pages/RejectPage.jsx";
 import MisCreditosPage from "../pages/MisCreditosPage.jsx";
+import CardEditPage from "../pages/CardEditPage.jsx";
+import ListarClasesPage from "../pages/ListarClasesPage.jsx";
 
 
 export default function AppRoutes() {
@@ -49,6 +51,8 @@ export default function AppRoutes() {
           <Route path="/asistencia-manual" element={<PasarAsistenciaManualPage />} />
           <Route path="/mis-creditos" element={<MisCreditosPage />} />
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
+          <Route path="/edit-card/:id" element={<CardEditPage />} />
+          <Route path="/clases" element={<ListarClasesPage />} />
         </Route>
 
       </Routes>

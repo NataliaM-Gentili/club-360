@@ -10,12 +10,12 @@ export default function CardItem({ card }) {
             <p>{card.titular}</p>
             <p>{card.fecha_vencimiento}</p>
 
-            {/*<button
+            <button
                 className="editBtn"
                 onClick={() => navigate(`/edit-card/${card.id}`)}
             >
                 Editar
-            </button>*/}
+            </button>
         </div>
     );
 }

@@ -185,9 +185,9 @@ def deshabilitar_clase():
     # Guardamos los cambios en la base de datos
     db.session.commit()
     
-    # Devolvemos un resumen de lo que pasó para que el Front lo sepa
+    # NUEVO: Devolvemos solo la cantidad de turnos que se cancelaron
     return jsonify({
-        "message": f"Clase deshabilitada. Se bajaron {turnos_cancelados} turnos vacíos y quedaron {turnos_mantenidos} vivos con alumnos.",
+        "message": f"Se cancelaron {turnos_cancelados} turnos.",
         "habilitada": False
     }), 200
     
@@ -238,3 +238,42 @@ def buscar_turnos_de_cliente_clase():
             })
 
         return jsonify({"turnos": resultado}), 200
+
+
+@clase_bp.route("/listar_clases", methods=["GET"])
+def listar_clases():
+    if session.get("rol_id") != ROL_ADMINISTRADOR:
+        return jsonify({"error": "No autorizado"}), 403
+
+    clases = Clase.query.all()
+    resultado = []
+    hoy = date.today()
+    
+    for c in clases:
+        # 1. Contar reservas de abono mensual completo
+        total_mensuales = ReservaClase.query.join(Reserva).filter(
+            ReservaClase.id_clase == c.id,
+            Reserva.estado != 'Cancelada'
+        ).count()
+        
+        # 2. Contar TODAS las reservas de turnos individuales a futuro
+        total_sueltos = db.session.query(ReservaTurno).join(Reserva).join(Turno).filter(
+            Turno.id_clase == c.id,
+            Turno.fecha >= hoy,
+            Reserva.estado != 'Cancelada'
+        ).count()
+
+        # 3. La suma total (Este es el número que ahora van a compartir la tabla y el cartel)
+        total_inscriptos = total_mensuales + total_sueltos
+
+        resultado.append({
+            "id": c.id,
+            "disciplina": c.disciplina,
+            "dia": c.dia,
+            "hora": c.hora,
+            "cupo": c.cupo, # Si preferís el cupo total sumado, cambiá esto por: cupo_total_futuro
+            "ocupados": total_inscriptos, 
+            "habilitada": c.habilitada
+        })
+        
+    return jsonify({"clases": resultado}), 200

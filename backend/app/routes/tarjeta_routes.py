@@ -138,3 +138,56 @@ def pago_tarjeta():
 
     db.session.commit()
     return jsonify({"mensaje": f"Pago realizado con exito!"}), 200
+
+# --- RUTA PARA OBTENER LOS DATOS COMPLETOS DE UNA SOLA TARJETA ---
+@tarjeta_bp.route("/tarjeta/<int:id_tarjeta>", methods=["GET"])
+def obtener_tarjeta_individual(id_tarjeta):
+    id_cliente = session.get("usuario_id")
+    if not id_cliente:
+        return jsonify({"error": "Usuario no autenticado"}), 401
+    
+    # Validar que le pertenezca al usuario
+    from app.models.db_structure import ClienteTarjeta
+    relacion = ClienteTarjeta.query.filter_by(id_cliente=id_cliente, id_tarjeta=id_tarjeta).first()
+    if not relacion:
+        return jsonify({"error": "No autorizado"}), 403
+        
+    t = Tarjeta.query.get(id_tarjeta)
+    return jsonify({
+        "numero": t.numero,
+        "titular": t.titular,
+        "fecha_vencimiento": t.fecha_vencimiento,
+        "cvv": t.cvv
+    }), 200
+
+# --- RUTA PARA APLICAR LA EDICIÓN ---
+@tarjeta_bp.route("/editar-tarjeta/<int:id_tarjeta>", methods=["PUT"])
+def editar_tarjeta_route(id_tarjeta):
+    data = request.get_json()
+    id_cliente = session.get("usuario_id")
+
+    if not id_cliente:
+        return jsonify({"error": "Usuario no autenticado"}), 401
+
+    required_fields = ["numero", "fecha_vencimiento", "cvv", "titular"]
+    missing = [f for f in required_fields if f not in data]
+
+    if missing:
+        return jsonify({"error": "Faltan datos obligatorios", "missing_fields": missing}), 400
+
+    fecha_venc = datetime.strptime(data["fecha_vencimiento"], "%Y-%m")
+    if fecha_venc.replace(day=1) < datetime.today().replace(day=1):
+        return jsonify({"error": "La tarjeta está vencida"}), 400
+
+    try:
+        resultado = TarjetaModel.editar_tarjeta(id_tarjeta, id_cliente, data)
+
+        if "error" in resultado:
+            return jsonify({"error": resultado["error"]}), 403
+
+        return jsonify({"mensaje": resultado["mensaje"]}), 200
+
+    except Exception as e:
+        from app import db
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500

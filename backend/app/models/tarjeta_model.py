@@ -80,3 +80,23 @@ class TarjetaModel:
         )
 
     
+    @staticmethod
+    def editar_tarjeta(id_tarjeta, id_cliente, data):
+        # 1. Verificar que la tarjeta realmente pertenece a este cliente
+        relacion = ClienteTarjeta.query.filter_by(id_cliente=id_cliente, id_tarjeta=id_tarjeta).first()
+        if not relacion:
+            return {"error": "No tienes permiso para editar esta tarjeta o no existe"}
+
+        # 2. Obtener la tarjeta
+        tarjeta = Tarjeta.query.get(id_tarjeta)
+        if not tarjeta:
+            return {"error": "Tarjeta no encontrada"}
+
+        # 3. Actualizar los campos
+        tarjeta.numero = data.get("numero", tarjeta.numero)
+        tarjeta.titular = data.get("titular", tarjeta.titular)
+        tarjeta.fecha_vencimiento = data.get("fecha_vencimiento", tarjeta.fecha_vencimiento)
+        tarjeta.cvv = data.get("cvv", tarjeta.cvv)
+
+        db.session.commit()
+        return {"status": "success", "mensaje": "Tarjeta actualizada con éxito"}

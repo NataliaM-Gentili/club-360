@@ -10,23 +10,39 @@ export default function ProfilePage() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchProfile = async () => {
+   useEffect(() => {
+        const fetchProfileData = async () => {
             try {
-                const res = await fetch("api/profile", {
+                // 1. Obtener los datos básicos del usuario
+                const resProfile = await fetch("/api/profile", {
                     credentials: "include"
                 });
+                const dataProfile = await resProfile.json();
 
-                const json = await res.json();
-                setData(json);
+                // 2. Usar el ID del usuario para ir a buscar sus tarjetas reales
+                const resCards = await fetch(`/api/tarjetas/${dataProfile.user.id}`, {
+                    credentials: "include"
+                });
+                
+                let realCards = [];
+                if (resCards.ok) {
+                    realCards = await resCards.json();
+                }
+
+                // 3. Juntar todo (Usuario + Tarjetas reales) y guardarlo en el estado
+                setData({
+                    user: dataProfile.user,
+                    cards: realCards
+                });
+
             } catch (err) {
-                console.error("Error fetching profile:", err);
+                console.error("Error al cargar el perfil:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchProfile();
+        fetchProfileData();
     }, []);
 
     const handleCambiarContrasena = async () => {
