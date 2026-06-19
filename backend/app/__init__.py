@@ -48,7 +48,7 @@ def create_app():
     app.register_blueprint(asistencia_bp)
     app.register_blueprint(asistencia_manual_bp)
     app.register_blueprint(credito_bp)
-    app.register_blueprint(historial_bp, url_prefix="/api")
+    app.register_blueprint(historial_bp)
     # from app.routes.user_routes import main
     #  as main_blueprint
     # app.register_blueprint(main_blueprint)

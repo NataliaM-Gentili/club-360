@@ -1,0 +1,223 @@
+/* HistorialPagos.css */
+
+.historialContainer {
+    padding: 2rem 4rem;
+    background-color: #fafafa;
+    min-height: 100vh;
+    margin-top: 100px;
+}
+
+.historialTitle {
+    font-size: 28pt;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 2rem;
+    color: black;
+}
+
+/* FILTROS */
+
+.historialFiltros {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.historialFiltros select {
+    padding: 12px 16px;
+    border: 1px solid rgba(89, 136, 73, 0.25);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-color: #ffffff;
+    color: #333;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.historialFiltros select:focus {
+    border-color: #598849;
+}
+
+/* BANNER TOTAL */
+
+.resumenBanner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #598849;
+    color: #fafafa;
+    padding: 14px 24px;
+    border-radius: 12px;
+    margin-bottom: 1.25rem;
+}
+
+.resumenLabel {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.resumenMonto {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+/* TABLA */
+
+.historialTable {
+    table-layout: fixed; /* columnas con ancho controlado */
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.historialTable thead {
+    background-color: #598849;
+    color: #fafafa;
+}
+
+.historialTable th {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.historialTable td {
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid rgba(89, 136, 73, 0.1);
+    vertical-align: middle;
+}
+
+.historialTable tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* CELDAS */
+
+.tdFecha {
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.tdDisciplina {
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.tdHora {
+    font-variant-numeric: tabular-nums;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+}
+
+.tdMonto {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.tdMonto, .historialTable th:last-child {
+    width: 100px;       /* ajustá según tus montos */
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* MÉTODO DE PAGO */
+
+.metodoCell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tipoBadge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge--tarjeta {
+    background-color: rgba(89, 136, 73, 0.12);
+    color: #3d6130;
+}
+
+.badge--efectivo {
+    background-color: rgba(245, 146, 53, 0.12);
+    color: #b86118;
+}
+
+.badge--credito {
+    background-color: rgba(90, 90, 200, 0.1);
+    color: #3a3a9e;
+}
+
+.numeroTarjeta {
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.45);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
+}
+
+/* VACÍO / ERROR */
+
+.sinResultados {
+    text-align: center;
+    color: rgba(0, 0, 0, 0.4);
+    font-size: 14px;
+    padding: 2rem;
+}
+
+.sinResultados a {
+    color: #598849;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+    .historialContainer {
+        padding: 1.5rem 1rem;
+    }
+
+    .historialTitle {
+        font-size: 20pt;
+    }
+
+    .historialFiltros select {
+        width: 100%;
+    }
+
+    .historialTable th,
+    .historialTable td {
+        padding: 10px 10px;
+        font-size: 12px;
+    }
+
+    .resumenBanner {
+        padding: 12px 16px;
+    }
+
+    .resumenMonto {
+        font-size: 18px;
+    }
+}

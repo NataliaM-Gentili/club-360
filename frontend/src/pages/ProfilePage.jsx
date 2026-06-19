@@ -119,6 +119,10 @@ export default function ProfilePage() {
                 <button onClick={() => navigate("/mis-pagos")}>
                     Pagos Pendientes
                 </button>
+
+                <button onClick={() => navigate("/historial-pagos")}>
+                    Historial de Pagos
+                </button>
             </div>
 
         </div>

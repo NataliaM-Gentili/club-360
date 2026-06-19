@@ -16,6 +16,7 @@ import MisPagos from "../pages/MisPagosPage.jsx";
 import PasarAsistenciaPage from "../pages/PasarAsistenciaPage.jsx";
 import PasarAsistenciaManualPage from "../pages/PasarAsistenciaManualPage";
 import MisCreditosPage from "../pages/MisCreditosPage.jsx";
+import HistorialPagosPage from "../pages/HistorialPagosPage.jsx";
 
 
 export default function AppRoutes() {
@@ -43,6 +44,7 @@ export default function AppRoutes() {
           <Route path="/asistencia-qr" element={<PasarAsistenciaPage />} />
           <Route path="/asistencia-manual" element={<PasarAsistenciaManualPage />} />
           <Route path="/mis-creditos" element={<MisCreditosPage />} />
+          <Route path="/historial-pagos" element={<HistorialPagosPage/>} />
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
         </Route>
 

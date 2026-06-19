@@ -21,7 +21,11 @@ historial_bp = Blueprint("historial", __name__)
 def historial_pagos():
     """
     Devuelve el historial de pagos del usuario autenticado.
-    Solo incluye reservas con estado 'Pago' cuyo turno ya ocurrió (fecha pasada).
+    - Turnos individuales: solo se muestran si ya ocurrieron (fecha pasada).
+    - Clases (abono mensual): se pagan en una sola cuota al momento de
+      abonar, por lo que se muestran siempre (no dependen de que ya haya
+      ocurrido un turno de esa clase). Se informa día, horario, disciplina
+      y monto total abonado.
     El método de pago se determina así:
       - Tarjeta  → existe registro en AbonoTarjeta
       - Efectivo → abono.efectivo = True  (y sin AbonoTarjeta)
@@ -72,21 +76,26 @@ def historial_pagos():
 
         if reserva_turno:
             turno = Turno.query.get(reserva_turno.id_turno)
-            if turno:
-                # Solo mostrar si el turno ya pasó
-                if turno.fecha >= hoy:
-                    continue
-                clase = Clase.query.get(turno.id_clase)
-                disciplina = clase.disciplina if clase else None
-                hora = clase.hora if clase else None
-                dia = clase.dia if clase else None
-                fecha_turno = turno.fecha.strftime("%d/%m/%Y")
-                id_turno_ref = turno.id
-                tipo_reserva = "turno"
+            if not turno:
+                continue
+
+            clase = Clase.query.get(turno.id_clase)
+            disciplina = clase.disciplina if clase else None
+            hora = clase.hora if clase else None
+            dia = clase.dia if clase else None
+            fecha_turno = turno.fecha.strftime("%d/%m/%Y")
+            id_turno_ref = turno.id
+            tipo_reserva = "turno"
 
         elif reserva_clase:
             clase = Clase.query.get(reserva_clase.id_clase)
-            # Para reservas mensuales buscamos el turno más reciente pasado de esa clase
+            if not clase:
+                continue
+
+            # El abono mensual se paga en una sola cuota: se muestra
+            # siempre, sin depender de que ya haya ocurrido un turno.
+            # Si ya existe algún turno pasado de esta clase, lo usamos
+            # solo para poder cruzar con créditos usados (id_turno_ref).
             ultimo_turno = (
                 Turno.query.filter(
                     Turno.id_clase == reserva_clase.id_clase, Turno.fecha < hoy
@@ -94,13 +103,12 @@ def historial_pagos():
                 .order_by(Turno.fecha.desc())
                 .first()
             )
-            if not ultimo_turno:
-                continue  # la clase todavía no tuvo ningún turno pasado
-            disciplina = clase.disciplina if clase else None
-            hora = clase.hora if clase else None
-            dia = clase.dia if clase else None
+
+            disciplina = clase.disciplina
+            hora = clase.hora
+            dia = clase.dia
             fecha_turno = None  # mensual: sin fecha única
-            id_turno_ref = ultimo_turno.id
+            id_turno_ref = ultimo_turno.id if ultimo_turno else None
             tipo_reserva = "clase"
         else:
             continue  # reserva sin turno ni clase asociada, ignorar
@@ -143,13 +151,14 @@ def historial_pagos():
             }
         )
 
-    # Ordenar: turnos individuales por fecha_turno desc; clases van al final
+    # Ordenar: turnos individuales por fecha_turno desc; clases (sin fecha
+    # única) van primero ya que se consideran "vigentes" / recién pagadas.
     def sort_key(p):
         if p["fecha_turno"]:
             # Convertir dd/mm/yyyy → yyyymmdd para orden lexicográfico
             d, m, y = p["fecha_turno"].split("/")
             return f"{y}{m}{d}"
-        return "00000000"
+        return "99999999"
 
     pagos.sort(key=sort_key, reverse=True)
 

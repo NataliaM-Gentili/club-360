@@ -150,15 +150,7 @@ export default function MisPagos() {
 
     return (
         <div className="misPagosContainer">
-            <div className="misPagosHeader">
-                <h1 className="misPagosTitle">Mis Pagos Pendientes</h1>
-                <button
-                    className="verHistorialBtn"
-                    onClick={() => navigate("/historial-pagos")}
-                >
-                    Ver historial de pagos
-                </button>
-            </div>
+            <h1 className="misPagosTitle">Mis Pagos Pendientes</h1>
 
             {cargando && <p className="misPagosEstado">Cargando...</p>}
             {error && <p className="misPagosEstado misPagosError">{error}</p>}
