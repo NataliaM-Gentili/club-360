@@ -5,11 +5,13 @@ from datetime import date
 from app.models.reserva_model import ReservaModel
 from app.models.tarjeta_model import TarjetaModel
 from app.models.db_structure import EmpleadoRegistraAbono
+from app.models.db_structure import ClienteSuspendido
 
 from app.models.db_structure import Usuario, Cliente
 from app.models.db_structure import Reserva, ReservaTurno
 from app.models.db_structure import Turno, Clase
 from app.models.db_structure import Abono, AbonoTarjeta
+
 
 
 from sqlalchemy import exists
@@ -82,8 +84,30 @@ def registrar_pago_efectivo():
     return jsonify({
         "mensaje": "El pago ha sido registrado correctamente"
     }), 200
+    
+@reserva_bp.route('/registrar_pago_suspension', methods=['POST'])
+def registrar_pago_suspension():
+    if session.get('rol_id') != 3:
+        return jsonify({"mensaje": "Acceso denegado. Se requiere rol de empleado"}), 403
 
+    datos = request.get_json()
+    id_suspension = datos.get('id_suspension')
+    monto_ingresado = datos.get('monto')
 
+    suspension = ClienteSuspendido.query.get(id_suspension)
+    if not suspension:
+        return jsonify({"mensaje": "Suspensión no encontrada"}), 404
+
+    if monto_ingresado < float(suspension.monto):
+        return jsonify({"mensaje": "El monto ingresado es insuficiente"}), 400
+
+    db.session.delete(suspension)
+    db.session.commit()
+
+    return jsonify({"mensaje": "Pago registrado con éxito"}), 200
+ 
+    
+    
 # dado el email de un usuario. retorna sus RESERVAS PENDIENTES
 # se usa para la página de registrar pago en efectivo
 @reserva_bp.route('/revisar-reserva', methods=['POST'])
@@ -97,11 +121,11 @@ def revisar_reserva():
 
     usuario = Usuario.query.filter_by(email=email).first()
     if not usuario:
-        return jsonify({"mensaje": "Usuario no encontrado"}), 404
+        return jsonify({"mensaje": "El cliente ingresado no se encuentra registrado en el sistema"}), 404
 
     cliente = Cliente.query.filter_by(id_usuario=usuario.id).first()
     if not cliente:
-        return jsonify({"mensaje": "El usuario no es cliente"}), 404
+        return jsonify({"mensaje": "El cliente ingresado no se encuentra registrado en el sistema"}), 404
 
     result = []
 
@@ -158,6 +182,52 @@ def revisar_reserva():
             "fecha": "Mensual",
             "hora": clase.hora,
             "monto_deuda": float(abono.monto),
+        })
+        
+        # -------------------------
+    # SUSPENSIONES
+    # -------------------------
+    susp_clase = (
+        db.session.query(ClienteSuspendido, Clase)
+        .join(Clase, Clase.id == ClienteSuspendido.id_clase)
+        .filter(
+            ClienteSuspendido.id_cliente == cliente.id_usuario,
+            ClienteSuspendido.id_clase != None,
+        )
+        .all()
+    )
+    
+    for susp, clase in susp_clase:
+        result.append({
+            "id_suspension": susp.id,
+            "id_cliente": cliente.id_usuario,
+            "tipo": "suspension",
+            "disciplina": clase.disciplina,
+            "fecha": "Mensual",
+            "hora": clase.hora,
+            "monto_deuda": float(susp.monto),
+        })
+
+    susp_turno = (
+        db.session.query(ClienteSuspendido, Turno, Clase)
+        .join(Turno, Turno.id == ClienteSuspendido.id_turno)
+        .join(Clase, Clase.id == Turno.id_clase)
+        .filter(
+            ClienteSuspendido.id_cliente == cliente.id_usuario,
+            ClienteSuspendido.id_turno != None,
+        )
+        .all()
+    )
+    
+    for susp, turno, clase in susp_turno:
+        result.append({
+            "id_suspension": susp.id,
+            "id_cliente": cliente.id_usuario,
+            "tipo": "suspension",
+            "disciplina": clase.disciplina,
+            "fecha": str(turno.fecha),
+            "hora": clase.hora,
+            "monto_deuda": float(susp.monto),
         })
 
     if not result:

@@ -3,6 +3,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_mail import Mail
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 db = SQLAlchemy()
 mail = Mail()
@@ -51,5 +53,22 @@ def create_app():
     # app.register_blueprint(main_blueprint)
     # from app.routes import main
     # app.register_blueprint(main)
+    
+    def _job_suspender():
+        with app.app_context():
+            from app.services.suspension_service import suspender_abonados_pendientes
+            suspender_abonados_pendientes()
+
+    scheduler = BackgroundScheduler(daemon=True)
+    scheduler.add_job(_job_suspender, 'cron', day=11, hour=0, minute=0)
+    scheduler.start()
+
+    return app                           
+
+    
+    
+    
+    
+    
 
     return app

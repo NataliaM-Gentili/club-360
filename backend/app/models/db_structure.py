@@ -311,3 +311,20 @@ class OfrecimientoReserva(db.Model):
             name="check_estado",
         ),
     )
+
+
+class ClienteSuspendido(db.Model):
+    __tablename__ = "cliente_suspendido"
+    id = db.Column(db.Integer, primary_key=True)
+    id_cliente = db.Column(db.Integer, db.ForeignKey("cliente.id_usuario"), nullable=False)
+    id_turno = db.Column(db.Integer, db.ForeignKey("turno.id"), nullable=True)
+    id_clase = db.Column(db.Integer, db.ForeignKey("clase.id"), nullable=True)
+    monto = db.Column(db.Numeric(10, 2), nullable=False)
+    __table_args__ = (
+        db.CheckConstraint(
+            "(id_clase IS NOT NULL AND id_turno IS NULL) OR (id_clase IS NULL AND id_turno IS NOT NULL)",
+            name="check_exclusividad_suspension",
+        ),
+    )
+
+
