@@ -116,33 +116,78 @@ export default function MisPagos() {
 
     // PAGAR
     const confirmPay = async () => {
-    try {
-        const res = await fetch("/api/pago_tarjeta", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                id_reserva: selectedPago.id_reserva,
-                id_tarjeta: selectedCard.id,
-            }),
-        });
+        try {
 
-        const data = await res.json();
+            let res;
+            let data;
 
-        if (!res.ok || data.mensaje.includes("insuficiente")) {
-            toast.error(data.mensaje || data.error || "Error al procesar el pago");
-            return;
+            // ==========================
+            // SUSPENSIONES
+            // ==========================
+            if (selectedPago.tipo === "suspension") {
+
+                console.log(selectedPago.id_suspension)
+
+                res = await fetch(
+                    `/api/pagar-suspension/${selectedPago.id_suspension}`,
+                    {
+                        method: "DELETE",
+                        credentials: "include",
+                    }
+                );
+
+                data = await res.json();
+
+
+            } else {
+
+                // ==========================
+                // PAGOS NORMALES
+                // ==========================
+                res = await fetch("/api/pago_tarjeta", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        id_reserva: selectedPago.id_reserva,
+                        id_tarjeta: selectedCard.id,
+                    }),
+                });
+
+                data = await res.json();
+            }
+
+            if (
+                !res.ok ||
+                data.mensaje?.toLowerCase().includes("insuficiente")
+            ) {
+                toast.error(
+                    data.mensaje ||
+                    data.error ||
+                    "Error al procesar la operación"
+                );
+                return;
+            }
+
+            toast.success(data.mensaje);
+
+            setModalOpen(false);
+
+            // eliminar de la lista
+            setPagos(prev =>
+                prev.filter(p => {
+                    if (selectedPago.tipo === "suspension") {
+                        return p.id_suspension !== selectedPago.id_suspension;
+                    }
+
+                    return p.id_reserva !== selectedPago.id_reserva;
+                })
+            );
+
+        } catch (err) {
+            toast.error("Error procesando la operación");
         }
-
-        toast.success(data.mensaje);
-
-        // close modal + refresh list
-        setModalOpen(false);
-        setPagos(prev => prev.filter(p => p.id_reserva !== selectedPago.id_reserva));
-
-    } catch (err) {
-        toast.error("Error procesando pago");
-    }
-};
+    };
 
     const getIcono = (disciplina) => {
         return ICONOS_DISCIPLINA[disciplina?.toLowerCase()] || '🏃';
@@ -162,44 +207,126 @@ export default function MisPagos() {
             {!cargando && !error && pagos.length > 0 && (
                 <div className="pagosGrid">
                     {pagos.map((pago) => (
-                        <div className="pagoCard" key={pago.id_reserva}>
+                        <div className="pagoCard" key={pago.id_reserva || pago.id_suspension}>
 
-                            {/* BADGE TIPO */}
-                            <span className={`tipoBadge ${pago.tipo === 'clase' ? 'tipoBadgeClase' : 'tipoBadgeTurno'}`}>
-                                {pago.tipo === 'clase' ? 'Abono (turno fijo)' : 'Clase suelta'}
+                            {/* BADGE */}
+                            <span
+                                className="tipoBadge"
+                                style={{
+                                    backgroundColor:
+                                        pago.tipo === "suspension"
+                                            ? "#d32f2f"
+                                            : undefined
+                                }}
+                            >
+                                {
+                                    pago.tipo === "suspension"
+                                        ? "Suspensión"
+                                        : pago.tipo === "clase"
+                                            ? "Abono (turno fijo)"
+                                            : "Clase suelta"
+                                }
                             </span>
 
                             {/* ICONO Y DISCIPLINA */}
                             <div className="pagoHeader">
-                                <div className="pagoIcono">{getIcono(pago.disciplina)}</div>
-                                <h2 className="pagoDisciplina">
-                                    {pago.disciplina.charAt(0).toUpperCase() + pago.disciplina.slice(1)}
+                                <div className="pagoIcono">
+                                    {
+                                        pago.tipo === "suspension"
+                                            ? "⛔"
+                                            : getIcono(pago.disciplina)
+                                    }
+                                </div>
+
+                                <h2
+                                    className="pagoDisciplina"
+                                    style={{
+                                        color:
+                                            pago.tipo === "suspension"
+                                                ? "#d32f2f"
+                                                : undefined
+                                    }}
+                                >
+                                    {pago.disciplina.charAt(0).toUpperCase() +
+                                        pago.disciplina.slice(1)}
                                 </h2>
                             </div>
 
                             {/* DETALLES */}
                             <div className="pagoDetalles">
-                                <p>📅 {pago.fecha}</p>
-                                <p>🕐 {pago.hora && pago.hora !== '-' ? `${pago.hora} hs` : 'Horario de clase'}</p>
-                                <p>⏱ Duración: 1 hora</p>
+
+                                {pago.tipo === "suspension" ? (
+                                    <>
+                                        <p>
+                                            {pago.fecha === "Mensual"
+                                                ? "🚫 Suspensión de clase"
+                                                : "🚫 Suspensión de turnos sueltos"}
+                                        </p>
+
+                                        <p>📅 {pago.fecha}</p>
+
+                                        <p>
+                                            🕐 {pago.hora
+                                                ? `${pago.hora} hs`
+                                                : "-"}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p>📅 {pago.fecha}</p>
+
+                                        <p>
+                                            🕐 {pago.hora && pago.hora !== '-'
+                                                ? `${pago.hora} hs`
+                                                : 'Horario de clase'}
+                                        </p>
+
+                                        <p>⏱ Duración: 1 hora</p>
+                                    </>
+                                )}
+
                             </div>
 
-                            {/* MONTO Y BOTON */}
+                            {/* FOOTER */}
                             <div className="pagoFooter">
+
                                 <div className="pagoMonto">
-                                    <span className="pagoMontoLabel">Total a pagar</span>
+                                    <span className="pagoMontoLabel">
+                                        {
+                                            pago.tipo === "suspension"
+                                                ? "Monto adeudado"
+                                                : "Total a pagar"
+                                        }
+                                    </span>
+
                                     <span className="pagoMontoValor">
                                         ${pago.monto_deuda.toLocaleString('es-AR')}
                                     </span>
                                 </div>
+
                                 <button
                                     className="pagarBtn"
-                                    onClick={() => handlePagar(pago)}
+                                    style={
+                                        pago.tipo === "suspension"
+                                            ? {
+                                                backgroundColor: "#d32f2f"
+                                            }
+                                            : {}
+                                    }
+                                    onClick={() =>
+                                        pago.tipo === "suspension"
+                                            ? handlePagar(pago)
+                                            : handlePagar(pago)
+                                    }
                                 >
-                                    Pagar
+                                    {
+                                        pago.tipo === "suspension"
+                                            ? "Solicitar Alta"
+                                            : "Pagar"
+                                    }
                                 </button>
-                            </div>
 
+                            </div>
                         </div>
                     ))}
                 </div>

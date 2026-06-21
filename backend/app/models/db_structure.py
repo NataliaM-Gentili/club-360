@@ -327,4 +327,13 @@ class ClienteSuspendido(db.Model):
         ),
     )
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "id_cliente": self.id_cliente,
+            "id_turno": self.id_turno,
+            "id_clase": self.id_clase,
+            "monto": float(self.monto)
+        }
+
 
