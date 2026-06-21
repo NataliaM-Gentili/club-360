@@ -20,6 +20,8 @@ import RejectPage from "../pages/RejectPage.jsx";
 import MisCreditosPage from "../pages/MisCreditosPage.jsx";
 import CardEditPage from "../pages/CardEditPage.jsx";
 import ListarClasesPage from "../pages/ListarClasesPage.jsx";
+import ReservarConCreditoPage from "../pages/ReservarConCreditoPage";
+
 
 
 export default function AppRoutes() {
@@ -53,6 +55,7 @@ export default function AppRoutes() {
           {/* <Route path="/perfil" element={<ProfilePage />} /> */}
           <Route path="/edit-card/:id" element={<CardEditPage />} />
           <Route path="/clases" element={<ListarClasesPage />} />
+          <Route path="/reservar-credito/:disciplina" element={<ReservarConCreditoPage />} />
         </Route>
 
       </Routes>

@@ -77,8 +77,9 @@ export default function MisCreditosPage() {
   }, []);
 
   const handleSolicitarClase = (disciplina) => {
-    navigate(`/turnos`);
+    navigate(`/reservar-credito/${disciplina}`);
   };
+
 
   if (cargando) {
     return (
