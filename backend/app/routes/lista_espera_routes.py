@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from app.models.db_structure import (
     Turno, Clase, Reserva, ReservaTurno, ReservaClase, 
-    Abono, ListaEspera, OfrecimientoReserva, AbonoTarjeta
+    Abono, ListaEspera, OfrecimientoReserva, AbonoTarjeta, ClienteSuspendido
 )
 from app.models.reserva_model import ReservaModel
 from app.models.lista_espera_models import ListaEsperaModel
@@ -37,6 +37,14 @@ def lista_espera_no_abonado(id_cliente, id_turno, tipo_lista):
 
     if not tipo_lista:
         return jsonify({"mensaje": "No se recuperó el tipo de lista"}), 500
+
+    suspendido = ClienteSuspendido.query.filter(
+        ClienteSuspendido.id_cliente == id_cliente,
+        ClienteSuspendido.id_turno.isnot(None)
+        ).first()
+
+    if suspendido:
+        return jsonify({"mensaje": "Se encuentra suspendido para turnos sueltos"}), 400
 
     # el frontend evita éste caso pero se chequea igual por seguridad
     if ReservaModel.cliente_ya_inscripto_turno(id_cliente, id_turno):
@@ -296,6 +304,14 @@ def aceptar_ofrecimiento(id_ofrecimento, id_cliente_elegido):
         return jsonify({
             "error": "El ofrecimiento venció"
         }), 400
+    
+    suspendido = ClienteSuspendido.query.filter(
+        ClienteSuspendido.id_cliente == id_cliente_elegido,
+        ClienteSuspendido.id_turno.isnot(None)
+        ).first()
+
+    if suspendido:
+        return jsonify({"mensaje": "Se encuentra suspendido para turnos sueltos"}), 400
 
     try:
         # 1. Cambiar ofrecimiento.estado a "Aceptado"
