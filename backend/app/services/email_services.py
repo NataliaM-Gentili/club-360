@@ -445,3 +445,78 @@ def send_ofrecimiento_turno_mail(ofrecimiento, id_cliente_elegido, id_turno, cli
     msg.html = html
 
     mail.send(msg)
+    
+def send_solicitud_reintegro_efectivo_mail(id_cliente, disciplina, monto):
+    """Avisa al cliente sin tarjeta que debe gestionar el reintegro en efectivo."""
+    try:
+        email_destino = _obtener_email_cliente(id_cliente)
+        msg = Message(
+            subject="Solicitud de reintegro en efectivo - Club 360",
+            recipients=[email_destino],
+            body=(
+                f"Cancelaste tu turno de {disciplina.capitalize()}.\n\n"
+                f"No tenés tarjetas asociadas a tu cuenta, así que el reintegro de "
+                f"${float(monto):.2f} debe gestionarse en efectivo en recepción.\n\n"
+                f"Acercate al club para retirarlo.\n\nClub 360"
+            ),
+        )
+        mail.send(msg)
+    except Exception as e:
+        print(f"[email_services] Error al enviar solicitud de reintegro: {e}")    
+        
+        
+def send_cancelacion_turno_cliente_email(nombre, disciplina, fecha, hora, detalle=None):
+    """
+    Notifica al cliente que canceló su propio turno, con los detalles del turno.
+    Distinta de send_cancellation_email (esa es para cuando el club suspende una clase).
+    En modo demo el mail va siempre a EMAIL_PRUEBAS.
+    """
+    try:
+        asunto = f"Cancelaste tu turno de {disciplina.capitalize()} - Club 360"
+
+        bloque_detalle = ""
+        if detalle:
+            bloque_detalle = f"""
+            <div style="background-color:#e6f4ea;border-left:4px solid #598849;padding:16px;margin:24px 0;border-radius:4px">
+                <p style="margin:0;font-size:14px;color:#2d5e3c;line-height:1.5">{detalle}</p>
+            </div>
+            """
+
+        html = f"""
+        <div style="background-color:#f0f0f0;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#333;padding:40px 16px;min-height:100vh">
+          <div style="max-width:520px;margin:0 auto;border-radius:24px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.09)">
+            <div style="background-color:#598849;padding:40px 40px 32px;color:#fafafa">
+              <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.85;margin-bottom:28px">Club 360</div>
+              <h1 style="font-size:26px;font-weight:700;margin:0 0 6px">Turno cancelado</h1>
+            </div>
+            <div style="background-color:#fafafa;padding:32px 40px">
+              <p style="font-size:16px;color:#333;margin-bottom:20px;line-height:1.65">Hola <strong>{nombre}</strong>,</p>
+              <p style="font-size:15px;color:#333;margin-bottom:24px;line-height:1.65">
+                Confirmamos que cancelaste tu turno en Club 360. Estos son los detalles:
+              </p>
+              <div style="background-color:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:20px;margin-bottom:24px">
+                <p style="margin:0 0 8px;font-size:14px;color:#666"><strong>Disciplina:</strong> {disciplina.capitalize()}</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#666"><strong>Fecha:</strong> {fecha}</p>
+                <p style="margin:0;font-size:14px;color:#666"><strong>Hora:</strong> {hora}</p>
+              </div>
+              {bloque_detalle}
+              <p style="font-size:15px;color:#333;margin-top:28px;line-height:1.65">
+                Saludos,<br/><strong>Equipo Club 360</strong>
+              </p>
+            </div>
+            <div style="background-color:#fafafa;border-top:1px solid rgba(0,0,0,0.07);padding:24px 40px;text-align:center">
+              <p style="font-size:12px;color:rgba(0,0,0,0.35);line-height:1.7;margin:0">© 2026 Club 360. Todos los derechos reservados.</p>
+            </div>
+          </div>
+        </div>
+        """
+
+        msg = Message(
+            subject=asunto,
+            recipients=[EMAIL_PRUEBAS],   # demo: siempre a la casilla de pruebas
+            html=html,
+        )
+        mail.send(msg)
+        print(f"[email_services] ✅ Mail de cancelación (cliente) enviado a: {EMAIL_PRUEBAS}")
+    except Exception as e:
+        print(f"[email_services] ❌ Error al enviar mail de cancelación (cliente): {e}")
