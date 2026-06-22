@@ -276,6 +276,14 @@ def reservar_turno():
     if not tarjetas:
         return jsonify({"mensaje": "Usted no posee tarjetas asociadas para abonar la seña correspondiente"}), 400
 
+    # Verificar que no tenga suspensiones no pagadas para turnos sueltos
+    suspendido = ClienteSuspendido.query.filter(
+        ClienteSuspendido.id_cliente == id_cliente,
+        ClienteSuspendido.id_turno.isnot(None)
+    ).first()
+    if suspendido:
+        return jsonify({"mensaje": "No se puede realizar la reserva, usted se encuentra suspendido por una deuda pendiente en un turno"}), 400
+
     # Obtener precio según disciplina
     clase = Clase.query.get(turno.id_clase)
     precio = ReservaModel.obtener_precio_disciplina(clase.disciplina)

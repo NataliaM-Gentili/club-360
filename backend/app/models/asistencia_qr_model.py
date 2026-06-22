@@ -71,9 +71,10 @@ class AsistenciaModel:
         ahora = datetime.now()
         hora_inicio = datetime.strptime(clase.hora, "%H:%M").time()
         inicio_dt = datetime.combine(turno.fecha, hora_inicio)
+        inicio_permitido = inicio_dt - timedelta(hours=1)
         fin_dt = inicio_dt + timedelta(hours=1)
 
-        if ahora < inicio_dt:
+        if ahora < inicio_permitido:
             if ahora.date() < turno.fecha:
                 return False, MSG_FUTURO, None
             return False, MSG_TEMPRANO, None
