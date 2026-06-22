@@ -1,5 +1,6 @@
+import datetime
 from app import db
-from app.models.db_structure import Turno, Clase, cliente_asistio_turno
+from app.models.db_structure import Abono, Reserva, ReservaClase, ReservaTurno, Turno, Clase, cliente_asistio_turno, Credito, ListaEspera, TipoLista, OfrecimientoReserva, Tarjeta, ClienteTarjeta
 from sqlalchemy import func
 from datetime import date
 
@@ -36,3 +37,4 @@ class TurnoModel:
             .all()
         )
         return query
+    

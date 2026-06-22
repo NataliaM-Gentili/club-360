@@ -37,3 +37,14 @@ class CreditoModel:
         credito.activo = False
         db.session.commit()
         return True
+    
+    @staticmethod
+    def crear_credito(id_usuario, disciplina):
+        credito = Credito(
+            id_usuario=id_usuario,
+            disciplina=disciplina.lower(),
+            activo=True,
+        )
+        db.session.add(credito)
+        db.session.commit()
+        return credito

@@ -1,8 +1,9 @@
 from app import db
 from flask import Blueprint, jsonify, session
 from app.models.actividad_model import ActividadModel
-from app.models.db_structure import Cliente
-from datetime import datetime
+from app.models.db_structure import Clase, Cliente, Reserva, ReservaClase, ReservaTurno, Turno, OfrecimientoReserva 
+from datetime import date, datetime  
+
 
 actividad_bp = Blueprint('actividad_bp', __name__) 
 
@@ -48,3 +49,90 @@ def get_mis_actividades():
     except Exception as e:
         print(f"[actividad_routes] Error: {e}")
         return jsonify({"error": "Error al procesar datos"}), 500
+ 
+@actividad_bp.route('/cliente/mis_turnos_pendientes', methods=['GET'])
+def mis_turnos_pendientes():
+    id_cliente = session.get('usuario_id')
+    if not id_cliente:
+        return jsonify({"mensaje": "No autenticado"}), 401
+    if session.get('rol_id') != 1:
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    hoy = date.today()
+    if hoy.month == 12:
+        primer_dia_sig = date(hoy.year + 1, 1, 1)
+    else:
+        primer_dia_sig = date(hoy.year, hoy.month + 1, 1)
+
+    resultado = []
+
+    # ---------- SUELTOS ----------
+    filas = (
+        db.session.query(ReservaTurno, Turno, Clase)
+        .join(Reserva, ReservaTurno.id_reserva == Reserva.id)
+        .join(Turno, ReservaTurno.id_turno == Turno.id)
+        .join(Clase, Turno.id_clase == Clase.id)
+        .filter(
+            Reserva.id_cliente == id_cliente,
+            Reserva.estado != 'Cancelada',
+            Turno.habilitado == True,
+            Turno.fecha >= hoy,
+        )
+        .order_by(Turno.fecha)
+        .all()
+    )
+    for rt, turno, clase in filas:
+        resultado.append({
+            "id_reserva": rt.id_reserva,
+            "id_turno": turno.id,
+            "disciplina": clase.disciplina,
+            "fecha": turno.fecha.strftime("%d/%m/%Y"),
+            "hora": clase.hora,
+            "tipo": "suelto",
+        })
+
+    # ---------- ABONOS ----------
+    # El abono no materializa ReservaTurno -> derivamos los turnos del mes de la clase.
+    # Los ya cancelados quedan registrados en OfrecimientoReserva.cliente_emisor.
+    cancelados = (
+        db.session.query(ReservaTurno.id_turno)
+        .join(OfrecimientoReserva, OfrecimientoReserva.id_reserva == ReservaTurno.id_reserva)
+        .filter(OfrecimientoReserva.cliente_emisor == id_cliente)
+        .all()
+    )
+    ids_cancelados = {row.id_turno for row in cancelados}
+
+    abonos = (
+        db.session.query(ReservaClase, Clase)
+        .join(Reserva, ReservaClase.id_reserva == Reserva.id)
+        .join(Clase, ReservaClase.id_clase == Clase.id)
+        .filter(
+            Reserva.id_cliente == id_cliente,
+            Reserva.estado != 'Cancelada',
+        )
+        .all()
+    )
+    for rc, clase in abonos:
+        turnos = (
+            Turno.query.filter(
+                Turno.id_clase == rc.id_clase,
+                Turno.habilitado == True,
+                Turno.fecha >= hoy,
+                Turno.fecha < primer_dia_sig,
+            )
+            .order_by(Turno.fecha)
+            .all()
+        )
+        for turno in turnos:
+            if turno.id in ids_cancelados:
+                continue
+            resultado.append({
+                "id_reserva": rc.id_reserva,
+                "id_turno": turno.id,
+                "disciplina": clase.disciplina,
+                "fecha": turno.fecha.strftime("%d/%m/%Y"),
+                "hora": clase.hora,
+                "tipo": "abono",
+            })
+
+    return jsonify(resultado), 200

@@ -156,3 +156,19 @@
     color: #444 !important;
     opacity: 1 !important;
 }
+
+.turnosPendientes { margin-top: 2rem; }
+
+.listaTurnos { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+
+.turnoCard { display: flex; justify-content: space-between; align-items: center;
+    border: 1px solid #e0e0e0; border-radius: 12px; padding: 1rem 1.25rem; }
+    
+.turnoInfo { display: flex; flex-direction: column; gap: .2rem; }
+
+.turnoTipo { font-size: .8rem; color: #6c757d; }
+
+.cancelarBtn { background: #972934; color: #fff; border: none; border-radius: 10px;
+    padding: .55rem 1rem; cursor: pointer; }
+
+.cancelarBtn:hover { background: #7d212a; }

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, session, request
 from app.models.turno_model import TurnoModel
 from app.models.db_structure import ReservaTurno, Turno, Clase, Reserva, ReservaClase, Abono, Usuario
-from datetime import date
+from datetime import date, datetime, time, timedelta, timezone
 from app.services.email_services import send_cancellation_email
 from app import db
 

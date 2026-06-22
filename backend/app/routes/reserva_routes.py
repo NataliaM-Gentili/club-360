@@ -1,7 +1,14 @@
 from flask import Blueprint, request, jsonify, session
 from app import db
 from datetime import date
-
+from app.models.credito_model import CreditoModel
+from app.services.email_services import (
+    send_cancelacion_turno_cliente_email,
+    send_cancellation_email,
+    send_solicitud_reintegro_efectivo_mail,
+)
+from app.models.cancelacion_model import CancelacionModel
+from app.models.db_structure import Usuario
 from app.models.reserva_model import ReservaModel
 from app.models.tarjeta_model import TarjetaModel
 from app.models.db_structure import EmpleadoRegistraAbono
@@ -400,3 +407,97 @@ def reset_reserva(id_reserva):
     
     db.session.commit()
     return True
+
+@reserva_bp.route('/cancelar_turno/<int:id_reserva>', methods=['POST'])
+def cancelar_turno_cliente(id_reserva):
+    """ recibe la reserva que se desea cancelar (seleccion)
+    Flujo:
+        1. Turno suelta: R.N: si cancela tres clases sueltas consecutivas, pierde el reintegro del 20%
+            a) El turno ya fue abonado:
+                i) Se listan las tarjetas del cliente
+                ii) Si no posee tarjetas, se envía un mail para reintegro en efectivo
+            b) El turno no fue abonado:
+                i) se cancela normalmente
+        2. Clase (mensual): 
+            a) La clase ya fue abonada: 
+                i) Se genera un crédito a favor para ESA actividad
+            b) La clase no fue abonada:
+                i) Se descuenta el turno del abono mensual
+    """
+    id_cliente = session.get('usuario_id')
+    if not id_cliente:
+        return jsonify({"mensaje": "No autenticado"}), 401
+    if session.get('rol_id') != 1:
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    reserva = Reserva.query.get(id_reserva)
+    if not reserva:
+        return jsonify({"mensaje": "Reserva no encontrada"}), 404
+    if reserva.id_cliente != id_cliente:
+        return jsonify({"mensaje": "La reserva no pertenece a este cliente"}), 403
+    if reserva.estado == "Cancelada":
+        return jsonify({"mensaje": "La reserva ya estaba cancelada"}), 400
+
+    from app.routes.lista_espera_routes import ofrecimiento_turno
+
+    es_clase = ReservaClase.query.filter_by(id_reserva=id_reserva).first()
+    es_turno = ReservaTurno.query.filter_by(id_reserva=id_reserva).first()
+
+    # ---------- TURNO SUELTO ----------
+    if es_turno and not es_clase:
+        turno = Turno.query.get(es_turno.id_turno)
+        clase = Clase.query.get(turno.id_clase)
+        abono = Abono.query.filter_by(id_reserva=id_reserva).first()
+        monto = float(abono.monto) if abono else 0
+
+        tarjetas = TarjetaModel.get_by_user(id_cliente)
+        if not tarjetas:
+            send_solicitud_reintegro_efectivo_mail(id_cliente, clase.disciplina, monto)
+            reintegro = "Sin tarjetas asociadas: se envió un mail para el reintegro en efectivo"
+        else:
+            reintegro = f"Se reintegraron ${monto:.2f} a su tarjeta"
+
+        usuario = Usuario.query.get(id_cliente)
+        turno = Turno.query.get(id_turno)
+        send_cancelacion_turno_cliente_email(
+            usuario.nombres, clase.disciplina,
+            turno.fecha.strftime("%d/%m/%Y"), clase.hora,
+            detalle=detalle        # "Se otorgó un crédito..." / "Se descontarán $X..."
+        )
+
+        resp, status = ofrecimiento_turno(cliente_emisor=id_cliente, id_reserva=id_reserva, id_turno=turno.id)
+        if status not in (200, 201):
+            return resp, status
+
+        # suspensión por exceso de cancelaciones de turnos sueltos en el mes
+        #sacarBeneficio = False
+        #if CancelacionModel.supera_limite_sueltas(id_cliente):
+            # pierde el beneficio del 20% 
+        #    sacarBeneficio = True
+
+        return jsonify({"mensaje": "Turno cancelado", "reintegro": reintegro}), 200
+
+    # ---------- ABONO MENSUAL ----------
+    if es_clase:
+        id_turno = (request.get_json(silent=True) or {}).get('id_turno')
+        if not id_turno:
+            return jsonify({"mensaje": "Para cancelar un turno del abono debe indicar id_turno"}), 400
+
+        clase = Clase.query.get(es_clase.id_clase)
+
+        if es_clase.id_clase == 1:  # Voley -> crédito a favor
+            CreditoModel.crear_credito(id_cliente, clase.disciplina)
+            detalle = f"Se otorgó un crédito a favor para {clase.disciplina.capitalize()}"
+            monto_descuento = 0  # se compensa con crédito, no con descuento de cuota
+        else:
+            monto_descuento = float(ReservaModel.obtener_precio_disciplina(clase.disciplina))
+            detalle = f"Se descontarán ${monto_descuento:.2f} de la cuota mensual"
+
+    
+        resp, status = ofrecimiento_turno(cliente_emisor=id_cliente, id_reserva=id_reserva, id_turno=id_turno)
+        if status not in (200, 201):
+            return resp, status
+
+        return jsonify({"mensaje": "Turno cancelado", "detalle": detalle}), 200
+
+    return jsonify({"mensaje": "La reserva no corresponde a un turno ni a una clase"}), 404

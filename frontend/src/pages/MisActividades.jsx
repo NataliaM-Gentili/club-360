@@ -3,7 +3,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-
+import TurnosPendientes from '../components/TurnosPendientes';
 import '../assets/styles/MisActividades.css'; 
 
 export default function MisActividades() {
@@ -106,6 +106,7 @@ export default function MisActividades() {
                         aspectRatio={1.35}
                     /> 
                 </div>
+                <TurnosPendientes />
             </div>
         </div>
     ); 
