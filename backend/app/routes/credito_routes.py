@@ -141,6 +141,7 @@ def reservar_turno_credito():
     db.session.add(Abono(id_reserva=reserva.id, monto=0, efectivo=True))
 
     credito.activo = False
+    credito.id_turno = id_turno
 
     db.session.commit()
 
