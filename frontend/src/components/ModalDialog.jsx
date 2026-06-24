@@ -1,19 +1,11 @@
 import { useEffect, useRef } from "react";
 import '../assets/styles/ModalDialog.css'
 
-export default function ModalDialog({
-    open,
-    onClose,
-    title,
-    message,
-    primaryText,
-    secondaryText,
-    onPrimary,
-    onSecondary
-}) {
+// Le agregamos mostrarCruz al final de las propiedades
+export default function ModalDialog({ open, onClose, title, message, primaryText, secondaryText, onPrimary, onSecondary, mostrarCruz }) {
     const dialogRef = useRef(null);
 
-    // open / close control
+    // Control de abrir/cerrar nativo del <dialog>
     useEffect(() => {
         if (open) {
             dialogRef.current?.showModal();
@@ -32,7 +24,31 @@ export default function ModalDialog({
                     onClose?.();
                 }
             }}
+            style={{ position: 'relative' }} // Aseguramos que la cruz se posicione bien adentro
         >
+            {/* LA CRUZ MÁGICA: Solo aparece si mandan mostrarCruz={true} */}
+            {mostrarCruz && (
+                <button
+                    type="button"
+                    onClick={() => onClose?.()}
+                    style={{
+                        position: 'absolute',
+                        top: '15px',
+                        right: '15px',
+                        background: 'transparent',
+                        border: 'none',
+                        fontSize: '26px',
+                        fontWeight: 'bold',
+                        color: '#666',
+                        cursor: 'pointer',
+                        lineHeight: '1'
+                    }}
+                    title="Cerrar"
+                >
+                    &times;
+                </button>
+            )}
+
             <h2>{title}</h2>
             <p>{message}</p>
 

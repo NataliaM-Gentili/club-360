@@ -312,8 +312,7 @@ export default function ListarClasesPage() {
                     </tbody>
                 </table> 
             </div>
-
-           <ModalDialog
+            <ModalDialog
                 open={confirmEliminarClase.open}
                 onClose={() => setConfirmEliminarClase({ ...confirmEliminarClase, open: false })}
                 title="Eliminar Clase Completa"
@@ -322,6 +321,7 @@ export default function ListarClasesPage() {
                 secondaryText="Cancelar turnos vacíos"
                 onPrimary={() => ejecutarEliminacionTotal(confirmEliminarClase.id_clase, confirmEliminarClase.total_inscriptos)}
                 onSecondary={() => deshabilitarTurnosVacios(confirmEliminarClase.id_clase)}
+                mostrarCruz={true} 
             />
         </div>
     );

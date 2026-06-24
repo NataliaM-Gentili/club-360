@@ -217,18 +217,20 @@ def listar_clases():
     hoy = date.today()
     
     for c in clases:
+        # 1. Contar reservas de abono mensual completo
         total_mensuales = ReservaClase.query.join(Reserva).filter(
             ReservaClase.id_clase == c.id,
             Reserva.estado != 'Cancelada'
         ).count()
         
+        # 2. Contar TODAS las reservas de turnos individuales a futuro
         total_sueltos = db.session.query(ReservaTurno).join(Reserva).join(Turno).filter(
             Turno.id_clase == c.id,
             Turno.fecha >= hoy,
             Reserva.estado != 'Cancelada'
         ).count()
         
-        # Le restamos a la clase global las excepciones que se hayan hecho a futuro
+        # 3. Le restamos a la clase global las excepciones que se hayan hecho a futuro
         excepciones_futuras = AbonadoTurnoCancelado.query.join(Turno).filter(
             Turno.id_clase == c.id,
             Turno.fecha >= hoy
@@ -236,12 +238,22 @@ def listar_clases():
 
         total_inscriptos = (total_mensuales - excepciones_futuras) + total_sueltos
 
+        # NUEVO: Contamos cuántos turnos a futuro tiene activos esta clase
+        turnos_futuros_count = Turno.query.filter(
+            Turno.id_clase == c.id, 
+            Turno.fecha >= hoy,
+            Turno.habilitado == True  # Solo contamos los turnos que no estén cancelados por el club
+        ).count()
+        
+        # Capacidad total del mes = cupo diario * cantidad de turnos futuros
+        cupo_total_futuro = c.cupo * turnos_futuros_count
+
         resultado.append({
             "id": c.id,
             "disciplina": c.disciplina,
             "dia": c.dia,
             "hora": c.hora,
-            "cupo": c.cupo,
+            "cupo": cupo_total_futuro,  # Enviamos el cupo total acumulado
             "ocupados": total_inscriptos if total_inscriptos > 0 else 0, 
             "habilitada": c.habilitada
         })
