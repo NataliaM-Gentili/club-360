@@ -290,6 +290,24 @@ def reservar_turno():
     if precio is None:
         return jsonify({"mensaje": "No se pudo determinar el precio de la disciplina"}), 400
 
+    # Verificar que no tenga otro turno en el mismo horario
+    turno_mismo_horario = (
+        db.session.query(ReservaTurno)
+        .join(Reserva, ReservaTurno.id_reserva == Reserva.id)
+        .join(Turno, Turno.id == ReservaTurno.id_turno)
+        .join(Clase, Clase.id == Turno.id_clase)
+        .filter(
+            Reserva.id_cliente == id_cliente,
+            Reserva.estado != "Cancelada",
+            Turno.fecha == turno.fecha,
+            Clase.hora == clase.hora,
+            ReservaTurno.id_turno != id_turno,
+        )
+        .first()
+    )
+    if turno_mismo_horario:
+        return jsonify({"mensaje": "No se puede realizar la reserva, usted ya posee una reserva de turno en el horario elegido"}), 400
+
     # Crear reserva con abono al 50% — queda Pendiente hasta que /pago_tarjeta confirme
     reserva = ReservaModel.reservar_turno_no_abonado(
         id_cliente=id_cliente,
@@ -315,6 +333,7 @@ def reservar_turno():
 
 
 
+
 # Abonado
 @reserva_bp.route("/abonar_mensual", methods=["POST"])
 def abonar_mensual():
@@ -337,6 +356,21 @@ def abonar_mensual():
     clase = Clase.query.get(id_clase)
     if not clase or not clase.habilitada:
         return jsonify({"mensaje": "La clase no está disponible"}), 404
+    
+    # Verificar si el cliente tiene suspensión en esta disciplina
+    suspension = (
+        db.session.query(ClienteSuspendido)
+        .join(Clase, Clase.id == ClienteSuspendido.id_clase)
+        .filter(
+            ClienteSuspendido.id_cliente == id_cliente,
+            ClienteSuspendido.id_clase != None,
+            Clase.disciplina == clase.disciplina,
+        )
+        .first()
+    )
+    if suspension:
+        return jsonify({"mensaje": "Reserva fallida, usted se encuentra suspendido en la disciplina elegida"}), 400
+
 
     # Verificar que no esté ya inscripto
     if ReservaModel.cliente_ya_inscripto_clase(id_cliente, id_clase):
