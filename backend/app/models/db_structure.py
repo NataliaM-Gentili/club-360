@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 
 # --- USUARIO Y ROLES ---
 
-
 class Rol(db.Model):
     __tablename__ = "rol"
     id = db.Column(db.Integer, primary_key=True)
@@ -35,13 +34,11 @@ class Usuario(db.Model):
             "rol_id": self.rol_id,
         }
 
-
 class Administrador(db.Model):
     __tablename__ = "administrador"
     id_usuario = db.Column(
         db.Integer, db.ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True
     )
-
 
 class Empleado(db.Model):
     __tablename__ = "empleado"
@@ -49,16 +46,13 @@ class Empleado(db.Model):
         db.Integer, db.ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True
     )
 
-
 class Cliente(db.Model):
     __tablename__ = "cliente"
     id_usuario = db.Column(
         db.Integer, db.ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True
     )
 
-
 # --- PAGO ---
-
 
 class Tarjeta(db.Model):
     __tablename__ = "tarjeta"
@@ -76,7 +70,6 @@ class Tarjeta(db.Model):
             "titular": self.titular,
         }
 
-
 class ClienteTarjeta(db.Model):
     __tablename__ = "cliente_tarjeta"
 
@@ -86,15 +79,7 @@ class ClienteTarjeta(db.Model):
 
     id_tarjeta = db.Column(db.Integer, db.ForeignKey("tarjeta.id"), primary_key=True)
 
-
-# Tabla intermedia Cliente_Tarjeta
-# cliente_tarjeta = db.Table('cliente_tarjeta',
-#    db.Column('id_usuario', db.Integer, db.ForeignKey('cliente.id_usuario'), primary_key=True),
-#    db.Column('id_tarjeta', db.Integer, db.ForeignKey('tarjeta.id'), primary_key=True)
-# )
-
 # --- CLASES Y TURNOS ---
-
 
 class Clase(db.Model):
     __tablename__ = "clase"
@@ -107,7 +92,6 @@ class Clase(db.Model):
     cupo = db.Column(db.Integer, default=0)
     habilitada = db.Column(db.Boolean, default=True)
 
-
 class Turno(db.Model):
     __tablename__ = "turno"
     id = db.Column(db.Integer, primary_key=True)
@@ -115,7 +99,6 @@ class Turno(db.Model):
     fecha = db.Column(db.Date, nullable=False)
     id_clase = db.Column(db.Integer, db.ForeignKey("clase.id"), nullable=False)
     __table_args__ = (db.UniqueConstraint("id_clase", "fecha", name="uq_clase_fecha"),)
-
 
 # Tabla intermedia Cliente_asistio_turno
 cliente_asistio_turno = db.Table(
@@ -126,8 +109,14 @@ cliente_asistio_turno = db.Table(
     ),
 )
 
-# --- RESERVAS ---
+# NUEVA TABLA: Excepciones de abonados que cancelan un día particular
+class AbonadoTurnoCancelado(db.Model):
+    __tablename__ = "abonado_turno_cancelado"
+    id_cliente = db.Column(db.Integer, db.ForeignKey("cliente.id_usuario"), primary_key=True)
+    id_turno = db.Column(db.Integer, db.ForeignKey("turno.id"), primary_key=True)
+    fecha_cancelacion = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
+# --- RESERVAS ---
 
 class Reserva(db.Model):
     __tablename__ = "reserva"
@@ -138,21 +127,17 @@ class Reserva(db.Model):
     )
     estado = db.Column(db.String(20), default="Pendiente")
 
-
 class ReservaTurno(db.Model):
     __tablename__ = "reserva_turno"
     id_reserva = db.Column(db.Integer, db.ForeignKey("reserva.id"), primary_key=True)
     id_turno = db.Column(db.Integer, db.ForeignKey("turno.id"), nullable=False)
-
 
 class ReservaClase(db.Model):
     __tablename__ = "reserva_clase"
     id_reserva = db.Column(db.Integer, db.ForeignKey("reserva.id"), primary_key=True)
     id_clase = db.Column(db.Integer, db.ForeignKey("clase.id"), nullable=False)
 
-
 # --- ABONOS ---
-
 
 class Abono(db.Model):
     __tablename__ = "abono"
@@ -160,14 +145,12 @@ class Abono(db.Model):
     monto = db.Column(db.Numeric(10, 2), nullable=False)
     efectivo = db.Column(db.Boolean, default=True)
 
-
 class AbonoTarjeta(db.Model):
     __tablename__ = "abono_tarjeta"
     id_abono = db.Column(
         db.Integer, db.ForeignKey("abono.id_reserva"), primary_key=True
     )
     id_tarjeta = db.Column(db.Integer, db.ForeignKey("tarjeta.id"), nullable=False)
-
 
 class EmpleadoRegistraAbono(db.Model):
     __tablename__ = "empleado_registra_abono"
@@ -178,7 +161,6 @@ class EmpleadoRegistraAbono(db.Model):
         db.Integer, db.ForeignKey("abono.id_reserva"), primary_key=True
     )
 
-
 # --- CREDITOS ---
 class Credito(db.Model):
     __tablename__ = "credito"
@@ -186,16 +168,14 @@ class Credito(db.Model):
     disciplina = db.Column(db.String(100), nullable=False)
     id_usuario = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
     activo = db.Column(db.Boolean, nullable=False, default=True)
-
+    id_turno = db.Column(db.Integer, db.ForeignKey("turno.id"), nullable=True)
 
 # --- LISTA DE ESPERA ---
-
 
 class TipoLista(db.Model):
     __tablename__ = "tipo_lista"
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(50), nullable=False)
-
 
 class ListaEspera(db.Model):
     __tablename__ = "lista_espera"
@@ -229,9 +209,7 @@ class ListaEspera(db.Model):
             "turno_id": self.turno_id,
         }
 
-
 def insertar_roles_y_listas(*args, **kwargs):
-    # Verificamos si ya existen para no duplicar en futuras ejecuciones
     if Rol.query.count() == 0:
         roles = [
             Rol(id=1, nombre="cliente"),
@@ -250,14 +228,10 @@ def insertar_roles_y_listas(*args, **kwargs):
 
     db.session.commit()
 
-
-# Esto se ejecuta automáticamente DESPUÉS de que db.create_all() hace su trabajo
 event.listen(db.metadata, "after_create", insertar_roles_y_listas)
-
 
 ##---------------
 from datetime import datetime
-
 
 class OfrecimientoReserva(db.Model):
     __tablename__ = "ofrecimiento_reserva"
@@ -311,3 +285,27 @@ class OfrecimientoReserva(db.Model):
             name="check_estado",
         ),
     )
+
+
+class ClienteSuspendido(db.Model):
+    __tablename__ = "cliente_suspendido"
+    id = db.Column(db.Integer, primary_key=True)
+    id_cliente = db.Column(db.Integer, db.ForeignKey("cliente.id_usuario"), nullable=False)
+    id_turno = db.Column(db.Integer, db.ForeignKey("turno.id"), nullable=True)
+    id_clase = db.Column(db.Integer, db.ForeignKey("clase.id"), nullable=True)
+    monto = db.Column(db.Numeric(10, 2), nullable=False)
+    __table_args__ = (
+        db.CheckConstraint(
+            "(id_clase IS NOT NULL AND id_turno IS NULL) OR (id_clase IS NULL AND id_turno IS NOT NULL)",
+            name="check_exclusividad_suspension",
+        ),
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "id_cliente": self.id_cliente,
+            "id_turno": self.id_turno,
+            "id_clase": self.id_clase,
+            "monto": float(self.monto)
+        }

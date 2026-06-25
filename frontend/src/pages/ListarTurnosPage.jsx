@@ -40,13 +40,8 @@ export default function ListarTurnosPage() {
     const [abonoModalOpen, setAbonoModalOpen] = useState(false);
     const [abonoModalData, setAbonoModalData] = useState(null);
 
-    // Estados para los modales de cancelación
+    // Estado para el modal de cancelación individual
     const [turnoACancelar, setTurnoACancelar] = useState(null);
-    const [confirmCancelarClase, setConfirmCancelarClase] = useState({ 
-        open: false, 
-        id_clase: null, 
-        total_inscriptos: 0 
-    });
 
     useEffect(() => {
         fetch('/api/auth/status', { credentials: 'include' })
@@ -187,7 +182,6 @@ export default function ListarTurnosPage() {
             toast.success(data.mensaje);
             setModalOpen(false);
 
-            // Actualizar turnosCliente después de reserva exitosa
             setTurnosCliente(prev => [
                 ...prev,
                 {
@@ -234,12 +228,16 @@ export default function ListarTurnosPage() {
             const inscriptos = turnos.filter((turno) => !ocupadosIds.includes(turno.id));
 
             if (ocupados.length > 0) {
-                const montoInfo = `Monto: $${data.monto_a_pagar}` + (data.descuento ? ` | ${data.descuento}` : '');
-                const message = `Te inscribiste en ${inscriptos.length} turno(s).\n` +
-                    `Los siguientes turnos están completos:\n` +
-                    ocupados.map((turno) => `- ${turno.fecha} ${turno.hora}`).join('\n') +
-                    `\n\n${montoInfo}\n\n¿Querés inscribirte en lista de espera para esos turnos?`;
-
+                const montoInfo = data.monto_a_pagar != null
+                    ? `Monto: $${data.monto_a_pagar}` + (data.descuento ? ` | ${data.descuento}` : '')
+                    : '';
+                const intro = data.todos_ocupados
+                    ? 'Todos los turnos del mes están completos.'
+                    : `Te inscribiste en ${inscriptos.length} turno(s).\nLos siguientes turnos están completos:`;
+                const message = `${intro}\n` +
+                    ocupados.map((t) => `- ${t.fecha} ${t.hora}`).join('\n') +
+                    (montoInfo ? `\n\n${montoInfo}` : '') +
+                    `\n\n¿Querés inscribirte en lista de espera mensual para esos turnos?`;
                 setAbonoModalData({ ocupados, inscriptos, mensaje: message });
                 setAbonoModalOpen(true);
                 return;
@@ -318,7 +316,7 @@ export default function ListarTurnosPage() {
                         id_cliente: session.user_id,
                         clase_id: null,
                         turno_id: resultado.turno.id,
-                        tipo_lista_id: 3,
+                        tipo_lista_id: 2,
                     }))
                 ]
             }));
@@ -368,37 +366,25 @@ export default function ListarTurnosPage() {
         }
     };
 
-    const handleToggleClase = async (idClase, estaHabilitada) => {
+    const handlePaymentCancelled = async (reservaId) => {
         try {
-            const endpoint = estaHabilitada ? '/api/deshabilitarClase' : '/api/habilitarClase';
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ id_clase: idClase })
+            const res = await fetch(`/api/cancelar_reserva/${reservaId}`, {
+                method: 'DELETE',
+                credentials: 'include'
             });
 
-            if (response.ok) {
-                setTurnos(prev => prev.map(t =>
-                    t.id_clase === idClase ? { 
-                        ...t, 
-                        habilitada: !estaHabilitada,
-                        // SI estamos deshabilitando (true) y el turno no tiene inscriptos, lo marcamos como cancelado
-                        // SI estamos habilitando de nuevo (false), limpiamos la cancelación para que vuelvan a estar activos
-                        turno_cancelado: estaHabilitada ? (t.ocupados === 0 ? true : t.turno_cancelado) : false
-                    } : t
-                ));
-                toast.success(estaHabilitada ? 'Clase deshabilitada.' : 'Clase habilitada.');
-            } else {
-                const errData = await response.json();
-                toast.error(errData.message || 'Error al cambiar estado de la clase.');
+            if (!res.ok) {
+                toast.error('Error al cancelar la reserva');
+                return;
             }
+
+            toast.info('No se confirmó la reserva debido a la falta de pago. El turno sigue disponible.');
         } catch (error) {
-            toast.error('Error al cambiar estado de clase.');
+            toast.error('Error al cancelar la reserva');
         }
     };
 
-    // Nueva lógica de Cancelar Turno (con modal)
+    // Lógica exclusiva de Cancelar Turno Individual
     const intentarCancelarTurno = (turno) => {
         if (turno.ocupados > 0) {
             setTurnoACancelar(turno);
@@ -420,7 +406,6 @@ export default function ListarTurnosPage() {
             
             if (response.ok) {
                 toast.success(data.mensaje);
-                // NUEVO: Lo dejamos en pantalla, le ponemos ocupados 0 y avisamos que está cancelado
                 setTurnos(prev => prev.map(t => 
                     t.id === idTurno ? { ...t, ocupados: 0, turno_cancelado: true } : t
                 ));
@@ -431,65 +416,6 @@ export default function ListarTurnosPage() {
         } catch (error) {
             console.error("Error:", error);
             toast.error('Error de conexión con el servidor');
-        }
-    };
-
-    // Lógica para Cancelar Clase (con modal)
-    const prepararCancelacionClase = async (idClase) => {
-        try {
-            const res = await fetch(`/api/calcular_impacto_clase/${idClase}`);
-            const data = await res.json();
-            if (data.total_inscriptos === 0) {
-                ejecutarCancelacionClase(idClase);
-            } else {
-                setConfirmCancelarClase({ 
-                    open: true, 
-                    id_clase: idClase, 
-                    total_inscriptos: data.total_inscriptos 
-                });
-            }
-        } catch (error) {
-            toast.error("Error al calcular impacto");
-        }
-    };
-
-    const ejecutarCancelacionClase = async (idClase) => {
-        try {
-            const response = await fetch('/api/cancelar_clase', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ id_clase: idClase })
-            });
-
-            if (response.ok) {
-                toast.success("Clase cancelada correctamente");
-                setConfirmCancelarClase({ ...confirmCancelarClase, open: false });
-                
-                setTurnos(prev => prev.map(t => 
-                    t.id_clase === idClase ? { ...t, habilitada: false, ocupados: 0, turno_cancelado: true } : t
-                ));
-            }
-        } catch (error) {
-            toast.error("Error al cancelar la clase");
-        }
-    };
-
-    const handlePaymentCancelled = async (reservaId) => {
-        try {
-            const res = await fetch(`/api/cancelar_reserva/${reservaId}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
-
-            if (!res.ok) {
-                toast.error('Error al cancelar la reserva');
-                return;
-            }
-
-            toast.info('No se confirmó la reserva debido a la falta de pago. El turno sigue disponible.');
-        } catch (error) {
-            toast.error('Error al cancelar la reserva');
         }
     };
 
@@ -645,7 +571,7 @@ export default function ListarTurnosPage() {
                                     <th>Día</th>
                                     <th>Hora</th>
                                     {esPersonalInterno && <th>Cupo</th>}
-                                    {esAdmin && <th>Clase</th>}
+                                    {esAdmin && <th>Acciones</th>}
                                     {!esPersonalInterno && <th></th>}
                                 </tr>
                             </thead>
@@ -660,8 +586,6 @@ export default function ListarTurnosPage() {
                                         {esAdmin && (
                                             <td>
                                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                    
-                                                    {/* COLUMN 1: ESTADO Y ACCIÓN DEL TURNO INDIVIDUAL */}
                                                     {!turno.turno_cancelado ? (
                                                         <button 
                                                             className="cancelarTurnoBtn" 
@@ -684,44 +608,6 @@ export default function ListarTurnosPage() {
                                                             Turno Cancelado
                                                         </span>
                                                     )}
-
-                                                    {/* COLUMN 2: ESTADO Y ACCIÓN DE LA CLASE COMPLETA */}
-                                                    {turno.habilitada ? (
-                                                        <button 
-                                                            className="cancelarClaseBtn" 
-                                                            style={{ 
-                                                                backgroundColor: '#6c757d', 
-                                                                color: 'white', 
-                                                                border: 'none', 
-                                                                padding: '6px 16px', 
-                                                                borderRadius: '20px',
-                                                                cursor: 'pointer',
-                                                                fontSize: '0.85rem',
-                                                                fontWeight: 'bold'
-                                                            }}
-                                                            onClick={() => prepararCancelacionClase(turno.id_clase)} 
-                                                        >
-                                                            Cancelar clase
-                                                        </button>
-                                                    ) : (
-                                                        <button 
-                                                            className="habilitarBtn" 
-                                                            style={{ 
-                                                                backgroundColor: '#28a745', 
-                                                                color: 'white', 
-                                                                border: 'none', 
-                                                                padding: '6px 16px', 
-                                                                borderRadius: '20px',
-                                                                cursor: 'pointer',
-                                                                fontSize: '0.85rem',
-                                                                fontWeight: 'bold'
-                                                            }}
-                                                            onClick={() => handleToggleClase(turno.id_clase, false)}
-                                                        >
-                                                            Habilitar clase
-                                                        </button>
-                                                    )}
-                                                    
                                                 </div>
                                             </td>
                                         )}
@@ -782,7 +668,7 @@ export default function ListarTurnosPage() {
                         }}
                     />
 
-                    {/* NUEVO MODAL: Confirmación individual de Turno */}
+                    {/* MODAL: Confirmación individual de Turno */}
                     <ModalDialog
                         open={turnoACancelar !== null}
                         onClose={() => setTurnoACancelar(null)}
@@ -794,20 +680,6 @@ export default function ListarTurnosPage() {
                         onSecondary={() => setTurnoACancelar(null)}
                     />
 
-                    {/* MODAL EXISTENTE: Confirmación para toda la Clase */}
-                    <ModalDialog
-                        open={confirmCancelarClase.open}
-                        onClose={() => setConfirmCancelarClase({ ...confirmCancelarClase, open: false })}
-                        title="Cancelar Clase Completa"
-                        message={`En esta clase hay ${confirmCancelarClase.total_inscriptos} inscripto(s) en total. ¿Desea continuar con la cancelación? Puede optar por deshabilitar la clase para eliminar solo los turnos sin inscriptos.`}
-                        primaryText="Continuar (Cancelar todo)"
-                        secondaryText="Deshabilitar turnos vacíos"
-                        onPrimary={() => ejecutarCancelacionClase(confirmCancelarClase.id_clase)}
-                        onSecondary={() => {
-                            handleToggleClase(confirmCancelarClase.id_clase, true);
-                            setConfirmCancelarClase({ ...confirmCancelarClase, open: false });
-                        }}
-                    />
                 </div>
             )}
         </div>

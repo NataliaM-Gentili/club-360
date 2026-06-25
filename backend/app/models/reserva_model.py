@@ -9,11 +9,11 @@ from app.models.db_structure import (
     Turno,
     Clase,
     ClienteTarjeta,
-    Cliente
+    Cliente,
+    AbonadoTurnoCancelado
 )
 from datetime import date 
 from decimal import Decimal
-
 
 PRECIOS_DISCIPLINA = {
     "futbol": 9000,
@@ -83,10 +83,30 @@ class ReservaModel:
         if not turno:
             return False
         clase = Clase.query.get(turno.id_clase)
-        ocupados = ReservaTurno.query.filter_by(id_turno=id_turno).count()
-        return ocupados < clase.cupo
+        return ReservaModel.ocupados_de_turno(turno) < clase.cupo
     
-    
+    @staticmethod
+    def ocupados_de_turno(turno):
+        """Ocupación real: abonados mensuales de la clase (menos los que
+        cancelaron este turno) + reservas individuales de este turno."""
+        ocupados_clase = (
+            db.session.query(ReservaClase)
+            .join(Reserva, ReservaClase.id_reserva == Reserva.id)
+            .filter(ReservaClase.id_clase == turno.id_clase,
+                    Reserva.estado != "Cancelada")
+            .count()
+        )
+        cancelados_este_turno = (
+            AbonadoTurnoCancelado.query.filter_by(id_turno=turno.id).count()
+        )
+        ocupados_turno = (
+            db.session.query(ReservaTurno)
+            .join(Reserva, ReservaTurno.id_reserva == Reserva.id)
+            .filter(ReservaTurno.id_turno == turno.id,
+                    Reserva.estado != "Cancelada")
+            .count()
+        )
+        return (ocupados_clase - cancelados_este_turno) + ocupados_turno
     
     @staticmethod
     def turnos_restantes_mes(id_clase):
@@ -124,12 +144,7 @@ class ReservaModel:
                 continue
 
             # contar reservas activas (no Canceladas) para este turno
-            ocupados = (
-                db.session.query(ReservaTurno)
-                .join(Reserva, ReservaTurno.id_reserva == Reserva.id)
-                .filter(ReservaTurno.id_turno == t.id, Reserva.estado != "Cancelada")
-                .count()
-            )
+            ocupados = ReservaModel.ocupados_de_turno(t)
 
             if ocupados >= clase.cupo:
                 ocupados_ids.append(t.id)
@@ -159,7 +174,7 @@ class ReservaModel:
             if cantidad > 1:
                 return precio * cantidad * Decimal("0.80"), True
             else:
-                return precio, False
+                return precio * cantidad, False
     
     
     

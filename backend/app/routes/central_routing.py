@@ -32,4 +32,7 @@ def all_routes(app):
     
     from app.routes.tarjeta_routes import tarjeta_bp
     app.register_blueprint(tarjeta_bp, url_prefix="/api")
+
+    from app.routes.suspension_routes import suspension_bp
+    app.register_blueprint(suspension_bp, url_prefix="/api")
     

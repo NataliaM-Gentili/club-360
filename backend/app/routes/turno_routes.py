@@ -1,12 +1,12 @@
 from flask import Blueprint, jsonify, session, request
 from app.models.turno_model import TurnoModel
-from app.models.db_structure import ReservaTurno, Turno, Clase, Reserva, ReservaClase, Abono, Usuario
+from app.models.db_structure import ReservaTurno, Turno, Clase, Reserva, ReservaClase, Abono, Usuario, AbonadoTurnoCancelado
 from datetime import date, datetime, time, timedelta, timezone
 from app.services.email_services import send_cancellation_email
 from app import db
+from app.models.reserva_model import ReservaModel
 
 turno_bp = Blueprint("turno_bp", __name__)
-
 
 @turno_bp.route("/visualizar_turnos", methods=["GET"])
 def get_turnos_admin():
@@ -38,7 +38,6 @@ def get_turnos_admin():
 
     return jsonify(resultado), 200
 
-
 # /BUSCAR_TURNOS --> lista turnos del mes corriente filtrados por disciplina, dia y hora
 @turno_bp.route("/buscar_turnos", methods=["GET"])
 def buscar_turnos():
@@ -58,7 +57,6 @@ def buscar_turnos():
         return jsonify({"turnos": []}), 200
 
     hoy = date.today()
-    #EN CASO DE QUERER FILTRAR TODO EL MES -> primer_dia_mes = date(hoy.year, hoy.month, 1)
     if hoy.month == 12:
         ultimo_dia_mes = date(hoy.year + 1, 1, 1)
     else:
@@ -73,7 +71,6 @@ def buscar_turnos():
         Turno.fecha < ultimo_dia_mes,
     )
 
-    # si es cleinte,filtro para ocultar los deshabilitados
     if not es_admin_o_empleado:
         query = query.filter(Turno.habilitado == True)
 
@@ -81,17 +78,8 @@ def buscar_turnos():
 
     resultado = []
     for t in turnos:
-        # Sumamos SOLO los inscriptos cuyo estado NO sea 'Cancelada'
-        ocupados_turno = ReservaTurno.query.join(Reserva).filter(
-            ReservaTurno.id_turno == t.id, Reserva.estado != 'Cancelada'
-        ).count()
-        
-        ocupados_clase = ReservaClase.query.join(Reserva).filter(
-            ReservaClase.id_clase == clase.id, Reserva.estado != 'Cancelada'
-        ).count()
-        
-        ocupados = ocupados_turno + ocupados_clase
-        
+        # Sumamos inscriptos individuales
+        ocupados = ReservaModel.ocupados_de_turno(t)
         resultado.append(
             {
                 "id": t.id,
@@ -100,7 +88,7 @@ def buscar_turnos():
                 "dia": clase.dia,
                 "hora": clase.hora,
                 "cupo": clase.cupo,
-                "ocupados": ocupados, # <-- Ahora este número será real
+                "ocupados": ocupados, # <-- Ahora resta los cancelados
                 "id_clase": clase.id,
                 "habilitada": clase.habilitada,
                 "turno_cancelado": not t.habilitado
@@ -108,7 +96,6 @@ def buscar_turnos():
         )
 
     return jsonify({"turnos": resultado}), 200
-
 
 @turno_bp.route('/turnos_de_cliente', methods=['GET'])
 def buscar_turnos_de_cliente():
@@ -122,16 +109,13 @@ def buscar_turnos_de_cliente():
     except ValueError:
         return jsonify({"error": "id_usuario inválido"}), 400
 
-    # 1. Buscar todas las reservas del cliente
     reservas = Reserva.query.filter_by(id_cliente=id_usuario).all()
-
 
     if not reservas:
         return jsonify({"turnos": []}), 200
 
     ids_reservas = [r.id for r in reservas]
 
-    # 2. Buscar los ReservaTurno asociados a esas reservas
     reservas_turno = ReservaTurno.query.filter(
         ReservaTurno.id_reserva.in_(ids_reservas)
     ).all()
@@ -163,20 +147,25 @@ def buscar_turnos_de_cliente():
 @turno_bp.route("/calcular_impacto_clase/<int:id_clase>", methods=["GET"])
 def calcular_impacto(id_clase):
     try:
-        # 1. Buscamos turnos vigentes (como vos indicaste, esto está bien)
         turnos = Turno.query.filter_by(id_clase=id_clase, habilitado=True).all()
         total_inscriptos = 0
         
-        # 2. Contamos a los inscriptos a turnos individuales (que no estén cancelados)
+        # 1. Contamos a los inscriptos mensuales
+        total_mensuales = ReservaClase.query.join(Reserva).filter(
+            ReservaClase.id_clase == id_clase, Reserva.estado != 'Cancelada'
+        ).count()
+        
+        # 2. Iteramos por cada turno para restar las excepciones y sumar los sueltos
         for t in turnos:
-            total_inscriptos += ReservaTurno.query.join(Reserva).filter(
+            sueltos = ReservaTurno.query.join(Reserva).filter(
                 ReservaTurno.id_turno == t.id, Reserva.estado != 'Cancelada'
             ).count()
             
-        # 3. Contamos a los inscriptos mensuales de toda la clase (que no estén cancelados)
-        total_inscriptos += ReservaClase.query.join(Reserva).filter(
-            ReservaClase.id_clase == id_clase, Reserva.estado != 'Cancelada'
-        ).count()
+            excepciones = AbonadoTurnoCancelado.query.filter_by(id_turno=t.id).count()
+            
+            # El impacto es la gente que realmente va a ir a ese turno (mensuales - excepciones + sueltos)
+            ocupacion_real = (total_mensuales - excepciones) + sueltos
+            total_inscriptos += ocupacion_real
             
         return jsonify({"total_inscriptos": total_inscriptos}), 200
     except Exception as e:
@@ -217,8 +206,6 @@ def cancelar_turno_admin():
         db.session.rollback()
         return jsonify({"error": "Ocurrió un error al intentar cancelar el turno."}), 500
     
-    
-# /TURNOS_HOY --> lista los turnos de hoy para que el empleado pueda pasar asistencia manual
 @turno_bp.route("/turnos_hoy", methods=["GET"])
 def get_turnos_hoy():
     if session.get("rol_id") != 3:
@@ -249,11 +236,9 @@ def cancelar_clase_admin():
     turnos = Turno.query.filter_by(id_clase=id_clase).all()
     
     try:
-        # 1. Cancelamos todos los turnos y mandamos mails
         for t in turnos:
             procesar_cancelacion_turno(t)
             
-        # 2. NUEVO: Deshabilitamos la clase real en la base de datos
         clase = Clase.query.get(id_clase)
         if clase:
             clase.habilitada = False

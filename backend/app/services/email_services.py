@@ -445,24 +445,6 @@ def send_ofrecimiento_turno_mail(ofrecimiento, id_cliente_elegido, id_turno, cli
     msg.html = html
 
     mail.send(msg)
-    
-def send_solicitud_reintegro_efectivo_mail(id_cliente, disciplina, monto):
-    """Avisa al cliente sin tarjeta que debe gestionar el reintegro en efectivo."""
-    try:
-        email_destino = _obtener_email_cliente(id_cliente)
-        msg = Message(
-            subject="Solicitud de reintegro en efectivo - Club 360",
-            recipients=[email_destino],
-            body=(
-                f"Cancelaste tu turno de {disciplina.capitalize()}.\n\n"
-                f"No tenés tarjetas asociadas a tu cuenta, así que el reintegro de "
-                f"${float(monto):.2f} debe gestionarse en efectivo en recepción.\n\n"
-                f"Acercate al club para retirarlo.\n\nClub 360"
-            ),
-        )
-        mail.send(msg)
-    except Exception as e:
-        print(f"[email_services] Error al enviar solicitud de reintegro: {e}")    
         
         
 def send_cancelacion_turno_cliente_email(nombre, disciplina, fecha, hora, detalle=None):

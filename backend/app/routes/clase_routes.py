@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from app.models.clase_model import ClaseModel
-from app.models.db_structure import Clase, Turno, Reserva, ReservaTurno, ReservaClase
+from app.models.db_structure import Clase, Turno, Reserva, ReservaTurno, ReservaClase, AbonadoTurnoCancelado
 from datetime import datetime, date, timedelta
 from app import db
 
@@ -36,25 +36,18 @@ DIAS_SEMANA = {
     "Sábado": 5,
 }
 
-
-# /CREAR_CLASE --> ruta para crear una clase
 @clase_bp.route("/crear_clase", methods=["POST"])
 def crear_clase():
-
-    # --- verificación de rol ---
     if session.get("rol_id") != ROL_ADMINISTRADOR:
         return jsonify({"error": "No autorizado"}), 403
 
     data = request.get_json()
-
     required_fields = ["dia", "hora", "disciplina", "cupo"]
 
-    # --- check missing fields ---
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Campo faltante: {field}"}), 400
 
-    # --- verificar conflicto de horario ---
     hora_nueva = datetime.strptime(data["hora"], "%H:%M")
     clases_misma_disciplina = Clase.query.filter_by(
         disciplina=data["disciplina"].lower(), dia=data["dia"]
@@ -63,31 +56,22 @@ def crear_clase():
     for clase in clases_misma_disciplina:
         hora_existente = datetime.strptime(clase.hora, "%H:%M")
         diferencia = abs((hora_nueva - hora_existente).total_seconds()) / 60
-
         if diferencia < 60:
             return (
-                jsonify(
-                    {
-                        "error": "Ya existe una clase de esa disciplina en ese horario. Debe haber al menos 1 hora de diferencia"
-                    }
-                ),
+                jsonify({"error": "Ya existe una clase de esa disciplina en ese horario. Debe haber al menos 1 hora de diferencia"}),
                 409,
             )
 
-    # Llama al modelo para que ejecute el INSERT en la bd
     clase = ClaseModel.crear_clase(data)
 
-    # --- crear turnos para los proximos 4 meses ---
     dia_semana = DIAS_SEMANA[data["dia"]]
     hoy = date.today()
-    fin = hoy + timedelta(days=120)  # 4 meses aprox
+    fin = hoy + timedelta(days=120)
 
-    # buscar el primer día que coincida con el día de la clase
     dia_actual = hoy
     while dia_actual.weekday() != dia_semana:
         dia_actual += timedelta(days=1)
 
-    # crear un turno por semana hasta 4 meses
     while dia_actual <= fin:
         if dia_actual not in FERIADOS_2026:
             turno = Turno(habilitado=True, fecha=dia_actual, id_clase=clase.id)
@@ -99,20 +83,15 @@ def crear_clase():
     return jsonify({"message": "¡Clase creada con éxito!", "clase_id": clase.id}), 201
 
 
-
 @clase_bp.route("/habilitarClase", methods=["POST"])
 def habilitar_clase():
-    
-    # Verificación de rol
     if session.get('rol_id') != 2:
         return jsonify({"Error": "Acceso denegado. Se requiere rol de administrador."}), 403
     
     data = request.get_json()
-    
     id_clase = data['id_clase']
     
     clase = ClaseModel.buscar_clase_por_id(id_clase)
-    
     if not clase:
         return jsonify({"message": "Clase no encontrada."}), 404
     
@@ -132,13 +111,10 @@ def habilitar_clase():
         turno.habilitado = True
         
     db.session.commit()
-    
     return jsonify({"message": "Clase habilitada con éxito."}), 200
 
 @clase_bp.route("/deshabilitarClase", methods=["POST"])
 def deshabilitar_clase():
-    
-    # 1. Verificación de rol
     if session.get('rol_id') != ROL_ADMINISTRADOR:
         return jsonify({"Error": "Acceso denegado. Se requiere rol de administrador."}), 403
     
@@ -146,17 +122,13 @@ def deshabilitar_clase():
     id_clase = data.get('id_clase')
     
     clase = Clase.query.get(id_clase)
-    
     if not clase:
         return jsonify({"message": "Clase no encontrada."}), 404
     
     if not clase.habilitada:
         return jsonify({"message": "La clase ya está deshabilitada."}), 400
     
-    # 2. Apagamos la clase general
     clase.habilitada = False
-    
-    # 3. Buscamos todos los turnos de esta clase a partir de hoy
     hoy = date.today()
     turnos_futuros = Turno.query.filter(
         Turno.id_clase == id_clase, 
@@ -168,73 +140,122 @@ def deshabilitar_clase():
     turnos_mantenidos = 0
 
     for turno in turnos_futuros:
-        # Chequeamos si ESTE turno en particular tiene reservas activas
         tiene_inscriptos = db.session.query(ReservaTurno).join(Reserva).filter(
             ReservaTurno.id_turno == turno.id,
             Reserva.estado != 'Cancelada'
         ).first() is not None
 
         if not tiene_inscriptos:
-            # Si el turno está vacío, lo damos de baja
             turno.habilitado = False
             turnos_cancelados += 1
         else:
-            # Si tiene alumnos, lo dejamos intacto
             turnos_mantenidos += 1
 
-    # Guardamos los cambios en la base de datos
     db.session.commit()
     
-    # Devolvemos un resumen de lo que pasó para que el Front lo sepa
     return jsonify({
-        "message": f"Clase deshabilitada. Se bajaron {turnos_cancelados} turnos vacíos y quedaron {turnos_mantenidos} vivos con alumnos.",
+        "message": f"Se cancelaron {turnos_cancelados} turnos vacíos.",
         "habilitada": False
     }), 200
     
 @clase_bp.route('/turnos_de_cliente_clase', methods=['GET'])
 def buscar_turnos_de_cliente_clase():
-        id_usuario = request.args.get("id_usuario")
+    id_usuario = request.args.get("id_usuario")
 
-        if not id_usuario:
-            return jsonify({"error": "Parámetro faltante: id_usuario"}), 400
+    if not id_usuario:
+        return jsonify({"error": "Parámetro faltante: id_usuario"}), 400
 
-        try:
-            id_usuario = int(id_usuario)
-        except ValueError:
-            return jsonify({"error": "id_usuario inválido"}), 400
+    try:
+        id_usuario = int(id_usuario)
+    except ValueError:
+        return jsonify({"error": "id_usuario inválido"}), 400
 
-        # 1. Buscar todas las reservas del cliente
-        reservas = Reserva.query.filter_by(id_cliente=id_usuario).all()
+    reservas = Reserva.query.filter_by(id_cliente=id_usuario).all()
 
-        if not reservas:
-            return jsonify({"turnos": []}), 200
+    if not reservas:
+        return jsonify({"turnos": []}), 200
 
-        ids_reservas = [r.id for r in reservas]
+    ids_reservas = [r.id for r in reservas]
 
-        # 2. Buscar los ReservaClase asociados a esas reservas
-        reservas_clase = ReservaClase.query.filter(
-            ReservaClase.id_reserva.in_(ids_reservas)
-        ).all()
+    reservas_clase = ReservaClase.query.filter(
+        ReservaClase.id_reserva.in_(ids_reservas)
+    ).all()
 
-        ids_clases = [rc.id_clase for rc in reservas_clase]
+    ids_clases = [rc.id_clase for rc in reservas_clase]
+    turnos = Turno.query.filter(Turno.id_clase.in_(ids_clases)).all()
 
-        # 3. Buscar todos los turnos que pertenezcan a esas clases
-        turnos = Turno.query.filter(Turno.id_clase.in_(ids_clases)).all()
+    resultado = []
+    for turno in turnos:
+        clase = Clase.query.get(turno.id_clase)
+        if not clase:
+            continue
+            
+        # Si el abonado canceló este turno específico, no lo mostramos en sus turnos pendientes
+        if AbonadoTurnoCancelado.query.filter_by(id_cliente=id_usuario, id_turno=turno.id).first() is not None:
+            continue
 
-        resultado = []
-        for turno in turnos:
-            clase = Clase.query.get(turno.id_clase)
-            if not clase:
-                continue
+        resultado.append({
+            "id_turno": turno.id,
+            "fecha": turno.fecha.strftime("%d/%m/%Y"),
+            "disciplina": clase.disciplina,
+            "dia": clase.dia,
+            "hora": clase.hora,
+            "cupo": clase.cupo,
+            "habilitado": turno.habilitado,
+        })
 
-            resultado.append({
-                "id_turno": turno.id,
-                "fecha": turno.fecha.strftime("%d/%m/%Y"),
-                "disciplina": clase.disciplina,
-                "dia": clase.dia,
-                "hora": clase.hora,
-                "cupo": clase.cupo,
-                "habilitado": turno.habilitado,
-            })
+    return jsonify({"turnos": resultado}), 200
 
-        return jsonify({"turnos": resultado}), 200
+
+@clase_bp.route("/listar_clases", methods=["GET"])
+def listar_clases():
+    if session.get("rol_id") != ROL_ADMINISTRADOR:
+        return jsonify({"error": "No autorizado"}), 403
+
+    clases = Clase.query.all()
+    resultado = []
+    hoy = date.today()
+    
+    for c in clases:
+        # 1. Contar reservas de abono mensual completo
+        total_mensuales = ReservaClase.query.join(Reserva).filter(
+            ReservaClase.id_clase == c.id,
+            Reserva.estado != 'Cancelada'
+        ).count()
+        
+        # 2. Contar TODAS las reservas de turnos individuales a futuro
+        total_sueltos = db.session.query(ReservaTurno).join(Reserva).join(Turno).filter(
+            Turno.id_clase == c.id,
+            Turno.fecha >= hoy,
+            Reserva.estado != 'Cancelada'
+        ).count()
+        
+        # 3. Le restamos a la clase global las excepciones que se hayan hecho a futuro
+        excepciones_futuras = AbonadoTurnoCancelado.query.join(Turno).filter(
+            Turno.id_clase == c.id,
+            Turno.fecha >= hoy
+        ).count()
+
+        total_inscriptos = (total_mensuales - excepciones_futuras) + total_sueltos
+
+        # NUEVO: Contamos cuántos turnos a futuro tiene activos esta clase
+        turnos_futuros_count = Turno.query.filter(
+            Turno.id_clase == c.id, 
+            Turno.fecha >= hoy,
+            Turno.habilitado == True  # Solo contamos los turnos que no estén cancelados por el club
+        ).count()
+        
+        # Capacidad total del mes = cupo diario * cantidad de turnos futuros
+        cupo_total_futuro = c.cupo * turnos_futuros_count
+
+        resultado.append({
+            "id": c.id,
+            "disciplina": c.disciplina,
+            "dia": c.dia,
+            "hora": c.hora,
+            "cupo": cupo_total_futuro,  # Enviamos el cupo total acumulado
+            "ocupados": total_inscriptos if total_inscriptos > 0 else 0, 
+            "habilitada": c.habilitada
+        })
+        
+    return jsonify({"clases": resultado}), 200
