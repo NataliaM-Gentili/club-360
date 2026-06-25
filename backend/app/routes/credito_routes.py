@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, session, request
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from app import db
 from app.models.credito_model import CreditoModel
 from app.models.db_structure import (
@@ -35,6 +35,11 @@ def listar_turnos_credito(disciplina):
     hoy = ahora.date()
     hora_limite = (ahora + timedelta(hours=1)).time()
 
+    if hoy.month == 12:
+        primer_dia_mes_sig = date(hoy.year + 1, 1, 1)
+    else:
+        primer_dia_mes_sig = date(hoy.year, hoy.month + 1, 1)
+
     clases = Clase.query.filter_by(disciplina=disciplina.lower(), habilitada=True).all()
     if not clases:
         return jsonify({"turnos": []}), 200
@@ -45,6 +50,7 @@ def listar_turnos_credito(disciplina):
             Turno.id_clase == clase.id,
             Turno.habilitado == True,
             Turno.fecha >= hoy,
+            Turno.fecha < primer_dia_mes_sig
         ).order_by(Turno.fecha).all()
 
         hora_clase = datetime.strptime(clase.hora, "%H:%M").time()
