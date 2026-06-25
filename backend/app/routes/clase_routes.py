@@ -238,23 +238,24 @@ def listar_clases():
 
         total_inscriptos = (total_mensuales - excepciones_futuras) + total_sueltos
 
-        # NUEVO: Contamos cuántos turnos a futuro tiene activos esta clase
+        # Contamos cuántos turnos a futuro tiene activos esta clase
         turnos_futuros_count = Turno.query.filter(
             Turno.id_clase == c.id, 
             Turno.fecha >= hoy,
-            Turno.habilitado == True  # Solo contamos los turnos que no estén cancelados por el club
+            Turno.habilitado == True
         ).count()
         
-        # Capacidad total del mes = cupo diario * cantidad de turnos futuros
-        cupo_total_futuro = c.cupo * turnos_futuros_count
+        # AJUSTE: Si no hay turnos, cupo y ocupados son 0
+        cupo_total_futuro = c.cupo * turnos_futuros_count if turnos_futuros_count > 0 else 0
+        ocupados_reales = total_inscriptos if turnos_futuros_count > 0 else 0
 
         resultado.append({
             "id": c.id,
             "disciplina": c.disciplina,
             "dia": c.dia,
             "hora": c.hora,
-            "cupo": cupo_total_futuro,  # Enviamos el cupo total acumulado
-            "ocupados": total_inscriptos if total_inscriptos > 0 else 0, 
+            # Enviamos el formato "ocupados/total" para que en el frontend se vea directo
+            "cupo": f"{ocupados_reales}/{cupo_total_futuro if turnos_futuros_count > 0 else c.cupo}",
             "habilitada": c.habilitada
         })
         
