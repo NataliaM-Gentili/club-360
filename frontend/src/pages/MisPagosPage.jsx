@@ -53,7 +53,7 @@ export default function MisPagos() {
                     return;
                 }
 
-                const data = await res.json();z
+                const data = await res.json();
                 setPagos(data);
             } catch (err) {
                 setError('No se pudieron cargar los pagos pendientes.');
@@ -195,155 +195,162 @@ export default function MisPagos() {
 
     return (
         <div className="misPagosContainer">
-            <h1 className="misPagosTitle">Mis Pagos Pendientes</h1>
+            <div className="misPagosHeader">
+                <h1 className="misPagosTitle">Mis Pagos Pendientes</h1>
+                <button
+                    className="historialBtn"
+                    onClick={() => navigate('/historial-pagos')}
+                >
+                    Ver historial de pagos
+                </button>
+            </div>
+                {cargando && <p className="misPagosEstado">Cargando...</p>}
+                {error && <p className="misPagosEstado misPagosError">{error}</p>}
 
-            {cargando && <p className="misPagosEstado">Cargando...</p>}
-            {error && <p className="misPagosEstado misPagosError">{error}</p>}
+                {!cargando && !error && pagos.length === 0 && (
+                    <p className="misPagosEstado">¡No tenés pagos pendientes! 🎉</p>
+                )}
 
-            {!cargando && !error && pagos.length === 0 && (
-                <p className="misPagosEstado">¡No tenés pagos pendientes! 🎉</p>
-            )}
+                {!cargando && !error && pagos.length > 0 && (
+                    <div className="pagosGrid">
+                        {pagos.map((pago) => (
+                            <div className="pagoCard" key={pago.id_reserva || pago.id_suspension}>
 
-            {!cargando && !error && pagos.length > 0 && (
-                <div className="pagosGrid">
-                    {pagos.map((pago) => (
-                        <div className="pagoCard" key={pago.id_reserva || pago.id_suspension}>
-
-                            {/* BADGE */}
-                            <span
-                                className="tipoBadge"
-                                style={{
-                                    backgroundColor:
-                                        pago.tipo === "suspension"
-                                            ? "#d32f2f"
-                                            : undefined
-                                }}
-                            >
-                                {
-                                    pago.tipo === "suspension"
-                                        ? "Suspensión"
-                                        : pago.tipo === "clase"
-                                            ? "Abono (turno fijo)"
-                                            : "Clase suelta"
-                                }
-                            </span>
-
-                            {/* ICONO Y DISCIPLINA */}
-                            <div className="pagoHeader">
-                                <div className="pagoIcono">
-                                    {
-                                        pago.tipo === "suspension"
-                                            ? "⛔"
-                                            : getIcono(pago.disciplina)
-                                    }
-                                </div>
-
-                                <h2
-                                    className="pagoDisciplina"
+                                {/* BADGE */}
+                                <span
+                                    className="tipoBadge"
                                     style={{
-                                        color:
+                                        backgroundColor:
                                             pago.tipo === "suspension"
                                                 ? "#d32f2f"
                                                 : undefined
                                     }}
                                 >
-                                    {pago.disciplina.charAt(0).toUpperCase() +
-                                        pago.disciplina.slice(1)}
-                                </h2>
-                            </div>
-
-                            {/* DETALLES */}
-                            <div className="pagoDetalles">
-
-                                {pago.tipo === "suspension" ? (
-                                    <>
-                                        <p>
-                                            {pago.fecha === "Mensual"
-                                                ? "🚫 Suspensión de clase"
-                                                : "🚫 Suspensión de turnos sueltos"}
-                                        </p>
-
-                                        <p>📅 {pago.fecha}</p>
-
-                                        <p>
-                                            🕐 {pago.hora
-                                                ? `${pago.hora} hs`
-                                                : "-"}
-                                        </p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <p>📅 {pago.fecha}</p>
-
-                                        <p>
-                                            🕐 {pago.hora && pago.hora !== '-'
-                                                ? `${pago.hora} hs`
-                                                : 'Horario de clase'}
-                                        </p>
-
-                                        <p>⏱ Duración: 1 hora</p>
-                                    </>
-                                )}
-
-                            </div>
-
-                            {/* FOOTER */}
-                            <div className="pagoFooter">
-
-                                <div className="pagoMonto">
-                                    <span className="pagoMontoLabel">
-                                        {
-                                            pago.tipo === "suspension"
-                                                ? "Monto adeudado"
-                                                : "Total a pagar"
-                                        }
-                                    </span>
-
-                                    <span className="pagoMontoValor">
-                                        ${pago.monto_deuda.toLocaleString('es-AR')}
-                                    </span>
-                                </div>
-
-                                <button
-                                    className="pagarBtn"
-                                    style={
-                                        pago.tipo === "suspension"
-                                            ? {
-                                                backgroundColor: "#d32f2f"
-                                            }
-                                            : {}
-                                    }
-                                    onClick={() =>
-                                        pago.tipo === "suspension"
-                                            ? handlePagar(pago)
-                                            : handlePagar(pago)
-                                    }
-                                >
                                     {
                                         pago.tipo === "suspension"
-                                            ? "Solicitar Alta"
-                                            : "Pagar"
+                                            ? "Suspensión"
+                                            : pago.tipo === "clase"
+                                                ? "Abono (turno fijo)"
+                                                : "Clase suelta"
                                     }
-                                </button>
+                                </span>
 
+                                {/* ICONO Y DISCIPLINA */}
+                                <div className="pagoHeader">
+                                    <div className="pagoIcono">
+                                        {
+                                            pago.tipo === "suspension"
+                                                ? "⛔"
+                                                : getIcono(pago.disciplina)
+                                        }
+                                    </div>
+
+                                    <h2
+                                        className="pagoDisciplina"
+                                        style={{
+                                            color:
+                                                pago.tipo === "suspension"
+                                                    ? "#d32f2f"
+                                                    : undefined
+                                        }}
+                                    >
+                                        {pago.disciplina.charAt(0).toUpperCase() +
+                                            pago.disciplina.slice(1)}
+                                    </h2>
+                                </div>
+
+                                {/* DETALLES */}
+                                <div className="pagoDetalles">
+
+                                    {pago.tipo === "suspension" ? (
+                                        <>
+                                            <p>
+                                                {pago.fecha === "Mensual"
+                                                    ? "🚫 Suspensión de clase"
+                                                    : "🚫 Suspensión de turnos sueltos"}
+                                            </p>
+
+                                            <p>📅 {pago.fecha}</p>
+
+                                            <p>
+                                                🕐 {pago.hora
+                                                    ? `${pago.hora} hs`
+                                                    : "-"}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p>📅 {pago.fecha}</p>
+
+                                            <p>
+                                                🕐 {pago.hora && pago.hora !== '-'
+                                                    ? `${pago.hora} hs`
+                                                    : 'Horario de clase'}
+                                            </p>
+
+                                            <p>⏱ Duración: 1 hora</p>
+                                        </>
+                                    )}
+
+                                </div>
+
+                                {/* FOOTER */}
+                                <div className="pagoFooter">
+
+                                    <div className="pagoMonto">
+                                        <span className="pagoMontoLabel">
+                                            {
+                                                pago.tipo === "suspension"
+                                                    ? "Monto adeudado"
+                                                    : "Total a pagar"
+                                            }
+                                        </span>
+
+                                        <span className="pagoMontoValor">
+                                            ${pago.monto_deuda.toLocaleString('es-AR')}
+                                        </span>
+                                    </div>
+
+                                    <button
+                                        className="pagarBtn"
+                                        style={
+                                            pago.tipo === "suspension"
+                                                ? {
+                                                    backgroundColor: "#d32f2f"
+                                                }
+                                                : {}
+                                        }
+                                        onClick={() =>
+                                            pago.tipo === "suspension"
+                                                ? handlePagar(pago)
+                                                : handlePagar(pago)
+                                        }
+                                    >
+                                        {
+                                            pago.tipo === "suspension"
+                                                ? "Solicitar Alta"
+                                                : "Pagar"
+                                        }
+                                    </button>
+
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
 
-                        {modalOpen && selectedPago && (
-                <PaymentModal
-                    isOpen={modalOpen}
-                    onClose={() => setModalOpen(false)}
-                    cards={cards}
-                    selectedCard={selectedCard}
-                    setSelectedCard={setSelectedCard}
-                    onConfirm={confirmPay}
-                    reservaInfo={selectedPago}
-                    amount={selectedPago?.monto_deuda}
-                />
-            )}
+                            {modalOpen && selectedPago && (
+                    <PaymentModal
+                        isOpen={modalOpen}
+                        onClose={() => setModalOpen(false)}
+                        cards={cards}
+                        selectedCard={selectedCard}
+                        setSelectedCard={setSelectedCard}
+                        onConfirm={confirmPay}
+                        reservaInfo={selectedPago}
+                        amount={selectedPago?.monto_deuda}
+                    />
+                )}
         </div>
     );
 }

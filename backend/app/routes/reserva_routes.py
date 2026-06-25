@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from app import db
-from datetime import date
+from datetime import date, datetime, time
 from app.models.credito_model import CreditoModel
 from app.services.email_services import (
     send_cancelacion_turno_cliente_email,
@@ -532,8 +532,7 @@ def cancelar_turno_cliente(id_reserva):
     Flujo:
         1. Turno suelta: R.N: si cancela tres clases sueltas consecutivas, pierde el reintegro del 20%
             a) El turno ya fue abonado:
-                i) Se listan las tarjetas del cliente
-                ii) Si no posee tarjetas, se envía un mail para reintegro en efectivo
+                i) se reintegra la plata
             b) El turno no fue abonado:
                 i) se cancela normalmente
         2. Clase (mensual): 
@@ -567,6 +566,17 @@ def cancelar_turno_cliente(id_reserva):
         clase = Clase.query.get(turno.id_clase)
         abono = Abono.query.filter_by(id_reserva=id_reserva).first()
          # --- Turno reservado con CRÉDITO: se cancela y listo (sin reintegro) ---
+        try:
+            # Separamos las horas y minutos del String (ej: "19:30" o "19:30:00")
+            partes_hora = [int(p) for p in str(clase.hora).strip().split(':')[:2]]
+            hora_obj = time(partes_hora[0], partes_hora[1])
+        except Exception:
+            hora_obj = time(0, 0)
+            
+        fecha_completa = datetime.combine(turno.fecha, hora_obj).replace(tzinfo=None)
+        ahora = datetime.now().replace(tzinfo=None)
+        horas_anticipacion = (fecha_completa - ahora).total_seconds() / 3600
+        
         if abono and float(abono.monto) == 0:
             reserva.estado = "Cancelada"
             db.session.commit()
@@ -583,18 +593,25 @@ def cancelar_turno_cliente(id_reserva):
             
         # El reintegro se calcula ANTES de liberar el turno, porque
         # ofrecimiento_turno borra el abono_tarjeta y puede duplicar el abono.
-        if reserva.estado == "Pago" and abono:
-            monto_reintegro = float(abono.monto) / 2          # 50% del total pagado
-            pago_tarjeta = AbonoTarjeta.query.filter_by(id_abono=id_reserva).first()
+        if horas_anticipacion >= 24:
+            if reserva.estado == "Pago" and abono:
+           
+                monto_reintegro = float(abono.monto) / 2          # 50% del total pagado
+                pago_tarjeta = AbonoTarjeta.query.filter_by(id_abono=id_reserva).first()
 
-            if pago_tarjeta:                                  # pagó con tarjeta -> a esa tarjeta
-                tarjeta = Tarjeta.query.get(pago_tarjeta.id_tarjeta)
-                ult4 = tarjeta.numero[-4:] if tarjeta else "----"
-                reintegro = f"Se reintegraron ${monto_reintegro:.2f} a la tarjeta terminada en {ult4}"
-            reserva.estado = "Cancelada"
+                if pago_tarjeta:                                  # pagó con tarjeta -> a esa tarjeta
+                    tarjeta = Tarjeta.query.get(pago_tarjeta.id_tarjeta)
+                    ult4 = tarjeta.numero[-4:] if tarjeta else "----"
+                    reintegro = f"Se reintegraron ${monto_reintegro:.2f} a la tarjeta terminada en {ult4}"
+                reserva.estado = "Cancelada"
+            else:
+                reintegro = "Turno cancelado con éxito, sin pago asociado."
+                reserva.estado = "Cancelada"
+                
         else:
-            reintegro = "Turno cancelado con éxito, sin pago asociado."
-            reserva.estado = "Cancelada"
+            # Caso contrario: Menos de 24 horas, simplemente se cancela sin devolver la seña
+                reintegro = "Turno cancelado fuera de término (menos de 24 horas de antelación). No corresponde devolución de seña."
+                reserva.estado = "Cancelada"
 
         db.session.commit()
 
@@ -635,13 +652,27 @@ def cancelar_turno_cliente(id_reserva):
             return jsonify({"mensaje": "Ya canceló este turno del abono"}), 400
 
         clase = Clase.query.get(es_clase.id_clase)
-
-        if es_clase.id_clase == 1:  # Voley -> crédito a favor
-            CreditoModel.crear_credito(id_cliente, clase.disciplina)
-            detalle = f"Se otorgó un crédito a favor para {clase.disciplina.capitalize()}"
+        turno = Turno.query.get(id_turno)
+        try:
+            partes_hora = [int(p) for p in str(clase.hora).strip().split(':')[:2]]
+            hora_obj = time(partes_hora[0], partes_hora[1])
+        except Exception:
+            hora_obj = time(0, 0)
+            
+        fecha_completa = datetime.combine(turno.fecha, hora_obj).replace(tzinfo=None)
+        ahora = datetime.now().replace(tzinfo=None)
+        horas_anticipacion = (fecha_completa - ahora).total_seconds() / 3600
+        if horas_anticipacion >= 48:
+            if reserva.estado == "Pago": 
+                CreditoModel.crear_credito(id_cliente, clase.disciplina)
+                detalle = f"Se otorgó un crédito a favor para {clase.disciplina.capitalize()}"
+            else:
+                monto_descuento = float(ReservaModel.obtener_precio_disciplina(clase.disciplina))
+                detalle = f"Se descontarán ${monto_descuento:.2f} de la cuota mensual"
+                
         else:
-            monto_descuento = float(ReservaModel.obtener_precio_disciplina(clase.disciplina))
-            detalle = f"Se descontarán ${monto_descuento:.2f} de la cuota mensual"
+              # Caso contrario: Simplemente se cancela el turno sin otorgar crédito
+                detalle = "Turno mensual cancelado fuera de término (menos de 48 horas de antelación). No se otorga crédito a favor."
 
         # Registrar la excepción: ESTO es lo que hace que el turno deje de
         # aparecer en el detalle y no se pueda re-cancelar.

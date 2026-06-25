@@ -38,7 +38,7 @@ def create_app():
     from app.routes.asistencia_manual_routes import asistencia_manual_bp
     from app.routes.credito_routes import credito_bp
     from app.routes.suspension_routes import suspension_bp
-
+    from app.routes.historial_routes import historial_bp
     # app.register_blueprint(user_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(tarjeta_bp)
@@ -50,6 +50,7 @@ def create_app():
     app.register_blueprint(asistencia_bp)
     app.register_blueprint(asistencia_manual_bp)
     app.register_blueprint(credito_bp)
+    app.register_blueprint(historial_bp) 
     app.register_blueprint(suspension_bp)
     # from app.routes.user_routes import main as main_blueprint
     # app.register_blueprint(main_blueprint)
