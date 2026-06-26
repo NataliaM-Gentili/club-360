@@ -44,9 +44,22 @@ export default function CardEditPage() {
         return regex.test(number) ? "" : "Debe tener 16 dígitos";
     };
 
-    const validateExpiration = (date) => {
-        const regex = /^\d{4}-\d{2}$/; // YYYY-MM
-        return regex.test(date) ? "" : "Formato YYYY-MM";
+    const validateExpiration = (dateStr) => {
+        // 1. Validar formato YYYY-MM
+        const regex = /^\d{4}-\d{2}$/;
+        if (!regex.test(dateStr)) return "Formato YYYY-MM";
+
+        // 2. Validar si está vencida
+        const [year, month] = dateStr.split('-').map(Number);
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+
+        if (year < currentYear || (year === currentYear && month < currentMonth)) {
+            return "La tarjeta está vencida";
+        }
+
+        return ""; // Si todo está bien, no hay error
     };
 
     const validateCVV = (cvv) => {
