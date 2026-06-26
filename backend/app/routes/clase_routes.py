@@ -249,18 +249,14 @@ def listar_clases():
         cupo_total_futuro = c.cupo * turnos_futuros_count if turnos_futuros_count > 0 else 0
         ocupados_reales = total_inscriptos if turnos_futuros_count > 0 else 0
 
-        # 🔥 CORRECCIÓN DEL 1/0 🔥
-        # Si no hay turnos a futuro, el cupo es 0 y los inscriptos válidos también son 0.
-        ocupados_reales = total_inscriptos if turnos_futuros_count > 0 else 0
-
         resultado.append({
             "id": c.id,
             "disciplina": c.disciplina,
             "dia": c.dia,
             "hora": c.hora,
-            "cupo": cupo_total_futuro,  
-            "ocupados": ocupados_reales if ocupados_reales > 0 else 0, 
+            "cupo_clase": c.cupo,          # Cupo asignado al crear la clase
+            "inscriptos": ocupados_reales, # Cantidad de inscriptos
+            "cupo_total": cupo_total_futuro, # Total capacidad de turnos activos
             "habilitada": c.habilitada
         })
-        
     return jsonify({"clases": resultado}), 200

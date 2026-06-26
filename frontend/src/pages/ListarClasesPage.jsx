@@ -264,13 +264,17 @@ export default function ListarClasesPage() {
                 <table className="turnosTable">
                     <thead>
                         <tr>
-                            <th>Disciplina</th>
-                            <th>Día</th>
-                            <th>Hora</th>
-                            {/* Ocultamos el título de la columna si estamos en eliminadas */}
-                            {tabActivo === 'activas' && <th>Cupo</th>}
-                            <th>Acciones</th>
-                        </tr>
+                        <th>Disciplina</th>
+                        <th>Día</th>
+                        <th>Hora</th>
+                        {tabActivo === 'activas' && (
+                            <>
+                                <th>Inscriptos</th>
+                                <th>Cupo Clase</th>
+                            </>
+                        )}
+                        <th>Acciones</th>
+                    </tr>
                     </thead>
                     <tbody>
                         {(tabActivo === 'activas' ? clasesActivas : clasesEliminadas).map((clase) => (
@@ -279,8 +283,13 @@ export default function ListarClasesPage() {
                                 <td>{clase.dia}</td>
                                 <td>{clase.hora}</td>
                                 
-                                {/* Ocultamos el dato del cupo si estamos en eliminadas */}
-                                {tabActivo === 'activas' && <td>{clase.ocupados}/{clase.cupo}</td>}
+                                {/* Si estamos en activas, mostramos las dos columnas nuevas */}
+                                {tabActivo === 'activas' && (
+                                    <>
+                                        <td>{clase.inscriptos}</td>
+                                        <td>{clase.cupo_clase}</td>
+                                    </>
+                                )}
                                 
                                 <td>
                                     {tabActivo === 'activas' ? (
@@ -303,8 +312,9 @@ export default function ListarClasesPage() {
                         ))}
                         {(tabActivo === 'activas' ? clasesActivas : clasesEliminadas).length === 0 && (
                             <tr>
-                                {/* Ajustamos el ancho del mensaje vacío según la cantidad de columnas */}
-                                <td colSpan={tabActivo === 'activas' ? "5" : "4"} style={{ textAlign: 'center', padding: '20px' }}>
+                                {/* colSpan 5 para Activas (Disciplina, Dia, Hora, Inscriptos, Cupo, Acciones) -> 6 en realidad si contamos Acciones */}
+                                {/* colSpan 4 para Eliminadas (Disciplina, Dia, Hora, Acciones) */}
+                                <td colSpan={tabActivo === 'activas' ? "6" : "4"} style={{ textAlign: 'center', padding: '20px' }}>
                                     No se encontraron clases que coincidan con los filtros.
                                 </td>
                             </tr>
