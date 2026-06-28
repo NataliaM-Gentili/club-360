@@ -172,3 +172,123 @@
     padding: .55rem 1rem; cursor: pointer; }
 
 .cancelarBtn:hover { background: #7d212a; }
+
+/* ── Overlay ──────────────────────────────────────────────── */
+.mat-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.50);
+    display: flex;
+    align-items: flex-end;   /* bottom-sheet en mobile */
+    justify-content: center;
+    z-index: 1000;
+}
+@media (min-width: 600px) {
+    .mat-overlay { align-items: center; }
+}
+
+/* ── Sheet ────────────────────────────────────────────────── */
+.mat-sheet {
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: 82vh;
+    overflow-y: auto;
+    padding: 1.5rem 1.25rem;
+    box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.18);
+}
+@media (min-width: 600px) {
+    .mat-sheet { border-radius: 16px; }
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+.mat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.2rem;
+
+    background: #85ad88;
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+}
+.mat-fecha {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #222;
+    text-transform: capitalize;
+    line-height: 1.3;
+    flex: 1;
+}
+.mat-cerrar {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: #888;
+    cursor: pointer;
+    padding: 0 0 0 0.75rem;
+    flex-shrink: 0;
+}
+
+/* ── Turno card ───────────────────────────────────────────── */
+.mat-card {
+    border: 1px solid #387246;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+}
+.mat-disciplina {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;  
+}
+.mat-hora {
+    font-size: 0.88rem;
+    color: #666;
+    margin: 0;
+}
+
+/* ── QR ───────────────────────────────────────────────────── */
+.mat-qr-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 0.9rem;
+    
+}
+.mat-qr-hint {
+    font-size: 0.73rem;
+    color: #999;
+    margin: 0;
+}
+
+/* ── Botón cancelar ───────────────────────────────────────── */
+.mat-btn-cancelar {
+    width: 100%;
+    background: transparent;
+    border: 1.5px solid #972934;
+    color: #972934;
+    border-radius: 8px;
+    padding: 0.55rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+}
+.mat-btn-cancelar:hover:not(:disabled) {
+    background: #972934;
+    color: #fff;
+}
+.mat-btn-cancelar:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
