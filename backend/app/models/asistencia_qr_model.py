@@ -100,7 +100,11 @@ class AsistenciaModel:
         if not es_turno and not es_clase:
             return False, MSG_QR_INVALIDO, None
 
-        # ── 6. Verificar pago ────────────────────────────────────────────────
+        # ── 6. Verificar cancelacion ─────────────────────────────────────────
+        if reserva.estado == "Cancelada":
+            return False, MSG_QR_INVALIDO, None
+
+        # ── 7. Verificar pago ────────────────────────────────────────────────
         if reserva.estado != "Pago":
             if es_turno:
                 return (
@@ -111,7 +115,7 @@ class AsistenciaModel:
             if es_clase:
                 return False, MSG_SIN_MENSUAL, None
 
-        # ── 7. Ya registrado ─────────────────────────────────────────────────
+        # ── 8. Ya registrado ─────────────────────────────────────────────────
         ya = db.session.execute(
             cliente_asistio_turno.select().where(
                 cliente_asistio_turno.c.id_turno == id_turno,
@@ -121,7 +125,7 @@ class AsistenciaModel:
         if ya:
             return False, MSG_YA_REGISTRADO, None
 
-        # ── 8. Registrar ─────────────────────────────────────────────────────
+        # ── 9. Registrar ─────────────────────────────────────────────────────
         db.session.execute(
             cliente_asistio_turno.insert().values(
                 id_turno=id_turno, id_cliente=id_cliente
