@@ -88,27 +88,28 @@ export default function MisActividades() {
         setCargandoCancel(true);
         try {
             const { data } = await axios.post(
-                '/api/cliente/cancelar_actividad',
-                { id_reserva: idReserva, id_turno: idTurno },
+                `/api/cancelar_turno/${idReserva}`,
+                { id_turno: idTurno },
                 { withCredentials: true }
             );
+            const extra = data.reintegro || data.detalle;
             toast.success(data.mensaje || 'Turno cancelado.');
+            if (extra) toast.info(extra, { autoClose: 6000 });
 
-            // Recargamos y actualizamos el modal en lugar de cerrarlo,
-            // por si el día tenía más de un turno
             const frescos = await cargarEventos();
             if (frescos && fechaSel) {
-                const restantes = frescos.filter(
-                    ev => ev.start === fechaSel && ev.extendedProps?.estado === 'confirmada'
-                );
-                setTurnosDelDia(restantes.length ? restantes : null);
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'Error al cancelar.');
-        } finally {
-            setCargandoCancel(false);
+            const restantes = frescos.filter(
+                ev => ev.start === fechaSel && ev.extendedProps?.estado === 'confirmada'
+            );
+            setTurnosDelDia(restantes.length ? restantes : null);
         }
-    };
+    } catch (err) {
+        // El backend usa "mensaje" también en los errores
+        toast.error(err.response?.data?.mensaje || 'Error al cancelar.');
+    } finally {
+        setCargandoCancel(false);
+    }
+};
 
     const cerrarModal = () => { setTurnosDelDia(null); setFechaSel(null); };
 
