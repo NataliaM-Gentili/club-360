@@ -594,15 +594,15 @@ def cancelar_turno_cliente(id_reserva):
         # El reintegro se calcula ANTES de liberar el turno, porque
         # ofrecimiento_turno borra el abono_tarjeta y puede duplicar el abono.
         if horas_anticipacion >= 24:
-            if reserva.estado == "Pago" and abono:
-           
-                monto_reintegro = float(abono.monto) / 2          # 50% del total pagado
-                pago_tarjeta = AbonoTarjeta.query.filter_by(id_abono=id_reserva).first()
+            pago_tarjeta = AbonoTarjeta.query.filter_by(id_abono=id_reserva).first()
 
-                if pago_tarjeta:                                  # pagó con tarjeta -> a esa tarjeta
-                    tarjeta = Tarjeta.query.get(pago_tarjeta.id_tarjeta)
-                    ult4 = tarjeta.numero[-4:] if tarjeta else "----"
-                    reintegro = f"Se reintegraron ${monto_reintegro:.2f} a la tarjeta terminada en {ult4}"
+            if pago_tarjeta and abono:
+           
+                monto_reintegro = float(abono.monto)         # 50% del total pagado                                 # pagó con tarjeta -> a esa tarjeta
+                tarjeta = Tarjeta.query.get(pago_tarjeta.id_tarjeta)
+                ult4 = tarjeta.numero[-4:] if tarjeta else "----"
+                
+                reintegro = f"Turno cancelado con éxito. Se reintegraron ${monto_reintegro:.2f} a la tarjeta terminada en {ult4}"
                 reserva.estado = "Cancelada"
             else:
                 reintegro = "Turno cancelado con éxito, sin pago asociado."
