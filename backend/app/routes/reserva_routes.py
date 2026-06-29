@@ -585,9 +585,9 @@ def cancelar_turno_cliente(id_reserva):
             send_cancelacion_turno_cliente_email(
                 usuario.nombres, clase.disciplina,
                 turno.fecha.strftime("%d/%m/%Y"), clase.hora,
-                detalle="Turno reservado con crédito: se canceló sin reintegro.",
+                detalle="Turno cancelado por crédito: sin reintegro.",
             )
-            return jsonify({"mensaje": "Turno cancelado",
+            return jsonify({"mensaje": "Turno cancelado con éxito",
                             "reintegro": "Turno por crédito: sin reintegro"}), 200
             
             
@@ -605,12 +605,12 @@ def cancelar_turno_cliente(id_reserva):
                     reintegro = f"Se reintegraron ${monto_reintegro:.2f} a la tarjeta terminada en {ult4}"
                 reserva.estado = "Cancelada"
             else:
-                reintegro = "Turno cancelado con éxito, sin pago asociado."
+                reintegro = "Turno cancelado con éxito."
                 reserva.estado = "Cancelada"
                 
         else:
             # Caso contrario: Menos de 24 horas, simplemente se cancela sin devolver la seña
-                reintegro = "Turno cancelado fuera de término (menos de 24 horas de antelación). No corresponde devolución de seña."
+                reintegro = "Turno cancelado con éxito."
                 reserva.estado = "Cancelada"
 
         db.session.commit()
@@ -672,7 +672,7 @@ def cancelar_turno_cliente(id_reserva):
                 
         else:
               # Caso contrario: Simplemente se cancela el turno sin otorgar crédito
-                detalle = "Turno mensual cancelado fuera de término (menos de 48 horas de antelación). No se otorga crédito a favor."
+                detalle = "Turno cancelado con éxito."
 
         # Registrar la excepción: ESTO es lo que hace que el turno deje de
         # aparecer en el detalle y no se pueda re-cancelar.
