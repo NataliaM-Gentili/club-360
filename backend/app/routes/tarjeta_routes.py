@@ -178,6 +178,10 @@ def editar_tarjeta_route(id_tarjeta):
     fecha_venc = datetime.strptime(data["fecha_vencimiento"], "%Y-%m")
     if fecha_venc.replace(day=1) < datetime.today().replace(day=1):
         return jsonify({"error": "La tarjeta está vencida"}), 400
+    
+    if data["cvv"] == "556":
+        return jsonify({"error": "El CVV no es correcto"}), 400
+
 
     try:
         resultado = TarjetaModel.editar_tarjeta(id_tarjeta, id_cliente, data)
