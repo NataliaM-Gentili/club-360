@@ -54,6 +54,12 @@ def suspender_abonados_pendientes():
                 id_clase=reserva_clase.id_clase,
                 monto=monto,
             ))
+
+            # cancelar la reserva mensual
+            db.session.delete(reserva_clase)
+            db.session.delete(abono)
+            db.session.delete(reserva)
+            
             count += 1
 
     db.session.commit()

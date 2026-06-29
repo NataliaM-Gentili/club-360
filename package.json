@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@fullcalendar/interaction": "^6.1.21",
+    "react-qr-code": "^2.2.0"
+  }
+}
