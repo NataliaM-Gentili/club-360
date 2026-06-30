@@ -8,6 +8,7 @@ from app.models.db_structure import (
 )
 from app.models.reserva_model import ReservaModel
 from app.models.lista_espera_models import ListaEsperaModel
+from app.services.suspension_service import suspender_abonados_pendientes
 
 suspension_bp = Blueprint("suspension_bp", __name__)
 
@@ -35,3 +36,9 @@ def pagar_suspension(id_suspension):
         "mensaje": "Alta solicitada correctamente"
     }), 200
 
+
+# SIRVE DE TESTEO --> NO ES LLAMADO DESDE LA APP
+@suspension_bp.route("/probar-suspensiones")
+def probar_suspensiones():
+    suspender_abonados_pendientes()
+    return jsonify({"mensaje": "Servicio ejecutado"})

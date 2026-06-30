@@ -1,6 +1,6 @@
 """
-Script de PRUEBA - 29/6/2026 18:00hs
-Probar entre 17:00 y 19:00.
+Script de PRUEBA - 29/6/2026 23:30hs
+Probar AHORA (23:26).
 
 Ejecutar desde backend/:
     python instance/load_scripts/script_demo_hoy.py
@@ -55,7 +55,8 @@ def limpiar_bd():
 
 
 def poblar():
-    hoy = date(2026, 6, 29)  # Lunes 29/6/2026
+    hoy = date(2026, 6, 29)        # Lunes 29/6/2026
+    mañana = date(2026, 6, 30)     # Martes 30/6/2026
     password = generate_password_hash("prueba123")
 
     # =================================================================
@@ -116,29 +117,29 @@ def poblar():
     # 3. CLASES
     # =================================================================
 
-    # --- Turnos a las 18:00 (ventana 17:00-19:00) ---
-    clase_futbol_18 = Clase(dia="Lunes", hora="18:00", disciplina="futbol", cupo=10, habilitada=True)
-    clase_padel_18 = Clase(dia="Lunes", hora="18:00", disciplina="paddle", cupo=10, habilitada=True)
-    clase_voley_18 = Clase(dia="Lunes", hora="18:00", disciplina="voley", cupo=10, habilitada=True)
-    clase_basquet_18 = Clase(dia="Lunes", hora="18:00", disciplina="basquet", cupo=10, habilitada=True)
+    # --- Turnos a las 23:30 (ventana ~22:30 - 00:30, cubre el "ahora" 23:26) ---
+    clase_futbol_2330 = Clase(dia="Lunes", hora="23:30", disciplina="futbol", cupo=10, habilitada=True)
+    clase_padel_2330 = Clase(dia="Lunes", hora="23:30", disciplina="paddle", cupo=10, habilitada=True)
+    clase_voley_2330 = Clase(dia="Lunes", hora="23:30", disciplina="voley", cupo=10, habilitada=True)
+    clase_basquet_2330 = Clase(dia="Lunes", hora="23:30", disciplina="basquet", cupo=10, habilitada=True)
 
-    # --- QR expirado (10:00) y temprano (23:00) ---
-    clase_futbol_10 = Clase(dia="Lunes", hora="10:00", disciplina="futbol", cupo=10, habilitada=True)
-    clase_futbol_23 = Clase(dia="Lunes", hora="23:00", disciplina="futbol", cupo=10, habilitada=True)
+    # --- QR / asistencia manual ya expirados (20:00, ventana cerró a las 21:00) ---
+    clase_futbol_20 = Clase(dia="Lunes", hora="20:00", disciplina="futbol", cupo=10, habilitada=True)
+    clase_padel_20 = Clase(dia="Lunes", hora="20:00", disciplina="paddle", cupo=10, habilitada=True)
+
+    # --- QR demasiado temprano: turno de MAÑANA -> da MSG_FUTURO ---
+    clase_futbol_mañana = Clase(dia="Martes", hora="10:00", disciplina="futbol", cupo=10, habilitada=True)
 
     # --- QR pago incompleto (segunda basquet) ---
-    clase_basquet_18b = Clase(dia="Lunes", hora="18:00", disciplina="basquet", cupo=10, habilitada=True)
+    clase_basquet_2330b = Clase(dia="Lunes", hora="23:30", disciplina="basquet", cupo=10, habilitada=True)
 
-    # --- Asist manual fuera de horario ---
-    clase_padel_10 = Clase(dia="Lunes", hora="10:00", disciplina="paddle", cupo=10, habilitada=True)
-
-    # --- Clases para suspensiones ---
+    # --- Clases para suspensiones (no dependen de la hora actual) ---
     clase_voley_lun = Clase(dia="Lunes", hora="19:00", disciplina="voley", cupo=10, habilitada=True)
     clase_futbol_lun = Clase(dia="Lunes", hora="22:00", disciplina="futbol", cupo=10, habilitada=True)
 
     db.session.add_all([
-        clase_futbol_18, clase_padel_18, clase_voley_18, clase_basquet_18,
-        clase_futbol_10, clase_futbol_23, clase_basquet_18b, clase_padel_10,
+        clase_futbol_2330, clase_padel_2330, clase_voley_2330, clase_basquet_2330,
+        clase_futbol_20, clase_padel_20, clase_futbol_mañana, clase_basquet_2330b,
         clase_voley_lun, clase_futbol_lun,
     ])
     db.session.flush()
@@ -146,20 +147,20 @@ def poblar():
     # =================================================================
     # 4. TURNOS
     # =================================================================
-    turno_futbol_18 = Turno(habilitado=True, fecha=hoy, id_clase=clase_futbol_18.id)
-    turno_padel_18 = Turno(habilitado=True, fecha=hoy, id_clase=clase_padel_18.id)
-    turno_voley_18 = Turno(habilitado=True, fecha=hoy, id_clase=clase_voley_18.id)
-    turno_basquet_18 = Turno(habilitado=True, fecha=hoy, id_clase=clase_basquet_18.id)
-    turno_futbol_10 = Turno(habilitado=True, fecha=hoy, id_clase=clase_futbol_10.id)
-    turno_futbol_23 = Turno(habilitado=True, fecha=hoy, id_clase=clase_futbol_23.id)
-    turno_basquet_b = Turno(habilitado=True, fecha=hoy, id_clase=clase_basquet_18b.id)
-    turno_padel_10 = Turno(habilitado=True, fecha=hoy, id_clase=clase_padel_10.id)
+    turno_futbol_2330 = Turno(habilitado=True, fecha=hoy, id_clase=clase_futbol_2330.id)
+    turno_padel_2330 = Turno(habilitado=True, fecha=hoy, id_clase=clase_padel_2330.id)
+    turno_voley_2330 = Turno(habilitado=True, fecha=hoy, id_clase=clase_voley_2330.id)
+    turno_basquet_2330 = Turno(habilitado=True, fecha=hoy, id_clase=clase_basquet_2330.id)
+    turno_futbol_20 = Turno(habilitado=True, fecha=hoy, id_clase=clase_futbol_20.id)
+    turno_padel_20 = Turno(habilitado=True, fecha=hoy, id_clase=clase_padel_20.id)
+    turno_futbol_mañana = Turno(habilitado=True, fecha=mañana, id_clase=clase_futbol_mañana.id)
+    turno_basquet_b = Turno(habilitado=True, fecha=hoy, id_clase=clase_basquet_2330b.id)
 
-    turno_voley_futuro = Turno(habilitado=True, fecha=hoy + timedelta(days=7), id_clase=clase_voley_18.id)
+    turno_voley_futuro = Turno(habilitado=True, fecha=hoy + timedelta(days=7), id_clase=clase_voley_2330.id)
 
     db.session.add_all([
-        turno_futbol_18, turno_padel_18, turno_voley_18, turno_basquet_18,
-        turno_futbol_10, turno_futbol_23, turno_basquet_b, turno_padel_10,
+        turno_futbol_2330, turno_padel_2330, turno_voley_2330, turno_basquet_2330,
+        turno_futbol_20, turno_padel_20, turno_futbol_mañana, turno_basquet_b,
         turno_voley_futuro,
     ])
     db.session.flush()
@@ -168,64 +169,64 @@ def poblar():
     # 5. RESERVAS DE JUAN
     # =================================================================
 
-    # A) Fútbol 18:00 - Pago (asist manual esc 1+5)
+    # A) Fútbol 23:30 - Pago (asist manual ok / QR ok)
     res_futbol = Reserva(id_cliente=juan.id, estado="Pago")
     db.session.add(res_futbol)
     db.session.flush()
-    db.session.add(ReservaTurno(id_reserva=res_futbol.id, id_turno=turno_futbol_18.id))
+    db.session.add(ReservaTurno(id_reserva=res_futbol.id, id_turno=turno_futbol_2330.id))
     db.session.add(Abono(id_reserva=res_futbol.id, monto=Decimal("9000"), efectivo=True))
 
-    # B) Padel 18:00 - ReservaClase Pago (QR abonado)
+    # B) Padel 23:30 - ReservaClase Pago (QR abonado)
     res_padel = Reserva(id_cliente=juan.id, estado="Pago")
     db.session.add(res_padel)
     db.session.flush()
-    db.session.add(ReservaClase(id_reserva=res_padel.id, id_clase=clase_padel_18.id))
+    db.session.add(ReservaClase(id_reserva=res_padel.id, id_clase=clase_padel_2330.id))
     db.session.add(Abono(id_reserva=res_padel.id, monto=Decimal("12000"), efectivo=False))
     db.session.add(AbonoTarjeta(id_abono=res_padel.id, id_tarjeta=tarjeta_juan.id))
 
-    # C) Voley 18:00 - Pago (QR no abonado)
+    # C) Voley 23:30 - Pago (QR no abonado)
     res_voley = Reserva(id_cliente=juan.id, estado="Pago")
     db.session.add(res_voley)
     db.session.flush()
-    db.session.add(ReservaTurno(id_reserva=res_voley.id, id_turno=turno_voley_18.id))
+    db.session.add(ReservaTurno(id_reserva=res_voley.id, id_turno=turno_voley_2330.id))
     db.session.add(Abono(id_reserva=res_voley.id, monto=Decimal("8000"), efectivo=True))
 
-    # D) Fútbol 10:00 - Pago (QR expirado + asist manual fuera horario)
-    res_futbol_10 = Reserva(id_cliente=juan.id, estado="Pago")
-    db.session.add(res_futbol_10)
+    # D) Fútbol 20:00 - Pago (QR expirado + asist manual fuera horario)
+    res_futbol_20 = Reserva(id_cliente=juan.id, estado="Pago")
+    db.session.add(res_futbol_20)
     db.session.flush()
-    db.session.add(ReservaTurno(id_reserva=res_futbol_10.id, id_turno=turno_futbol_10.id))
-    db.session.add(Abono(id_reserva=res_futbol_10.id, monto=Decimal("9000"), efectivo=True))
+    db.session.add(ReservaTurno(id_reserva=res_futbol_20.id, id_turno=turno_futbol_20.id))
+    db.session.add(Abono(id_reserva=res_futbol_20.id, monto=Decimal("9000"), efectivo=True))
 
-    # E) Fútbol 23:00 - Pago (QR temprano)
-    res_futbol_23 = Reserva(id_cliente=juan.id, estado="Pago")
-    db.session.add(res_futbol_23)
+    # E) Fútbol mañana 10:00 - Pago (QR "demasiado temprano" -> MSG_FUTURO)
+    res_futbol_mañana = Reserva(id_cliente=juan.id, estado="Pago")
+    db.session.add(res_futbol_mañana)
     db.session.flush()
-    db.session.add(ReservaTurno(id_reserva=res_futbol_23.id, id_turno=turno_futbol_23.id))
-    db.session.add(Abono(id_reserva=res_futbol_23.id, monto=Decimal("9000"), efectivo=True))
+    db.session.add(ReservaTurno(id_reserva=res_futbol_mañana.id, id_turno=turno_futbol_mañana.id))
+    db.session.add(Abono(id_reserva=res_futbol_mañana.id, monto=Decimal("9000"), efectivo=True))
 
-    # F) Basquet B 18:00 - Aprobada 50% (QR pago incompleto)
+    # F) Basquet B 23:30 - Aprobada 50% (QR pago incompleto)
     res_basquet_inc = Reserva(id_cliente=juan.id, estado="Aprobada")
     db.session.add(res_basquet_inc)
     db.session.flush()
     db.session.add(ReservaTurno(id_reserva=res_basquet_inc.id, id_turno=turno_basquet_b.id))
     db.session.add(Abono(id_reserva=res_basquet_inc.id, monto=Decimal("4250"), efectivo=True))
 
+    # G) Padel 20:00 - Pago (asist manual fuera de horario, alternativa)
+    res_padel_20 = Reserva(id_cliente=juan.id, estado="Pago")
+    db.session.add(res_padel_20)
+    db.session.flush()
+    db.session.add(ReservaTurno(id_reserva=res_padel_20.id, id_turno=turno_padel_20.id))
+    db.session.add(Abono(id_reserva=res_padel_20.id, monto=Decimal("12000"), efectivo=True))
+
     # =================================================================
-    # 6. RESERVAS DE SOFI (asist manual esc 3)
+    # 6. RESERVA DE SOFI (asist manual sin pago)
     # =================================================================
     res_sofi_basquet = Reserva(id_cliente=sofi.id, estado="Aprobada")
     db.session.add(res_sofi_basquet)
     db.session.flush()
-    db.session.add(ReservaTurno(id_reserva=res_sofi_basquet.id, id_turno=turno_basquet_18.id))
+    db.session.add(ReservaTurno(id_reserva=res_sofi_basquet.id, id_turno=turno_basquet_2330.id))
     db.session.add(Abono(id_reserva=res_sofi_basquet.id, monto=Decimal("4250"), efectivo=True))
-
-    # Juan inscripto en Padel 10:00 Pago (asist manual esc 4 fuera horario)
-    res_padel_10 = Reserva(id_cliente=juan.id, estado="Pago")
-    db.session.add(res_padel_10)
-    db.session.flush()
-    db.session.add(ReservaTurno(id_reserva=res_padel_10.id, id_turno=turno_padel_10.id))
-    db.session.add(Abono(id_reserva=res_padel_10.id, monto=Decimal("12000"), efectivo=True))
 
     # =================================================================
     # 7. SUSPENSIONES
@@ -240,7 +241,7 @@ def poblar():
         id_cliente=tomas.id, id_clase=clase_voley_lun.id, monto=Decimal("5000.00"),
     )
     susp_tomas_turno = ClienteSuspendido(
-        id_cliente=tomas.id, id_turno=turno_basquet_18.id, monto=Decimal("5000.00"),
+        id_cliente=tomas.id, id_turno=turno_basquet_2330.id, monto=Decimal("5000.00"),
     )
 
     db.session.add_all([susp_lgomez, susp_tomas_futbol, susp_tomas_voley, susp_tomas_turno])
@@ -272,23 +273,23 @@ def poblar():
     print("Enviando QRs...")
 
     qrs_turno = [
-        ("QR Voley 18:00 (Pago)", res_voley, turno_voley_18, "voley", "18:00"),
-        ("QR Futbol 10:00 (expirado)", res_futbol_10, turno_futbol_10, "futbol", "10:00"),
-        ("QR Futbol 23:00 (temprano)", res_futbol_23, turno_futbol_23, "futbol", "23:00"),
-        ("QR Basquet 18:00 (pago incompleto)", res_basquet_inc, turno_basquet_b, "basquet", "18:00"),
+        ("QR Voley 23:30 (Pago)", res_voley, turno_voley_2330, "voley", "23:30"),
+        ("QR Futbol 20:00 (expirado)", res_futbol_20, turno_futbol_20, "futbol", "20:00"),
+        ("QR Futbol mañana 10:00 (futuro)", res_futbol_mañana, turno_futbol_mañana, "futbol", "10:00"),
+        ("QR Basquet 23:30 (pago incompleto)", res_basquet_inc, turno_basquet_b, "basquet", "23:30"),
     ]
     for nombre, reserva, turno, disc, hora in qrs_turno:
         try:
-            enviar_comprobante_qr_turno(juan.id, reserva.id, turno.id, disc, str(hoy), hora)
+            enviar_comprobante_qr_turno(juan.id, reserva.id, turno.id, disc, str(turno.fecha), hora)
             print(f"  {nombre} - enviado")
         except Exception as e:
             print(f"  {nombre} - error: {e}")
 
     try:
-        enviar_comprobantes_qr_clase(juan.id, res_padel.id, "paddle", "18:00", [turno_padel_18])
-        print("  QR Padel 18:00 (abonado) - enviado")
+        enviar_comprobantes_qr_clase(juan.id, res_padel.id, "paddle", "23:30", [turno_padel_2330])
+        print("  QR Padel 23:30 (abonado) - enviado")
     except Exception as e:
-        print(f"  QR Padel 18:00 - error: {e}")
+        print(f"  QR Padel 23:30 - error: {e}")
 
     # =================================================================
     # 10. ENVIAR MAIL DE OFRECIMIENTO
@@ -306,7 +307,7 @@ def poblar():
     # =================================================================
     print("")
     print("=" * 70)
-    print("  TEST COMPLETO - Lunes 29/6/2026 - probar entre 17:00 y 19:00")
+    print("  TEST AHORA - Lunes 29/6/2026 23:30hs (probar ya mismo, 23:26)")
     print("=" * 70)
     print("")
     print("  Password universal: prueba123")
@@ -319,30 +320,30 @@ def poblar():
     print("  Login 1: juanmanuelperezz468@gmail.com")
     print("    - Perfil con tarjeta")
     print("    - Actualizar tarjeta (6 esc)")
-    print("    - Historial pagos (3 pagos)")
-    print("    - Reservar Basquet 18:00 -> ya tiene reserva en horario")
+    print("    - Historial pagos")
     print("")
-    print("  Login 2: sofi.mendez.ok@gmail.com")
-    print("    - Perfil sin tarjeta")
-    print("    - Historial vacio")
-    print("")
-    print("  Login 3: rivastoma0@gmail.com")
+    print("  Login 2: rivastoma0@gmail.com")
     print("    - Aceptar ofrecimiento (mail/link) -> suspendido")
     print("    - Reservar turno -> suspendido por turno")
     print("    - Abonar voley -> suspendido en disciplina")
     print("    - Anular susp: Futbol Lun 22:00 -> exitoso")
     print("    - Anular susp: Voley Lun 19:00 -> error")
     print("")
-    print("  Login 4: lgomez.deuda@gmail.com")
+    print("  Login 3: lgomez.deuda@gmail.com")
     print("    - Anular susp -> sin tarjetas")
     print("")
-    print("  Login 5: recepcion360@gmail.com (empleado)")
+    print("  Login 4: recepcion360@gmail.com (empleado)")
     print("    - Pago efect: lgomez (ok), sofi (sin deudas), noexiste (no existe)")
-    print("    - Asist manual: juan+Futbol18 (ok), juan+Basquet18 (no inscr),")
-    print("      sofi+Basquet18 (sin pago), juan+Padel10 (fuera hora), repetir (ya reg)")
+    print("    - Asist manual: juan+Futbol23:30 (ok), sofi+Basquet23:30 (sin pago),")
+    print("      juan+Padel20:00 (fuera de horario), repetir (ya registrada)")
     print("    - QR: Voley (ok), Padel (abonado ok), basura (invalido),")
-    print("      Futbol10 (expirado), Futbol23 (temprano), Basquet (sin pago),")
-    print("      Voley de nuevo (ya registrada)")
+    print("      Futbol20:00 (expirado), Futbol mañana (MSG_FUTURO),")
+    print("      Basquet (sin pago), Voley de nuevo (ya registrada)")
+    print("")
+    print("  NOTA: el escenario de 'demasiado temprano' hoy da el mensaje")
+    print("  'El turno aún no ha comenzado' (MSG_FUTURO) en vez de")
+    print("  'La clase asignada aun no ha comenzado' (MSG_TEMPRANO), porque")
+    print("  a esta hora de la noche no queda margen dentro del mismo día.")
     print("")
     print("=" * 70)
 
