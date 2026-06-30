@@ -352,7 +352,7 @@ def main():
     with app.app_context():
         limpiar_bd()
         poblar()
-        print("BD lista para probar.")
+        print("Script y BD lista para probar.")
 
 
 if __name__ == "__main__":
