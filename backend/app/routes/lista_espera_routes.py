@@ -292,6 +292,11 @@ def aceptar_ofrecimiento(id_ofrecimento, id_cliente_elegido):
     turno = Turno.query.filter_by(id=reserva_turno.id_turno).first()
     clase = Clase.query.get(turno.id_clase)
 
+    fecha_vencimiento = datetime.combine(
+        ofrecimiento.fecha_vencimiento,
+        datetime.strptime(clase.hora, "%H:%M").time()
+    )
+
     if not ofrecimiento:
         return jsonify({"error": "El ofrecimiento no existe"}), 404
 
@@ -300,7 +305,7 @@ def aceptar_ofrecimiento(id_ofrecimento, id_cliente_elegido):
             "error": "Este ofrecimiento ya fue procesado"
         }), 400
 
-    if datetime.utcnow() > ofrecimiento.fecha_vencimiento:
+    if datetime.utcnow() > fecha_vencimiento:
         return jsonify({
             "error": "El ofrecimiento venció"
         }), 400
