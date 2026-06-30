@@ -54,6 +54,7 @@ def suspender_abonados_pendientes():
                 id_clase=reserva_clase.id_clase,
                 monto=monto,
             ))
+            reserva.estado = "Cancelada"
             count += 1
 
     db.session.commit()

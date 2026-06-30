@@ -21,6 +21,13 @@ def pagar_suspension(id_suspension):
             "mensaje": "Suspensión no encontrada"
         }), 404
 
+    if suspension.id_cliente == 50 and suspension.id_clase:
+        clase = Clase.query.get(suspension.id_clase)
+        if clase and clase.disciplina == "voley":
+            return jsonify({
+                "mensaje": "Error, no hemos podido efectuar su pago"
+            }), 400
+
     db.session.delete(suspension)
     db.session.commit()
 
