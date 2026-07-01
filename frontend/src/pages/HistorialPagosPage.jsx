@@ -24,11 +24,10 @@ const TIPO_RESERVA_CLASS = {
 };
 
 export default function HistorialPagosPage() {
-    const [session,    setSession]    = useState(null);
-    const [pagos,      setPagos]      = useState([]);
-    const [cargando,   setCargando]   = useState(true);
-    const [error,      setError]      = useState(null);
-    const [filtroTipo, setFiltroTipo] = useState('');
+    const [session,  setSession]  = useState(null);
+    const [pagos,    setPagos]    = useState([]);
+    const [cargando, setCargando] = useState(true);
+    const [error,    setError]    = useState(null);
 
     useEffect(() => {
         fetch('/api/auth/status', { credentials: 'include' })
@@ -50,14 +49,9 @@ export default function HistorialPagosPage() {
             .catch(err  => { setError(err.message);    setCargando(false); });
     }, [session]);
 
-    const pagosFiltrados = filtroTipo
-        ? pagos.filter(p => p.tipo_pago === filtroTipo)
-        : pagos;
-
-    const totalAbonado = pagosFiltrados
+    const totalAbonado = pagos
         .reduce((acc, p) => acc + parseFloat(p.monto || 0), 0);
 
-    /* ── helpers de presentación ── */
     const detallePago = (p) => {
         if (p.tipo_pago === 'tarjeta' && p.numero_tarjeta)
             return `•••• ${p.numero_tarjeta}`;
@@ -68,29 +62,16 @@ export default function HistorialPagosPage() {
         <div className="historialContainer">
             <h1 className="historialTitle">Historial de pagos</h1>
 
-            {/* Filtro */}
-            <div className="historialFiltros">
-                <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}>
-                    <option value="">Todos los métodos</option>
-                    <option value="tarjeta">Tarjeta</option>
-                    <option value="efectivo">Efectivo</option>
-                    <option value="credito">Crédito</option>
-                </select>
-            </div>
-
             {cargando ? (
                 <p className="sinResultados">Cargando...</p>
             ) : error ? (
                 <p className="sinResultados">{error}</p>
-            ) : pagosFiltrados.length === 0 ? (
+            ) : pagos.length === 0 ? (
                 <p className="sinResultados">No hay pagos realizados aún.</p>
             ) : (
                 <>
-                    {/* Banner total */}
                     <div className="resumenBanner">
-                        <span className="resumenLabel">
-                            Total abonado{filtroTipo ? ` · ${TIPO_PAGO_LABEL[filtroTipo]}` : ''}
-                        </span>
+                        <span className="resumenLabel">Total abonado</span>
                         <span className="resumenMonto">${totalAbonado.toFixed(2)}</span>
                     </div>
 
@@ -106,7 +87,7 @@ export default function HistorialPagosPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {pagosFiltrados.map((pago, idx) => (
+                            {pagos.map((pago, idx) => (
                                 <tr key={pago.id_reserva ?? idx}>
                                     <td className="tdTipo">
                                         {pago.tipo_pago === 'credito' ? (
@@ -130,7 +111,7 @@ export default function HistorialPagosPage() {
                                             )}
                                         </div>
                                     </td>
-                                        <td className="tdMonto">
+                                    <td className="tdMonto">
                                         {pago.tipo_pago === 'credito' ? '—' : `$${parseFloat(pago.monto).toFixed(2)}`}
                                     </td>
                                 </tr>

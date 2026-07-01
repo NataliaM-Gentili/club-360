@@ -382,6 +382,24 @@ def abonar_mensual():
     if ReservaModel.cliente_ya_inscripto_clase(id_cliente, id_clase):
         return jsonify({"mensaje": "Usted ya se encuentra inscripto a la clase seleccionada"}), 400
 
+        # Verificar que no tenga otro abono en el mismo día y horario
+    abono_mismo_horario = (
+        db.session.query(ReservaClase)
+        .join(Reserva, ReservaClase.id_reserva == Reserva.id)
+        .join(Clase, Clase.id == ReservaClase.id_clase)
+        .filter(
+            Reserva.id_cliente == id_cliente,
+            Reserva.estado != "Cancelada",
+            Clase.dia == clase.dia,
+            Clase.hora == clase.hora,
+            ReservaClase.id_clase != id_clase,
+        )
+        .first()
+    )
+    if abono_mismo_horario:
+        return jsonify({"mensaje": "Usted ya posee un abono en el mismo día y horario"}), 400
+
+
     # Obtener precio según disciplina
     precio = ReservaModel.obtener_precio_disciplina(clase.disciplina)
     if precio is None:
