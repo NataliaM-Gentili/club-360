@@ -1,4 +1,3 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import AppRoutes from './routes/AppRoutes'
@@ -9,16 +8,14 @@ import 'react-toastify/dist/ReactToastify.css'
 import { AuthProvider } from "./hooks/AuthContext";
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <AuthProvider>
-      <AppRoutes />
-      <ToastContainer 
-        position="top-center" 
-        autoClose={3000} 
-        hideProgressBar={true}  
-        pauseOnHover
-        theme="colored"
-        transition={Slide}/>
-    </AuthProvider>
-  </StrictMode>,
+  <AuthProvider>
+    <AppRoutes />
+    <ToastContainer 
+      position="top-center" 
+      autoClose={3000} 
+      hideProgressBar={true}  
+      pauseOnHover
+      theme="colored"
+      transition={Slide}/>
+  </AuthProvider>,
 )

@@ -42,7 +42,7 @@ function ModalTurnosDia({ fecha, turnos, onCancelar, onCerrar, cargando }) {
                                 disabled={cargando}
                                 onClick={() => onCancelar(id_reserva, id_turno)}
                             >
-                                {cargando ? 'Cancelando…' : 'Cancelar turno'}
+                                {cargando === id_turno ? 'Cancelando…' : 'Cancelar turno'}
                             </button>
                         </div>
                     );
@@ -85,7 +85,7 @@ export default function MisActividades() {
 
     const handleCancelar = async (idReserva, idTurno) => {
         if (cargandoCancel) return;
-        setCargandoCancel(true);
+        setCargandoCancel(idTurno);
         try {
             const { data } = await axios.post(
                 `/api/cancelar_turno/${idReserva}`,
@@ -107,7 +107,7 @@ export default function MisActividades() {
         // El backend usa "mensaje" también en los errores
         toast.error(err.response?.data?.mensaje || 'Error al cancelar.');
     } finally {
-        setCargandoCancel(false);
+        setCargandoCancel(null);
     }
 };
 
