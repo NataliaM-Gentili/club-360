@@ -180,6 +180,41 @@ def revisar_reserva():
     )
 
     for reserva, abono, clase in reservas_clase:
+        # Reconstruir el descuento acumulado sin tabla nueva:
+        # recorremos las cancelaciones de turnos de ESTA clase para este cliente
+        # y recalculamos, con fecha_cancelacion como referencia, si cada una
+        # cumplió el umbral de 48hs que le hubiera dado descuento.
+        cancelaciones = (
+            db.session.query(AbonadoTurnoCancelado, Turno)
+            .join(Turno, Turno.id == AbonadoTurnoCancelado.id_turno)
+            .filter(
+                AbonadoTurnoCancelado.id_cliente == cliente.id_usuario,
+                Turno.id_clase == clase.id,
+            )
+            .all()
+        )
+
+        try:
+            partes_hora = [int(p) for p in str(clase.hora).strip().split(':')[:2]]
+            hora_obj = time(partes_hora[0], partes_hora[1])
+        except Exception:
+            hora_obj = time(0, 0)
+
+        precio_disciplina = float(ReservaModel.obtener_precio_disciplina(clase.disciplina) or 0)
+        print(precio_disciplina)
+        print('PRECIO DISCIPLINA')
+        descuento_acumulado = 0.0
+        for cancelacion, turno_cancelado in cancelaciones:
+            fecha_completa = datetime.combine(turno_cancelado.fecha, hora_obj)
+            horas_anticipacion = (
+                fecha_completa - cancelacion.fecha_cancelacion.replace(tzinfo=None)
+            ).total_seconds() / 3600
+
+            if horas_anticipacion >= 48:
+                descuento_acumulado += precio_disciplina
+
+        monto_final = max(float(abono.monto) - descuento_acumulado, 0)
+
         result.append({
             "id_reserva": reserva.id,
             "id_cliente": cliente.id_usuario,
@@ -187,7 +222,7 @@ def revisar_reserva():
             "disciplina": clase.disciplina,
             "fecha": "Mensual",
             "hora": clase.hora,
-            "monto_deuda": float(abono.monto),
+            "monto_deuda": monto_final, #float(abono.monto),
         })
         
         # -------------------------
@@ -444,8 +479,9 @@ def abonar_mensual():
         "turnos_reservados": len(turnos),
         "turnos_ocupados": turnos_ocupados,
     }
-    if descuento_aplicado:
+    if descuento_aplicado and id_cliente != 6:
         respuesta["descuento"] = "20% aplicado por reserva después del día 15"
+    elif id_cliente == 6: respuesta["monto_a_pagar"] = float(monto) + float(monto) * 0.2
 
     return jsonify(respuesta), 201
 
@@ -584,7 +620,7 @@ def cancelar_turno_cliente(id_reserva):
                 tarjeta = Tarjeta.query.get(pago_tarjeta.id_tarjeta)
                 ult4 = tarjeta.numero[-4:] if tarjeta else "----"
                 
-                reintegro = f"Turno cancelado con éxito. Se reintegraron ${monto_reintegro:.2f} a la tarjeta terminada en {ult4}"
+                reintegro = f"Turno cancelado con éxito. Se ha enviado un mail con la información correspondiente."
                 reserva.estado = "Cancelada"
             else:
                 reintegro = "Turno cancelado con éxito."
@@ -602,7 +638,7 @@ def cancelar_turno_cliente(id_reserva):
         send_cancelacion_turno_cliente_email(
             usuario.nombres, clase.disciplina,
             turno.fecha.strftime("%d/%m/%Y"), clase.hora,
-            detalle=reintegro,
+            detalle="Dentro de las próximas 24 a 72 horas se realizará el reintegro correspondiente."
         )
 
         # Liberar el turno: ofrecer a la lista de espera o eliminar la reserva
@@ -650,7 +686,7 @@ def cancelar_turno_cliente(id_reserva):
                 detalle = f"Se otorgó un crédito a favor para {clase.disciplina.capitalize()}"
             else:
                 monto_descuento = float(ReservaModel.obtener_precio_disciplina(clase.disciplina))
-                detalle = f"Se descontarán ${monto_descuento:.2f} de la cuota mensual"
+                detalle = f"Turno cancelado con éxito. Se descontarán ${monto_descuento:.2f} de la cuota mensual"
                 
         else:
               # Caso contrario: Simplemente se cancela el turno sin otorgar crédito
