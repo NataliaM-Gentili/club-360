@@ -296,24 +296,6 @@ def reservar_turno():
     if precio is None:
         return jsonify({"mensaje": "No se pudo determinar el precio de la disciplina"}), 400
 
-    # Verificar que no tenga otro turno en el mismo horario
-    turno_mismo_horario = (
-        db.session.query(ReservaTurno)
-        .join(Reserva, ReservaTurno.id_reserva == Reserva.id)
-        .join(Turno, Turno.id == ReservaTurno.id_turno)
-        .join(Clase, Clase.id == Turno.id_clase)
-        .filter(
-            Reserva.id_cliente == id_cliente,
-            Reserva.estado != "Cancelada",
-            Turno.fecha == turno.fecha,
-            Clase.hora == clase.hora,
-            ReservaTurno.id_turno != id_turno,
-        )
-        .first()
-    )
-    if turno_mismo_horario:
-        return jsonify({"mensaje": "No se puede realizar la reserva, usted ya posee una reserva de turno en el horario elegido"}), 400
-
     # Crear reserva con abono al 50% — queda Pendiente hasta que /pago_tarjeta confirme
     reserva = ReservaModel.reservar_turno_no_abonado(
         id_cliente=id_cliente,
@@ -381,24 +363,6 @@ def abonar_mensual():
     # Verificar que no esté ya inscripto
     if ReservaModel.cliente_ya_inscripto_clase(id_cliente, id_clase):
         return jsonify({"mensaje": "Usted ya se encuentra inscripto a la clase seleccionada"}), 400
-
-        # Verificar que no tenga otro abono en el mismo día y horario
-    abono_mismo_horario = (
-        db.session.query(ReservaClase)
-        .join(Reserva, ReservaClase.id_reserva == Reserva.id)
-        .join(Clase, Clase.id == ReservaClase.id_clase)
-        .filter(
-            Reserva.id_cliente == id_cliente,
-            Reserva.estado != "Cancelada",
-            Clase.dia == clase.dia,
-            Clase.hora == clase.hora,
-            ReservaClase.id_clase != id_clase,
-        )
-        .first()
-    )
-    if abono_mismo_horario:
-        return jsonify({"mensaje": "Usted ya posee un abono en el mismo día y horario"}), 400
-
 
     # Obtener precio según disciplina
     precio = ReservaModel.obtener_precio_disciplina(clase.disciplina)

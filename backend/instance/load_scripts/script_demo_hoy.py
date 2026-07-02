@@ -32,11 +32,11 @@ from werkzeug.security import generate_password_hash
 # =====================================================================
 # CONFIGURACIÓN — solo tocar estas líneas para cambiar la ventana
 # =====================================================================
-HOY            = date(2026, 6, 30)  # Martes 30/6/2026
-DIA            = "Martes"
-HORA_PRINCIPAL = "22:00"   # ← ventana actual: 21:00–23:00
-HORA_EXPIRADA  = "14:00"   # siempre expirada (mañana lejano pasado)
-HORA_TEMPRANA  = "23:59"   # demasiado temprano (funciona hasta las 22:59)
+HOY            = date(2026, 7, 1)
+DIA            = "Miércoles"
+HORA_PRINCIPAL = "23:00"   # ← ventana: 18:00–20:00
+HORA_EXPIRADA  = "14:00"   # siempre expirada
+HORA_TEMPRANA  = "23:59"   # demasiado temprano (funciona hasta las 20:59)
 # =====================================================================
 
 
@@ -153,10 +153,10 @@ def poblar():
     # =================================================================
     # 4. TURNOS
     # =================================================================
-    turno_futbol_p  = Turno(habilitado=True, fecha=HOY, id_clase=clase_futbol_p.id)
-    turno_padel_p   = Turno(habilitado=True, fecha=HOY, id_clase=clase_padel_p.id)
-    turno_voley_p   = Turno(habilitado=True, fecha=HOY, id_clase=clase_voley_p.id)
-    turno_basquet_p = Turno(habilitado=True, fecha=HOY, id_clase=clase_basquet_p.id)
+    turno_futbol_p    = Turno(habilitado=True, fecha=HOY, id_clase=clase_futbol_p.id)
+    turno_padel_p     = Turno(habilitado=True, fecha=HOY, id_clase=clase_padel_p.id)
+    turno_voley_p     = Turno(habilitado=True, fecha=HOY, id_clase=clase_voley_p.id)
+    turno_basquet_p   = Turno(habilitado=True, fecha=HOY, id_clase=clase_basquet_p.id)
     turno_futbol_exp  = Turno(habilitado=True, fecha=HOY, id_clase=clase_futbol_exp.id)
     turno_padel_exp   = Turno(habilitado=True, fecha=HOY, id_clase=clase_padel_exp.id)
     turno_futbol_temp = Turno(habilitado=True, fecha=HOY, id_clase=clase_futbol_temp.id)
@@ -173,20 +173,19 @@ def poblar():
     # 5. RESERVAS DE JUAN
     # =================================================================
 
-    # A) Fútbol — Pago (asist manual esc1 ok + QR no abonado ok)
+    # A) Fútbol — Pago (asist manual esc1 ok)
     res_futbol = Reserva(id_cliente=juan.id, estado="Pago")
     db.session.add(res_futbol); db.session.flush()
     db.session.add(ReservaTurno(id_reserva=res_futbol.id, id_turno=turno_futbol_p.id))
     db.session.add(Abono(id_reserva=res_futbol.id, monto=Decimal("9000"), efectivo=True))
 
-    # B) Padel — ReservaClase Pago (QR abonado ok)
-    res_padel = Reserva(id_cliente=juan.id, estado="Pago")
+    # B) Padel — ReservaClase Pendiente (se paga durante la demo; QR abonado + asist manual esc2)
+    res_padel = Reserva(id_cliente=juan.id, estado="Pendiente")
     db.session.add(res_padel); db.session.flush()
     db.session.add(ReservaClase(id_reserva=res_padel.id, id_clase=clase_padel_p.id))
     db.session.add(Abono(id_reserva=res_padel.id, monto=Decimal("12000"), efectivo=False))
-    db.session.add(AbonoTarjeta(id_abono=res_padel.id, id_tarjeta=tarjeta_juan.id))
 
-    # C) Voley — Pago (QR no abonado "ya registrada" — pre-cargada)
+    # C) Voley — Pago (QR no abonado esc1; esc7 ya registrada escaneando dos veces)
     res_voley = Reserva(id_cliente=juan.id, estado="Pago")
     db.session.add(res_voley); db.session.flush()
     db.session.add(ReservaTurno(id_reserva=res_voley.id, id_turno=turno_voley_p.id))
@@ -204,16 +203,22 @@ def poblar():
     db.session.add(ReservaTurno(id_reserva=res_futbol_temp.id, id_turno=turno_futbol_temp.id))
     db.session.add(Abono(id_reserva=res_futbol_temp.id, monto=Decimal("9000"), efectivo=True))
 
-    # F) Padel expirado — Pago (asist manual esc4 fuera de horario)
+    # F) Padel expirado — Pago (asist manual esc5 fuera de horario)
     res_padel_exp = Reserva(id_cliente=juan.id, estado="Pago")
     db.session.add(res_padel_exp); db.session.flush()
     db.session.add(ReservaTurno(id_reserva=res_padel_exp.id, id_turno=turno_padel_exp.id))
     db.session.add(Abono(id_reserva=res_padel_exp.id, monto=Decimal("12000"), efectivo=True))
+    
+    # G) Basquet abonado — Pago (asist manual esc2 abonado ok)
+    res_basquet_clase = Reserva(id_cliente=juan.id, estado="Pago")
+    db.session.add(res_basquet_clase); db.session.flush()
+    db.session.add(ReservaClase(id_reserva=res_basquet_clase.id, id_clase=clase_basquet_p.id))
+    db.session.add(Abono(id_reserva=res_basquet_clase.id, monto=Decimal("8500"), efectivo=True))
+
 
     # =================================================================
     # 6. RESERVA DE SOFI EN BASQUET
-    # Aprobada (50%) → asist manual esc3 "sin pago" + QR esc6 "pago incompleto"
-    # Juan NO está en basquet → botón habilitado → esc6 reservar "ya tiene horario"
+    # Aprobada (50%) → asist manual esc4 "sin pago" + QR esc6 "pago incompleto"
     # =================================================================
     res_sofi_basquet = Reserva(id_cliente=sofi.id, estado="Aprobada")
     db.session.add(res_sofi_basquet); db.session.flush()
@@ -221,16 +226,7 @@ def poblar():
     db.session.add(Abono(id_reserva=res_sofi_basquet.id, monto=Decimal("4250"), efectivo=True))
 
     # =================================================================
-    # 7. PRE-REGISTRO ASISTENCIA VOLEY (QR esc7 "ya registrada")
-    # =================================================================
-    db.session.execute(
-        cliente_asistio_turno.insert().values(
-            id_cliente=juan.id, id_turno=turno_voley_p.id
-        )
-    )
-
-    # =================================================================
-    # 8. SUSPENSIONES
+    # 7. SUSPENSIONES
     # =================================================================
     db.session.add(ClienteSuspendido(
         id_cliente=sofi.id, id_clase=clase_voley_lun.id, monto=Decimal("5000.00"),
@@ -246,7 +242,7 @@ def poblar():
     ))
 
     # =================================================================
-    # 9. OFRECIMIENTO
+    # 8. OFRECIMIENTO
     # =================================================================
     res_ofrecimiento = Reserva(id_cliente=juan.id, estado="Pendiente")
     db.session.add(res_ofrecimiento); db.session.flush()
@@ -264,15 +260,14 @@ def poblar():
     db.session.commit()
 
     # =================================================================
-    # 10. ENVIAR QR POR MAIL
+    # 9. ENVIAR QR POR MAIL
     # =================================================================
     print("\nEnviando QRs...")
 
     qrs_turno = [
-        ("QR Futbol ok (no abonado)",    res_futbol,    turno_futbol_p,   "futbol",  HORA_PRINCIPAL),
-        ("QR Futbol expirado",           res_futbol_exp, turno_futbol_exp, "futbol",  HORA_EXPIRADA),
-        ("QR Futbol temprano",           res_futbol_temp, turno_futbol_temp, "futbol", HORA_TEMPRANA),
-        ("QR Voley (ya registrada)",     res_voley,     turno_voley_p,    "voley",   HORA_PRINCIPAL),
+        ("QR Voley ok (no abonado)",  res_voley,      turno_voley_p,    "voley",  HORA_PRINCIPAL),
+        ("QR Fútbol expirado",        res_futbol_exp, turno_futbol_exp, "futbol", HORA_EXPIRADA),
+        ("QR Fútbol temprano",        res_futbol_temp, turno_futbol_temp, "futbol", HORA_TEMPRANA),
     ]
     for nombre, reserva, turno, disc, hora in qrs_turno:
         try:
@@ -283,7 +278,7 @@ def poblar():
 
     try:
         enviar_comprobantes_qr_clase(juan.id, res_padel.id, "paddle", HORA_PRINCIPAL, [turno_padel_p])
-        print("  QR Padel abonado ok — enviado")
+        print("  QR Padel abonado — enviado")
     except Exception as e:
         print(f"  QR Padel abonado — error: {e}")
 
@@ -294,7 +289,7 @@ def poblar():
         print(f"  QR Basquet (sofi) — error: {e}")
 
     # =================================================================
-    # 11. MAIL DE OFRECIMIENTO
+    # 10. MAIL DE OFRECIMIENTO
     # =================================================================
     print("\nEnviando mail de ofrecimiento...")
     try:
@@ -311,7 +306,7 @@ def poblar():
 
     print(f"""
 {'='*70}
-  TEST — {DIA} {HOY} — ventana {ventana}  (HORA_PRINCIPAL={HORA_PRINCIPAL})
+  DEMO — {DIA} {HOY} — ventana {ventana}  (HORA_PRINCIPAL={HORA_PRINCIPAL})
 {'='*70}
 
   Password universal: prueba123
@@ -322,48 +317,49 @@ def poblar():
   PARTE 1 — CLIENTE
   ---------------------------------------------------------
   Login 1: juanmanuelperezz468@gmail.com
-    - Perfil con tarjeta *1234
-    - Actualizar tarjeta (6 escenarios)
-    - Historial pagos
-    - Reservar Basquet {HORA_PRINCIPAL} → ya tiene turno en ese horario (Fútbol)
-    - Abonar  Basquet {HORA_PRINCIPAL} → ya posee abono en mismo día y horario (Padel)
+    - Ver Perfil → tarjeta *1234
+    - Actualizar tarjeta → 6 escenarios
+    - Pagos Pendientes → pagar Padel {HORA_PRINCIPAL} con tarjeta
+      (necesario antes de QR esc2 y asist manual esc2)
 
   Login 2: sofimendez@gmail.com
-    - Perfil sin tarjeta
-    - Historial pagos (pago parcial basquet)
+    - Ver Perfil → sin tarjeta
+    - Historial pagos → pago parcial Basquet
     - Anular susp: Voley Lunes 21:00 → sin tarjetas
 
   Login 3: rivastoma0@gmail.com
     - Aceptar ofrecimiento (link en mail juanmanuelperezz468) → suspendido
-    - Reservar Basquet {HORA_PRINCIPAL} → suspendido por turno
-    - Abonar  Voley    {HORA_PRINCIPAL} → suspendido en disciplina
-    - Anular susp: Fútbol Lun 22:00   → exitoso
-    - Anular susp: Voley  Lun 21:00   → error (hardcoded)
+    - Reservar Basquet {HORA_PRINCIPAL}  → suspendido por turno
+    - Abonar  Voley    {HORA_PRINCIPAL}  → suspendido en disciplina
+    - Anular susp: Fútbol Lunes 22:00   → exitoso
+    - Anular susp: Voley  Lunes 21:00   → error (hardcoded)
 
   PARTE 2 — EMPLEADO
   ---------------------------------------------------------
   Login: recepcion360@gmail.com
 
   Pago efectivo suspensión:
-    esc1: sofi          → ok
-    esc2: carlos        → sin deudas
-    esc3: noexiste@...  → no existe
+    esc1: sofi         → ok
+    esc2: carlos       → sin deudas
+    esc3: noexiste@... → no existe
 
   Asistencia manual:
-    esc1: juan  + Fútbol  {HORA_PRINCIPAL}  → ok
-    esc2: juan  + Basquet {HORA_PRINCIPAL}  → no inscripto
-    esc3: sofi  + Basquet {HORA_PRINCIPAL}  → sin pago
-    esc4: juan  + Padel   {HORA_EXPIRADA}   → fuera de horario
-    esc5: repetir esc1                      → ya registrada
+    esc1: juan  + Fútbol  {HORA_PRINCIPAL}  → ok (turno suelto)
+    esc2: juan  + Basquet {HORA_PRINCIPAL}  → ok (abonado)
+    esc3: tomas + Fútbol  {HORA_PRINCIPAL}  → no inscripto
+    esc4: sofi  + Basquet {HORA_PRINCIPAL}  → sin pago
+    esc5: juan  + Padel   {HORA_EXPIRADA}   → fuera de horario
+    esc6: repetir esc1                      → ya registrada
+
 
   QR (escanear en orden):
-    esc1: Fútbol {HORA_PRINCIPAL}  (juan, no abonado)  → ok
-    esc2: Padel  {HORA_PRINCIPAL}  (juan, abonado)     → ok
-    esc3: QR inválido propio                           → inválido
-    esc4: Fútbol {HORA_EXPIRADA}   (juan)              → expirado
-    esc5: Fútbol {HORA_TEMPRANA}   (juan)              → demasiado temprano
-    esc6: Basquet {HORA_PRINCIPAL} (sofi)              → pago incompleto
-    esc7: Voley  {HORA_PRINCIPAL}  (juan, ya reg.)     → ya registrada
+    esc1: Voley  {HORA_PRINCIPAL} (juan, no abonado) → ok
+    esc2: Padel  {HORA_PRINCIPAL} (juan, abonado)    → ok
+    esc3: QR inválido propio                         → inválido
+    esc4: Fútbol {HORA_EXPIRADA}  (juan)             → expirado
+    esc5: Fútbol {HORA_TEMPRANA}  (juan)             → demasiado temprano
+    esc6: Basquet {HORA_PRINCIPAL} (sofi)            → pago incompleto
+    esc7: Voley  {HORA_PRINCIPAL} (juan, de nuevo)   → ya registrada
 
   NOTA: HORA_TEMPRANA={HORA_TEMPRANA} es válida hasta las {h:02d}:59
 {'='*70}
